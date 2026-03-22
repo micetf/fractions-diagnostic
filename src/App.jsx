@@ -7,6 +7,7 @@ import GestionClasses from "@/pages/enseignant/GestionClasses";
 import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
+import SpikeNumberLine from "@/pages/enseignant/SpikeNumberLine";
 
 /**
  * App — composant racine.
@@ -87,6 +88,7 @@ function App() {
                 onLancer={handleLancerSession}
             />
         ),
+        "spike-numberline": <SpikeNumberLine onNavigate={setTeacherPage} />,
     };
 
     return (
