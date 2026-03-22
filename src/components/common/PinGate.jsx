@@ -110,6 +110,17 @@ function PinGate({ mode, onSuccess }) {
 
                 {/* Formulaire */}
                 <form onSubmit={handleSubmit} noValidate>
+                    {/* Champ username masqué — requis par les navigateurs pour l'accessibilité
+              des formulaires contenant un champ password (https://goo.gl/9p2vKq) */}
+                    <input
+                        type="text"
+                        autoComplete="username"
+                        value="enseignant"
+                        readOnly
+                        className="sr-only"
+                        aria-hidden="true"
+                        tabIndex={-1}
+                    />
                     <div className="mb-4">
                         <label
                             className="block text-sm font-medium text-slate-700 mb-1"
