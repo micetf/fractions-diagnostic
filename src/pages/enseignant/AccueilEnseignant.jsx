@@ -4,13 +4,13 @@ import PropTypes from "prop-types";
  * AccueilEnseignant
  *
  * Page d'accueil du mode enseignant.
- * Sprint 0 : squelette de navigation uniquement.
- * Les modules fonctionnels sont construits aux sprints S3 à S5.
+ * Sprint 4 : bloc de test S2 retiré, carte "Mes classes" active.
  *
  * @param {object}   props
  * @param {function} props.onStartSession - Bascule en mode élève (actif en S5).
+ * @param {function} props.onNavigate     - Navigation interne enseignant.
  */
-function AccueilEnseignant({ onStartSession }) {
+function AccueilEnseignant({ onStartSession, onNavigate }) {
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
             <h1 className="text-2xl font-semibold text-slate-800 mb-1">
@@ -22,16 +22,36 @@ function AccueilEnseignant({ onStartSession }) {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <SprintCard titre="Mes classes" sprint="S4" />
-                <SprintCard titre="Créer une session" sprint="S5" />
-                <SprintCard titre="Analyse des résultats" sprint="S14" />
-                <SprintCard titre="Export / Import" sprint="S18" />
+                {/* Carte active */}
+                <NavCard
+                    titre="Mes classes"
+                    description="Créer et gérer les classes et les élèves."
+                    onClick={() => onNavigate("classes")}
+                    actif
+                />
+
+                {/* Cartes à venir */}
+                <NavCard
+                    titre="Créer une session"
+                    description="Sélectionner les exercices et lancer la passation."
+                    sprint="S5"
+                />
+                <NavCard
+                    titre="Analyse des résultats"
+                    description="Matrice de résultats, profils élèves, biais détectés."
+                    sprint="S14"
+                />
+                <NavCard
+                    titre="Export / Import"
+                    description="Sauvegarder et restaurer les données."
+                    sprint="S18"
+                />
             </div>
 
-            {/* Bouton de test bascule — remplacé par la logique PIN en S3 */}
+            {/* Accès rapide mode élève — test S3, sera retiré en S5 */}
             <div className="mt-10 pt-6 border-t border-slate-200">
                 <p className="text-xs text-slate-400 mb-3">
-                    Test sprint 0 — basculer manuellement en mode élève :
+                    Test — basculer manuellement en mode élève :
                 </p>
                 <button
                     onClick={onStartSession}
@@ -47,41 +67,69 @@ function AccueilEnseignant({ onStartSession }) {
 
 AccueilEnseignant.propTypes = {
     onStartSession: PropTypes.func.isRequired,
+    onNavigate: PropTypes.func.isRequired,
 };
 
-/* ── Sous-composant interne ──────────────────────────────────────── */
+/* ── Sous-composants ─────────────────────────────────────────────── */
 
 /**
- * SprintCard
+ * NavCard
  *
- * Carte représentant un module à venir, avec sa référence de sprint.
- *
- * @param {object} props
- * @param {string} props.titre  - Nom du module.
- * @param {string} props.sprint - Référence du sprint SRS (ex. "S4").
+ * @param {object}   props
+ * @param {string}   props.titre
+ * @param {string}   props.description
+ * @param {boolean}  [props.actif=false]  - Carte cliquable.
+ * @param {function} [props.onClick]
+ * @param {string}   [props.sprint]       - Badge sprint si non actif.
  */
-function SprintCard({ titre, sprint }) {
+function NavCard({ titre, description, actif, onClick, sprint }) {
+    const base = "rounded-xl border p-5 flex flex-col gap-2 transition-colors";
+
+    if (actif) {
+        return (
+            <button
+                onClick={onClick}
+                className={`${base} bg-white border-brand-200 hover:bg-brand-50
+                    hover:border-brand-300 text-left cursor-pointer`}
+            >
+                <span className="font-semibold text-slate-800">{titre}</span>
+                <span className="text-sm text-slate-500">{description}</span>
+            </button>
+        );
+    }
+
     return (
         <div
-            className="rounded-xl border border-slate-200 bg-white p-5
-                    opacity-50 cursor-not-allowed select-none"
+            className={`${base} bg-white border-slate-200 opacity-50 cursor-not-allowed select-none`}
         >
             <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-700">{titre}</span>
-                <span
-                    className="text-xs font-mono text-slate-400 bg-slate-100
-                         px-2 py-0.5 rounded-full"
-                >
-                    {sprint}
-                </span>
+                <span className="font-semibold text-slate-700">{titre}</span>
+                {sprint && (
+                    <span
+                        className="text-xs font-mono text-slate-400 bg-slate-100
+                           px-2 py-0.5 rounded-full shrink-0"
+                    >
+                        {sprint}
+                    </span>
+                )}
             </div>
+            <span className="text-sm text-slate-500">{description}</span>
         </div>
     );
 }
 
-SprintCard.propTypes = {
+NavCard.propTypes = {
     titre: PropTypes.string.isRequired,
-    sprint: PropTypes.string.isRequired,
+    description: PropTypes.string.isRequired,
+    actif: PropTypes.bool,
+    onClick: PropTypes.func,
+    sprint: PropTypes.string,
+};
+
+NavCard.defaultProps = {
+    actif: false,
+    onClick: undefined,
+    sprint: undefined,
 };
 
 export default AccueilEnseignant;
