@@ -1,20 +1,28 @@
 import PropTypes from "prop-types";
+import PinGate from "@/components/common/PinGate";
+import { useState } from "react";
 
 /**
  * AccueilEleve
  *
  * Page d'accueil du mode élève.
- * Sprint 0 : squelette uniquement.
- * Le sélecteur d'élève et PassationRunner sont produits aux sprints S11–S12.
+ * Sprint 0 : squelette.
+ * Sprint 3 : bouton "Appelle ton enseignant(e)" → PinGate vérification.
  *
- * Contrainte SRS NF-UX-01 : police ≥ 16 px (text-base),
- * consignes en 18 px (text-lg).
+ * Le sélecteur d'élève et PassationRunner arrivent en S11–S12.
+ *
+ * Contrainte SRS NF-UX-01 : police ≥ 16 px.
  *
  * @param {object}   props
- * @param {function} props.onReturnToTeacher - Retour en mode enseignant.
- *                                             Conditionné par le PIN à partir de S3.
+ * @param {function} props.onCallTeacher - Succès du PIN → retour mode enseignant.
  */
-function AccueilEleve({ onReturnToTeacher }) {
+function AccueilEleve({ onCallTeacher }) {
+    const [showPin, setShowPin] = useState(false);
+
+    if (showPin) {
+        return <PinGate mode="verify" onSuccess={onCallTeacher} />;
+    }
+
     return (
         <div className="min-h-[calc(100vh-88px)] flex flex-col items-center justify-center px-4 py-10">
             <div
@@ -39,7 +47,7 @@ function AccueilEleve({ onReturnToTeacher }) {
                     </p>
                 </div>
 
-                {/* Placeholder — activé en S11 */}
+                {/* Placeholder passation — activé en S11 */}
                 <button
                     disabled
                     className="w-full py-3 rounded-xl text-base font-semibold
@@ -49,20 +57,23 @@ function AccueilEleve({ onReturnToTeacher }) {
                 </button>
             </div>
 
-            {/* Lien de test sprint 0 uniquement */}
-            <button
-                onClick={onReturnToTeacher}
-                className="mt-8 text-sm text-slate-400 hover:text-slate-600
-                   underline underline-offset-2 transition-colors cursor-pointer"
-            >
-                ← Retour mode enseignant (test S0)
-            </button>
+            {/* Bouton retour enseignant — visible en bas de page */}
+            <div className="mt-10 text-center">
+                <p className="text-sm text-slate-400 mb-3">Tu as terminé ?</p>
+                <button
+                    onClick={() => setShowPin(true)}
+                    className="px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600
+                     text-white text-sm font-semibold transition-colors cursor-pointer"
+                >
+                    Appelle ton enseignant(e)
+                </button>
+            </div>
         </div>
     );
 }
 
 AccueilEleve.propTypes = {
-    onReturnToTeacher: PropTypes.func.isRequired,
+    onCallTeacher: PropTypes.func.isRequired,
 };
 
 export default AccueilEleve;
