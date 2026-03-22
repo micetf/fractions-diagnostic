@@ -1,16 +1,22 @@
 import PropTypes from "prop-types";
+import { useAppContext } from "@/context/useAppContext";
 
 /**
  * AccueilEnseignant
  *
- * Page d'accueil du mode enseignant.
- * Sprint 4 : bloc de test S2 retiré, carte "Mes classes" active.
+ * Sprint 5 : cartes "Sessions" et "Créer une session" actives.
  *
  * @param {object}   props
  * @param {function} props.onStartSession - Bascule en mode élève (actif en S5).
  * @param {function} props.onNavigate     - Navigation interne enseignant.
  */
-function AccueilEnseignant({ onStartSession, onNavigate }) {
+function AccueilEnseignant({ onNavigate }) {
+    const { state } = useAppContext();
+
+    const nbSessionsEnCours = state.sessions.filter(
+        (s) => s.statut === "en_cours"
+    ).length;
+
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
             <h1 className="text-2xl font-semibold text-slate-800 mb-1">
@@ -22,7 +28,6 @@ function AccueilEnseignant({ onStartSession, onNavigate }) {
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Carte active */}
                 <NavCard
                     titre="Mes classes"
                     description="Créer et gérer les classes et les élèves."
@@ -30,36 +35,31 @@ function AccueilEnseignant({ onStartSession, onNavigate }) {
                     actif
                 />
 
-                {/* Cartes à venir */}
                 <NavCard
-                    titre="Créer une session"
-                    description="Sélectionner les exercices et lancer la passation."
-                    sprint="S5"
+                    titre="Sessions"
+                    description="Historique et gestion des sessions diagnostiques."
+                    onClick={() => onNavigate("sessions")}
+                    actif
+                    badge={
+                        nbSessionsEnCours > 0
+                            ? `${nbSessionsEnCours} en cours`
+                            : null
+                    }
                 />
+
+                <NavCard
+                    titre="Nouvelle session"
+                    description="Sélectionner les exercices et lancer la passation."
+                    onClick={() => onNavigate("creer-session")}
+                    actif
+                    accent
+                />
+
                 <NavCard
                     titre="Analyse des résultats"
                     description="Matrice de résultats, profils élèves, biais détectés."
                     sprint="S14"
                 />
-                <NavCard
-                    titre="Export / Import"
-                    description="Sauvegarder et restaurer les données."
-                    sprint="S18"
-                />
-            </div>
-
-            {/* Accès rapide mode élève — test S3, sera retiré en S5 */}
-            <div className="mt-10 pt-6 border-t border-slate-200">
-                <p className="text-xs text-slate-400 mb-3">
-                    Test — basculer manuellement en mode élève :
-                </p>
-                <button
-                    onClick={onStartSession}
-                    className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
-                     text-white text-sm font-medium transition-colors cursor-pointer"
-                >
-                    Passer en mode élève
-                </button>
             </div>
         </div>
     );
@@ -70,7 +70,7 @@ AccueilEnseignant.propTypes = {
     onNavigate: PropTypes.func.isRequired,
 };
 
-/* ── Sous-composants ─────────────────────────────────────────────── */
+/* ── Sous-composant ─────────────────────────────────────────────────── */
 
 /**
  * NavCard
@@ -78,22 +78,57 @@ AccueilEnseignant.propTypes = {
  * @param {object}   props
  * @param {string}   props.titre
  * @param {string}   props.description
- * @param {boolean}  [props.actif=false]  - Carte cliquable.
+ * @param {boolean}  [props.actif=false]
+ * @param {boolean}  [props.accent=false]  - Style mise en avant.
  * @param {function} [props.onClick]
- * @param {string}   [props.sprint]       - Badge sprint si non actif.
+ * @param {string}   [props.sprint]
+ * @param {string}   [props.badge]         - Badge compteur.
  */
-function NavCard({ titre, description, actif, onClick, sprint }) {
-    const base = "rounded-xl border p-5 flex flex-col gap-2 transition-colors";
+function NavCard({
+    titre,
+    description,
+    actif,
+    accent,
+    onClick,
+    sprint,
+    badge,
+}) {
+    const base =
+        "rounded-xl border p-5 flex flex-col gap-2 transition-colors text-left";
 
     if (actif) {
+        const color = accent
+            ? "bg-brand-500 border-brand-600 hover:bg-brand-600 text-white"
+            : "bg-white border-brand-200 hover:bg-brand-50 hover:border-brand-300";
         return (
             <button
                 onClick={onClick}
-                className={`${base} bg-white border-brand-200 hover:bg-brand-50
-                    hover:border-brand-300 text-left cursor-pointer`}
+                className={`${base} ${color} cursor-pointer w-full`}
             >
-                <span className="font-semibold text-slate-800">{titre}</span>
-                <span className="text-sm text-slate-500">{description}</span>
+                <div className="flex items-start justify-between gap-2">
+                    <span
+                        className={`font-semibold ${accent ? "text-white" : "text-slate-800"}`}
+                    >
+                        {titre}
+                    </span>
+                    {badge && (
+                        <span
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0
+              ${
+                  accent
+                      ? "bg-white/20 text-white"
+                      : "bg-success-100 text-success-700"
+              }`}
+                        >
+                            {badge}
+                        </span>
+                    )}
+                </div>
+                <span
+                    className={`text-sm ${accent ? "text-white/80" : "text-slate-500"}`}
+                >
+                    {description}
+                </span>
             </button>
         );
     }
@@ -122,14 +157,18 @@ NavCard.propTypes = {
     titre: PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
     actif: PropTypes.bool,
+    accent: PropTypes.bool,
     onClick: PropTypes.func,
     sprint: PropTypes.string,
+    badge: PropTypes.string,
 };
 
 NavCard.defaultProps = {
     actif: false,
+    accent: false,
     onClick: undefined,
     sprint: undefined,
+    badge: undefined,
 };
 
 export default AccueilEnseignant;

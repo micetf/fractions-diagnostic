@@ -4,45 +4,55 @@ import Layout from "@/components/common/Layout";
 import PinGate from "@/components/common/PinGate";
 import AccueilEnseignant from "@/pages/enseignant/AccueilEnseignant";
 import GestionClasses from "@/pages/enseignant/GestionClasses";
+import CreerSession from "@/pages/enseignant/CreerSession";
+import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
 
 /**
  * App — composant racine.
  *
- * Gestion de la navigation par état local :
- *   - `mode`          : 'teacher' | 'student'
- *   - `teacherPage`   : page courante dans le mode enseignant
+ * Navigation par état local :
+ *   - `mode`            : 'teacher' | 'student'
+ *   - `teacherPage`     : page courante mode enseignant
  *   - `teacherUnlocked` : PIN vérifié dans la session courante
+ *   - `sessionActiveId` : id de la session en cours de passation (utilisé en S11)
  *
- * @typedef {'accueil'|'classes'} TeacherPage
+ * @typedef {'accueil'|'classes'|'sessions'|'creer-session'} TeacherPage
  */
 function App() {
     const { state } = useAppContext();
 
     const [mode, setMode] = useState("teacher");
     const [teacherUnlocked, setTeacherUnlocked] = useState(false);
-    /** @type {[TeacherPage, function(TeacherPage): void]} */
     const [teacherPage, setTeacherPage] = useState("accueil");
-
-    function handleStartSession() {
-        setTeacherUnlocked(false);
-        setMode("student");
-    }
+    const [sessionActiveId, setSessionActiveId] = useState(null);
 
     function handlePinSuccess() {
         setTeacherUnlocked(true);
         setMode("teacher");
     }
 
-    // Hydratation en cours — ne rien afficher pour éviter un flash
+    /**
+     * Lance la passation : enregistre la session active, verrouille
+     * le mode enseignant et bascule en mode élève (SRS F-PAS-01).
+     *
+     * @param {object} session - Session créée ou relancée.
+     */
+    function handleLancerSession(session) {
+        setSessionActiveId(session.id);
+        setTeacherUnlocked(false);
+        setMode("student");
+    }
+
+    // ── Garde hydratation ───────────────────────────────────────────────────
     if (!state._hydrated) return null;
 
-    // Premier lancement : pas de config
+    // ── Premier lancement ───────────────────────────────────────────────────
     if (state.config === null) {
         return <PinGate mode="create" onSuccess={handlePinSuccess} />;
     }
 
-    // Mode élève
+    // ── Mode élève ──────────────────────────────────────────────────────────
     if (mode === "student") {
         return (
             <Layout mode="student" onSwitchMode={() => {}}>
@@ -51,20 +61,32 @@ function App() {
         );
     }
 
-    // Enseignant non déverrouillé
+    // ── Enseignant non déverrouillé ─────────────────────────────────────────
     if (!teacherUnlocked) {
         return <PinGate mode="verify" onSuccess={handlePinSuccess} />;
     }
 
-    // Enseignant déverrouillé — routage interne
+    // ── Enseignant déverrouillé — routage interne ───────────────────────────
     const teacherPages = {
         accueil: (
             <AccueilEnseignant
-                onStartSession={handleStartSession}
+                onStartSession={() => setMode("student")}
                 onNavigate={setTeacherPage}
             />
         ),
         classes: <GestionClasses onNavigate={setTeacherPage} />,
+        sessions: (
+            <ListeSessions
+                onNavigate={setTeacherPage}
+                onRelancerSession={handleLancerSession}
+            />
+        ),
+        "creer-session": (
+            <CreerSession
+                onNavigate={setTeacherPage}
+                onLancer={handleLancerSession}
+            />
+        ),
     };
 
     return (
