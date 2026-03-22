@@ -26,7 +26,6 @@ function AccueilEnseignant({ onNavigate }) {
                 Gérez vos classes, lancez des sessions diagnostiques et analysez
                 les résultats.
             </p>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <NavCard
                     titre="Mes classes"
@@ -61,14 +60,14 @@ function AccueilEnseignant({ onNavigate }) {
                     sprint="S14"
                 />
             </div>
-            {/* Lien temporaire SPIKE S10 — à retirer après validation */}
+            {/* Lien temporaire S6 — à retirer après validation */}
             <button
-                onClick={() => onNavigate("spike-numberline")}
+                onClick={() => onNavigate("s6-fraction-input")}
                 className="col-span-full text-xs text-amber-600 hover:text-amber-800
                      underline underline-offset-2 transition-colors cursor-pointer
                      text-left"
             >
-                SPIKE S10 → Tester NumberLine
+                S6 → Tester FractionInput
             </button>
         </div>
     );
