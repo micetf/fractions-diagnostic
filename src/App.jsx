@@ -25,7 +25,7 @@ function App() {
     const [mode, setMode] = useState("teacher");
     const [teacherUnlocked, setTeacherUnlocked] = useState(false);
     const [teacherPage, setTeacherPage] = useState("accueil");
-    const [sessionActiveId, setSessionActiveId] = useState(null);
+    const [, setSessionActiveId] = useState(null);
 
     function handlePinSuccess() {
         setTeacherUnlocked(true);
