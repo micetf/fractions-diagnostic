@@ -126,46 +126,40 @@ function ListeSessions({ onNavigate, onRelancerSession, onAnalyserSession }) {
                                     {/* Actions */}
                                     <div className="flex flex-col gap-2 shrink-0">
                                         {enCours && (
-                                            <>
-                                                <button
-                                                    onClick={() =>
-                                                        onRelancerSession(
-                                                            session
-                                                        )
-                                                    }
-                                                    className="px-4 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600
-                                     text-white text-xs font-medium transition-colors cursor-pointer
-                                     whitespace-nowrap"
-                                                >
-                                                    Lancer passation
-                                                </button>
-                                                {/* Bouton analyser — toutes les sessions (en cours ou clôturées) */}
-                                                <button
-                                                    onClick={() =>
-                                                        onAnalyserSession(
-                                                            session.id
-                                                        )
-                                                    }
-                                                    className="px-4 py-1.5 rounded-lg border border-slate-200
-                               hover:bg-slate-50 text-slate-600 text-xs font-medium
-                               transition-colors cursor-pointer whitespace-nowrap"
-                                                >
-                                                    Analyser
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        handleCloturer(
-                                                            session.id
-                                                        )
-                                                    }
-                                                    className="px-4 py-1.5 rounded-lg border border-slate-200
-                                     hover:bg-slate-50 text-slate-500 text-xs font-medium
-                                     transition-colors cursor-pointer whitespace-nowrap"
-                                                >
-                                                    Clôturer
-                                                </button>
-                                            </>
+                                            <button
+                                                onClick={() =>
+                                                    onRelancerSession(session)
+                                                }
+                                                className="px-4 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600
+                                   text-white text-xs font-medium transition-colors cursor-pointer
+                                   whitespace-nowrap"
+                                            >
+                                                Lancer passation
+                                            </button>
                                         )}
+                                        {enCours && (
+                                            <button
+                                                onClick={() =>
+                                                    handleCloturer(session.id)
+                                                }
+                                                className="px-4 py-1.5 rounded-lg border border-slate-200
+                                   hover:bg-slate-50 text-slate-500 text-xs font-medium
+                                   transition-colors cursor-pointer whitespace-nowrap"
+                                            >
+                                                Clôturer
+                                            </button>
+                                        )}
+                                        {/* Analyser — toujours visible, quelle que soit le statut */}
+                                        <button
+                                            onClick={() =>
+                                                onAnalyserSession(session.id)
+                                            }
+                                            className="px-4 py-1.5 rounded-lg border border-brand-200
+                                 hover:bg-brand-50 text-brand-600 text-xs font-medium
+                                 transition-colors cursor-pointer whitespace-nowrap"
+                                        >
+                                            Analyser
+                                        </button>
                                     </div>
                                 </div>
                             </li>
