@@ -9,8 +9,9 @@ import { figuresCE1Ex1 } from "./figures/CE1Ex1";
 import { figuresCE1Ex2 } from "./figures/CE1Ex2";
 import { figuresCE2Ex2 } from "./figures/CE2Ex2";
 import { figuresCM2Ex4 } from "./figures/CM2Ex4";
-import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
 import DemiDisque from "./figures/DemiDisque";
+import RegletteSegments from "./figures/RegletteSegments";
+import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
 import { getInitialValue } from "@/utils/initialValues";
 
 /** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
@@ -23,6 +24,14 @@ const FIGURE_REGISTRY = {
 /** Registre figures pour les items fraction_input. Clé : "NIVEAU-NUMERO". */
 const ITEM_FIGURE_REGISTRY = {
     "CE1-2": figuresCE1Ex2,
+};
+
+/**
+ * Figure support affichée au-dessus des items pour certains exercices.
+ * Clé : "NIVEAU-NUMERO".
+ */
+const SUPPORT_FIGURE_REGISTRY = {
+    "CE2-3": <RegletteSegments />,
 };
 
 /**
@@ -132,8 +141,16 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
             if (exercice.items?.length > 0) {
                 const itemFigures =
                     ITEM_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`] ?? {};
+                const figureSupport =
+                    SUPPORT_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`];
+
                 return (
                     <div className="flex flex-col gap-6">
+                        {/* Figure support (ex. : règle graduée CE2 Ex.3) */}
+                        {figureSupport && (
+                            <div className="w-full">{figureSupport}</div>
+                        )}
+
                         <div className="flex flex-wrap gap-8 items-end">
                             {exercice.items.map((item) => (
                                 <div
@@ -169,19 +186,21 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                 </div>
                             ))}
                         </div>
-                        {exercice.aRelire && (
-                            <TextJustification
-                                value={
-                                    typeof val.__explication === "string"
-                                        ? val.__explication
-                                        : ""
-                                }
-                                onChange={(v) =>
-                                    onChange({ ...val, __explication: v })
-                                }
-                                label="Explique avec des mots comment tu as trouvé :"
-                            />
-                        )}
+                        {/* Explication uniquement si avecExplication !== false */}
+                        {exercice.aRelire &&
+                            exercice.avecExplication !== false && (
+                                <TextJustification
+                                    value={
+                                        typeof val.__explication === "string"
+                                            ? val.__explication
+                                            : ""
+                                    }
+                                    onChange={(v) =>
+                                        onChange({ ...val, __explication: v })
+                                    }
+                                    label="Explique comment tu as trouvé :"
+                                />
+                            )}
                     </div>
                 );
             }

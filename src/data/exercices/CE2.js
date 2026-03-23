@@ -85,21 +85,30 @@ export const exercices = [
         type: "fraction_input",
         consigne:
             "Voici une règle graduée en quarts d'unité (l'unité est marquée entre 0 et 1). Mesure les longueurs des trois segments dessinés ci-dessous et écris ta réponse.",
-        // Note : la règle graduée est un support imprimé (non interactif dans la passation numérique)
-        // Les segments A, B, C sont dessinés à côté de la règle.
-        // Les longueurs exactes des segments ne sont pas spécifiées dans le document source.
-        // TODO : définir les longueurs exactes des 3 segments lors de la conception graphique.
         items: [
-            { id: "A", description: "Segment A", attendu: null },
-            { id: "B", description: "Segment B", attendu: null },
+            {
+                id: "A",
+                description: "Segment A",
+                attendu: { numerateur: 3, denominateur: 4 },
+            },
+            {
+                id: "B",
+                description: "Segment B",
+                // Biais documenté source : lire « 2 » en comptant les traits de graduation
+                attendu: { numerateur: 2, denominateur: 4 },
+            },
             {
                 id: "C",
                 description: "Segment C (dépasse l'unité)",
-                attendu: null,
+                // Biais documenté source : refus de mesurer car dépasse l'unité
+                attendu: { numerateur: 5, denominateur: 4 },
             },
         ],
         biaisDetectables: [],
+        // aRelire : la mesure du segment C révèle un obstacle enseignant → relecture
         aRelire: true,
+        // Pas de zone de texte : l'élève mesure et écrit, il n'explique pas
+        avecExplication: false,
     },
 
     // ── Exercice 4 ────────────────────────────────────────────────────────────
