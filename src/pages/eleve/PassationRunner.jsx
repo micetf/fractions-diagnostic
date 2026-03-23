@@ -6,9 +6,7 @@ import { getInitialValue } from "@/utils/initialValues";
 import ExerciceRenderer from "@/components/exercices/ExerciceRenderer";
 
 /**
- * Calcule récursivement si un nœud (exercice ou sous-question) nécessite
- * une relecture par l'enseignant.
- *
+ * Calcule récursivement si un nœud requiert une relecture enseignant.
  * @param {object} node
  * @returns {boolean}
  */
@@ -19,53 +17,56 @@ function computeARelire(node) {
     return false;
 }
 
+// ─── PassationRunner ──────────────────────────────────────────────────────────
+
 /**
  * PassationRunner
  *
  * Orchestrateur séquentiel de la passation élève (SRS F-PAS-01 à F-PAS-08).
  *
  * Responsabilités :
- * - Trouver ou créer la passation dans AppContext.
- * - Présenter les exercices un par un dans l'ordre de session.exercices_selectionnes.
- * - Navigation unidirectionnelle uniquement (pas de retour arrière).
- * - Mesurer le temps passé sur chaque exercice.
- * - Sauvegarder chaque réponse via SAVE_REPONSE immédiatement après validation.
- * - Afficher une barre de progression sans score.
- * - Alerter en cas de tentative de rechargement / fermeture.
- * - Appeler onTermine() quand tous les exercices sont soumis.
+ * - Trouver ou créer la passation dans AppContext (une seule fois au montage).
+ * - Calculer l'exercice courant depuis passation.reponses.length.
+ * - Afficher la barre de progression sans score (SRS F-PAS-06).
+ * - Alerter en cas de rechargement/fermeture (SRS F-PAS-08).
+ * - Déléguer l'affichage et la saisie à ExerciceStep (keyed).
+ * - Dispatcher SAVE_REPONSE à chaque validation.
+ * - Dispatcher FINISH_PASSATION et appeler onTermine() à la fin.
  *
- * Aucun retour de justesse n'est fourni à l'élève (SRS F-PAS-05).
+ * Aucun setState n'est appelé dans les effets.
+ * La mesure du temps est déléguée à ExerciceStep.
  *
  * @param {object}   props
- * @param {object}   props.session    - Session active (statut 'en_cours').
+ * @param {object}   props.session    - Session active.
  * @param {string}   props.eleveId    - Identifiant de l'élève.
  * @param {function} props.onTermine  - Appelé quand la passation est terminée.
  */
 function PassationRunner({ session, eleveId, onTermine }) {
     const { state, dispatch } = useAppContext();
 
-    const [passationId, setPassationId] = useState(null);
-    const [valeurCourante, setValeurCourante] = useState(null);
-
-    const debutTempsRef = useRef(null);
+    // ID stable pour la passation à créer.
+    // Initialisé une seule fois via un test sur la valeur courante (pas d'impure call).
+    const newIdRef = useRef(null);
     const termineRef = useRef(false);
 
-    // ── Trouver ou créer la passation ────────────────────────────────────────
+    if (newIdRef.current === null) {
+        newIdRef.current = crypto.randomUUID();
+    }
+
+    // ── Créer la passation si inexistante (une seule fois au montage) ─────────
+    // Pas de setState ici — uniquement un dispatch externe (SRS §6.2).
     useEffect(() => {
-        const existante = state.passations.find(
+        const existe = state.passations.find(
             (p) =>
                 p.session_id === session.id &&
                 p.eleve_id === eleveId &&
                 p.statut === "en_cours"
         );
-        if (existante) {
-            setPassationId(existante.id);
-        } else {
-            const id = crypto.randomUUID();
+        if (!existe) {
             dispatch({
                 type: "CREATE_PASSATION",
                 payload: {
-                    id,
+                    id: newIdRef.current,
                     session_id: session.id,
                     eleve_id: eleveId,
                     statut: "en_cours",
@@ -74,11 +75,11 @@ function PassationRunner({ session, eleveId, onTermine }) {
                     reponses: [],
                 },
             });
-            setPassationId(id);
         }
-    }, [session.id, eleveId]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+    // Intentionnellement vide : ne doit s'exécuter qu'une fois au montage.
 
-    // ── Garde navigation (SRS F-PAS-08) ─────────────────────────────────────
+    // ── Garde navigation (SRS F-PAS-08) ──────────────────────────────────────
     useEffect(() => {
         const handler = (e) => {
             e.preventDefault();
@@ -88,9 +89,12 @@ function PassationRunner({ session, eleveId, onTermine }) {
         return () => window.removeEventListener("beforeunload", handler);
     }, []);
 
-    // ── État dérivé ───────────────────────────────────────────────────────────
+    // ── État dérivé — aucun useState pour ces valeurs ─────────────────────────
     const passation =
-        state.passations.find((p) => p.id === passationId) ?? null;
+        state.passations.find(
+            (p) => p.session_id === session.id && p.eleve_id === eleveId
+        ) ?? null;
+
     const exerciceIndex = passation?.reponses.length ?? 0;
     const numeros = session.exercices_selectionnes;
     const currentNumero = numeros[exerciceIndex];
@@ -98,52 +102,44 @@ function PassationRunner({ session, eleveId, onTermine }) {
         ? getExercice(session.niveau, currentNumero)
         : null;
     const total = numeros.length;
+    const progression = (exerciceIndex / total) * 100;
 
-    // ── Initialiser la valeur courante quand l'exercice change ───────────────
-    useEffect(() => {
-        if (!exercice) return;
-        setValeurCourante(getInitialValue(exercice));
-        debutTempsRef.current = Date.now();
-    }, [exercice?.numero]);
-
-    // ── Détecter la fin de passation ─────────────────────────────────────────
+    // ── Fin de passation ──────────────────────────────────────────────────────
+    // Pas de setState dans cet effet — uniquement dispatch + callback prop.
     useEffect(() => {
         if (!passation || termineRef.current) return;
-        if (exerciceIndex >= total) {
-            termineRef.current = true;
-            dispatch({
-                type: "FINISH_PASSATION",
-                payload: {
-                    id: passationId,
-                    date_fin: new Date().toISOString(),
-                },
-            });
-            onTermine();
-        }
-    }, [exerciceIndex, total, passation]); // eslint-disable-line react-hooks/exhaustive-deps
+        if (exerciceIndex < total) return;
+        termineRef.current = true;
+        dispatch({
+            type: "FINISH_PASSATION",
+            payload: { id: passation.id, date_fin: new Date().toISOString() },
+        });
+        onTermine();
+    }, [exerciceIndex, total, passation, dispatch, onTermine]);
 
-    // ── Valider et passer à l'exercice suivant ───────────────────────────────
-    function handleValider() {
-        if (!passationId || !exercice) return;
-        const reponse = {
-            exercice_numero: currentNumero,
-            type: exercice.type,
-            valeur_brute: valeurCourante,
-            biais_auto: [], // calculé en S13
-            biais_manuel: null,
-            duree_ms: Date.now() - debutTempsRef.current,
-            a_relire: computeARelire(exercice),
-        };
+    // ── Callback de validation — reçoit la valeur et la durée de ExerciceStep ─
+    function handleValider(valeurCourante, dureeMs) {
+        if (!passation || !exercice) return;
         dispatch({
             type: "SAVE_REPONSE",
-            payload: { passation_id: passationId, reponse },
+            payload: {
+                passation_id: passation.id,
+                reponse: {
+                    exercice_numero: currentNumero,
+                    type: exercice.type,
+                    valeur_brute: valeurCourante,
+                    biais_auto: [],
+                    biais_manuel: null,
+                    duree_ms: dureeMs,
+                    a_relire: computeARelire(exercice),
+                },
+            },
         });
     }
 
     // ── Rendu ─────────────────────────────────────────────────────────────────
 
-    // Passation pas encore créée dans le state
-    if (!passationId || !passation) {
+    if (!passation) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <p className="text-slate-400 text-base">Préparation…</p>
@@ -151,15 +147,11 @@ function PassationRunner({ session, eleveId, onTermine }) {
         );
     }
 
-    // Fin en cours de traitement
     if (exerciceIndex >= total || !exercice) return null;
-
-    // Progression (SRS F-PAS-06)
-    const progression = (exerciceIndex / total) * 100;
 
     return (
         <div className="min-h-screen flex flex-col">
-            {/* ── Barre de progression ──────────────────────────────────────── */}
+            {/* Barre de progression (SRS F-PAS-06) */}
             <div
                 className="w-full bg-slate-100 h-1.5"
                 role="progressbar"
@@ -173,43 +165,25 @@ function PassationRunner({ session, eleveId, onTermine }) {
                 />
             </div>
 
-            {/* ── Compteur ──────────────────────────────────────────────────── */}
             <div className="flex justify-end px-4 pt-2 pb-0">
                 <span className="text-xs text-slate-400 font-mono">
                     {exerciceIndex + 1} / {total}
                 </span>
             </div>
 
-            {/* ── Corps de l'exercice ───────────────────────────────────────── */}
-            <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
-                {/* Consigne principale (SRS NF-UX-01 : ≥ 18 px) */}
-                {exercice.consigne && (
-                    <p className="text-lg text-slate-800 leading-relaxed">
-                        {exercice.consigne}
-                    </p>
-                )}
-
-                {/* Composant de réponse */}
-                <div className="flex flex-col gap-4">
-                    <ExerciceRenderer
-                        exercice={exercice}
-                        niveau={session.niveau}
-                        value={valeurCourante}
-                        onChange={setValeurCourante}
-                    />
-                </div>
-            </div>
-
-            {/* ── Bouton de validation ──────────────────────────────────────── */}
-            <div className="w-full max-w-2xl mx-auto px-4 py-6">
-                <button
-                    onClick={handleValider}
-                    className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600
-                     text-white text-lg font-semibold transition-colors cursor-pointer"
-                >
-                    {exerciceIndex + 1 < total ? "Valider →" : "Terminer"}
-                </button>
-            </div>
+            {/*
+        ExerciceStep reçoit une key basée sur le numéro d'exercice courant.
+        React démonte et remonte le composant à chaque nouvel exercice,
+        ce qui reset automatiquement le state interne (valeurCourante, debutRef)
+        sans avoir besoin d'un useEffect.
+      */}
+            <ExerciceStep
+                key={currentNumero}
+                exercice={exercice}
+                niveau={session.niveau}
+                isLast={exerciceIndex + 1 === total}
+                onValider={handleValider}
+            />
         </div>
     );
 }
@@ -218,6 +192,81 @@ PassationRunner.propTypes = {
     session: PropTypes.object.isRequired,
     eleveId: PropTypes.string.isRequired,
     onTermine: PropTypes.func.isRequired,
+};
+
+// ─── ExerciceStep ─────────────────────────────────────────────────────────────
+
+/**
+ * ExerciceStep
+ *
+ * Composant enfant de PassationRunner, monté avec une `key` par exercice.
+ * Gère localement :
+ * - `valeurCourante` (initialisée depuis getInitialValue à chaque montage)
+ * - La mesure du temps passé (debutRef, initialisé dans useEffect)
+ *
+ * Appelle `onValider(valeur, dureeMs)` quand l'élève clique sur Valider.
+ *
+ * @param {object}   props
+ * @param {object}   props.exercice
+ * @param {string}   props.niveau
+ * @param {boolean}  props.isLast
+ * @param {function} props.onValider  - (valeurCourante: any, dureeMs: number) => void
+ */
+function ExerciceStep({ exercice, niveau, isLast, onValider }) {
+    // État local : reset automatique à chaque remontage (grâce à la key).
+    const [valeurCourante, setValeurCourante] = useState(() =>
+        getInitialValue(exercice)
+    );
+
+    // Chrono : initialisé dans useEffect pour éviter Date.now() dans le rendu.
+    const debutRef = useRef(null);
+
+    useEffect(() => {
+        debutRef.current = Date.now();
+    }, []);
+
+    function handleValider() {
+        const dureeMs =
+            debutRef.current !== null ? Date.now() - debutRef.current : 0;
+        onValider(valeurCourante, dureeMs);
+    }
+
+    return (
+        <>
+            {/* Corps de l'exercice (SRS NF-UX-01 : consigne ≥ 18 px) */}
+            <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+                {exercice.consigne && (
+                    <p className="text-lg text-slate-800 leading-relaxed">
+                        {exercice.consigne}
+                    </p>
+                )}
+                <ExerciceRenderer
+                    exercice={exercice}
+                    niveau={niveau}
+                    value={valeurCourante}
+                    onChange={setValeurCourante}
+                />
+            </div>
+
+            {/* Bouton de validation */}
+            <div className="w-full max-w-2xl mx-auto px-4 py-6">
+                <button
+                    onClick={handleValider}
+                    className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600
+                     text-white text-lg font-semibold transition-colors cursor-pointer"
+                >
+                    {isLast ? "Terminer" : "Valider →"}
+                </button>
+            </div>
+        </>
+    );
+}
+
+ExerciceStep.propTypes = {
+    exercice: PropTypes.object.isRequired,
+    niveau: PropTypes.oneOf(["CE1", "CE2", "CM1", "CM2"]).isRequired,
+    isLast: PropTypes.bool.isRequired,
+    onValider: PropTypes.func.isRequired,
 };
 
 export default PassationRunner;

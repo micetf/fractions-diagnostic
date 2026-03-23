@@ -6,6 +6,7 @@ import FigureSelector from "./FigureSelector";
 import ColoringFigure from "./ColoringFigure";
 import NumberLine from "./NumberLine";
 import { figuresCE1Ex1 } from "./figures/CE1Ex1";
+import { figuresCE1Ex2 } from "./figures/CE1Ex2";
 import { figuresCE2Ex2 } from "./figures/CE2Ex2";
 import { figuresCM2Ex4 } from "./figures/CM2Ex4";
 import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
@@ -76,18 +77,36 @@ function ExerciceRenderer({ exercice, niveau, value, onChange }) {
         // ── Fraction input ────────────────────────────────────────────────────
         case "fraction_input": {
             if (exercice.items?.length > 0) {
+                // Registre des figures illustrant chaque item
+                const ITEM_FIGURES = {
+                    "CE1-2": figuresCE1Ex2,
+                };
+                const itemFigures =
+                    ITEM_FIGURES[`${niveau}-${exercice.numero}`] ?? {};
+
                 return (
-                    <div className="flex flex-wrap gap-6 items-start">
+                    <div className="flex flex-wrap gap-8 items-start">
                         {exercice.items.map((item) => (
                             <div
                                 key={item.id}
-                                className="flex flex-col items-center gap-2"
+                                className="flex flex-col items-center gap-3"
                             >
-                                {item.description && (
+                                {/* Figure illustrative si disponible */}
+                                {itemFigures[item.id] && (
+                                    <div className="flex items-center justify-center">
+                                        {itemFigures[item.id]}
+                                    </div>
+                                )}
+                                {/* Description texte si pas de figure */}
+                                {!itemFigures[item.id] && item.description && (
                                     <p className="text-sm text-slate-500 text-center max-w-32">
                                         {item.description}
                                     </p>
                                 )}
+                                {/* Libellé de l'item */}
+                                <span className="text-xs font-mono text-slate-400 uppercase">
+                                    Figure {item.id}
+                                </span>
                                 <FractionInput
                                     value={
                                         val[item.id] ?? {
