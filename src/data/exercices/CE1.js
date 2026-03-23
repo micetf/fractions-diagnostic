@@ -136,7 +136,7 @@ export const exercices = [
             { id: "B", description: "Disque", nbParts: 2 },
             {
                 id: "C",
-                description: "Bande de 6 cases (colorier 3 cases)",
+                description: "Bande de 6 cases",
                 nbParts: 6,
                 partiesAttendues: 3,
             },
