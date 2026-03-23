@@ -34,6 +34,8 @@ export function getInitialValue(node) {
             return { choix: null, texte: "" };
 
         case "selection":
+            // Si l'exercice nécessite une justification, on initialise aussi ce champ
+            if (node.aRelire) return { selection: [], __justification: "" };
             return [];
 
         case "coloring":

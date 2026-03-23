@@ -269,12 +269,38 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                 );
             }
             return (
-                <FigureSelector
-                    figures={figures}
-                    value={Array.isArray(val) ? val : []}
-                    onChange={onChange}
-                    multiple
-                />
+                <div className="flex flex-col gap-4">
+                    <FigureSelector
+                        figures={figures}
+                        value={
+                            Array.isArray(val)
+                                ? val
+                                : Array.isArray(val?.selection)
+                                  ? val.selection
+                                  : []
+                        }
+                        onChange={(sel) =>
+                            exercice.aRelire
+                                ? onChange({ ...(val ?? {}), selection: sel })
+                                : onChange(sel)
+                        }
+                        multiple
+                    />
+                    {/* Justification requise sur les exercices de sélection avec aRelire */}
+                    {exercice.aRelire && (
+                        <TextJustification
+                            value={
+                                typeof val.__justification === "string"
+                                    ? val.__justification
+                                    : ""
+                            }
+                            onChange={(v) =>
+                                onChange({ ...val, __justification: v })
+                            }
+                            label="Justifie tes choix :"
+                        />
+                    )}
+                </div>
             );
         }
 

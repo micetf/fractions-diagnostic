@@ -34,30 +34,72 @@ export const exercices = [
         titre: "Représente cette fraction",
         competence:
             "Représenter une fraction (inférieure ou supérieure à 1) par une figure géométrique",
-        type: "coloring",
+        type: "compound",
         consigne:
-            "Représente chaque fraction par un dessin. Indique clairement ce qui représente l'unité (le tout).",
-        items: [
-            { id: "a", fraction: { n: 5, d: 8 } },
-            { id: "b", fraction: { n: 9, d: 4 } },
-            { id: "c", fraction: { n: 7, d: 7 } },
-            { id: "d", fraction: { n: 11, d: 3 } },
-        ],
-        biaisDetectables: [
+            "Pour chaque fraction, colorie la représentation proposée. " +
+            "Indique clairement ce qui représente l'unité.",
+        sousQuestions: [
             {
-                code: "INVERSION_NUM_DENOM",
-                declencheur: { type: "text_review" },
-                ceQueRevele:
-                    "En b) : dessiner un seul rectangle partagé en 9 parts dont 4 sont coloriées → inversion numérateur/dénominateur persistante.",
+                id: "a",
+                type: "coloring",
+                consigne: "Représente 5/8 :",
+                nbParts: 8,
+                partiesAttendues: 5,
+                biaisDetectables: [],
+                aRelire: true,
             },
             {
-                code: "N_SUR_N_NON_ACQUIS",
-                declencheur: { type: "text_review" },
-                ceQueRevele:
-                    "En c) : laisser blanc ou ne pas savoir que 7/7 = 1 peut se dessiner comme un tout entier → n/n = 1 toujours fragile.",
+                id: "b",
+                type: "coloring",
+                consigne: "Représente 9/4 (deux bandes de 4 parts) :",
+                // bande de 8 parts = 2 unités × 4 parts, colorier 9
+                nbParts: 8,
+                partiesAttendues: 9,
+                biaisDetectables: [
+                    {
+                        code: "INVERSION_NUM_DENOM",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Colorier 4 parts sur 9 → inversion numérateur/dénominateur.",
+                    },
+                ],
+                aRelire: true,
+            },
+            {
+                id: "c",
+                type: "coloring",
+                consigne: "Représente 7/7 (colorie tout) :",
+                nbParts: 7,
+                partiesAttendues: 7,
+                biaisDetectables: [
+                    {
+                        code: "N_SUR_N_NON_ACQUIS",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Laisser blanc ou colorier une partie → 7/7 = 1 non reconnu.",
+                    },
+                ],
+                aRelire: true,
+            },
+            {
+                id: "d",
+                type: "coloring",
+                consigne: "Représente 11/3 (plusieurs bandes de 3 parts) :",
+                // 4 bandes de 3 = 12 parts, colorier 11
+                nbParts: 12,
+                partiesAttendues: 11,
+                biaisDetectables: [
+                    {
+                        code: "N_SUR_N_NON_ACQUIS",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Ne représenter qu'une seule bande → fraction > 1 non représentable dans le répertoire.",
+                    },
+                ],
+                aRelire: true,
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 2 ────────────────────────────────────────────────────────────
@@ -95,21 +137,15 @@ export const exercices = [
             },
             {
                 id: "d",
-                type: "fraction_input",
-                consigne:
-                    "30/6 = ______ (cas particulier : cherche le nombre entier exact)",
-                items: [
-                    {
-                        id: "resultat",
-                        attendu: { numerateur: 5, denominateur: 1 },
-                    },
-                ],
+                type: "number_input",
+                consigne: "30/6 = ______ (cherche le nombre entier exact)",
+                attendu: 5,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre « entre 4 et 5 » → 30/6 = 5 non identifié comme entier exact ; 6n/6 = n non disponible.",
+                            "30/6 = 5 non identifié ; 6×n/6 = n non disponible.",
                     },
                 ],
                 aRelire: true,
@@ -333,7 +369,8 @@ export const exercices = [
         sousQuestions: [
             {
                 id: "a",
-                type: "text",
+                type: "number_input",
+                unite: "œufs",
                 consigne:
                     "Dans un sac, il y a 12 œufs. 2/3 des œufs sont cassés. Combien d'œufs sont cassés ? Explique ta démarche.",
                 attendu: 8,
@@ -349,7 +386,8 @@ export const exercices = [
             },
             {
                 id: "b",
-                type: "text",
+                type: "number_input",
+                unite: "g",
                 consigne:
                     "Une recette nécessite 3/10 de 500 g de farine. Quelle masse de farine faut-il peser ?",
                 attendu: 150,
@@ -358,7 +396,8 @@ export const exercices = [
             },
             {
                 id: "c",
-                type: "text",
+                type: "number_input",
+                unite: "m",
                 consigne:
                     "Un terrain mesure 60 m de long. Nadia en clôture 2/5. Quelle longueur clôture-t-elle ?",
                 attendu: 24,
@@ -391,7 +430,8 @@ export const exercices = [
         sousQuestions: [
             {
                 id: "a",
-                type: "text",
+                type: "number_input",
+                unite: "filles",
                 consigne: "Combien y a-t-il de filles dans cette classe ?",
                 attendu: 12,
                 biaisDetectables: [
@@ -462,19 +502,16 @@ export const exercices = [
             },
             {
                 id: "d",
-                type: "binary_choice",
+                type: "text",
                 consigne:
-                    "Dans une autre classe, 3/5 des élèves sont des filles. Peut-on dire que cette classe a plus de filles que la première ? Explique.",
-                options: ["OUI", "NON"],
-                // Réponse correcte : NON (sans connaître l'effectif total, on ne peut pas conclure)
-                attendu: "NON",
-                avecJustification: true,
+                    "Dans une autre classe, 3/5 des élèves sont des filles. " +
+                    "Peut-on dire que cette classe a plus de filles que la première ? Explique.",
                 biaisDetectables: [
                     {
                         code: "SENS_RAPPORT_TAUX_ABSENT",
-                        declencheur: { type: "choice_equals", valeur: "OUI" },
+                        declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre OUI sans condition → la fraction-rapport est confondue avec un nombre absolu ; 3/5 d'une classe inconnue ne peut être comparé à 2/5 de 30 élèves. C'est l'obstacle du sens rapport/taux, rarement travaillé explicitement à l'école primaire.",
+                            "Répondre OUI sans condition → 3/5 d'une classe inconnue est confondu avec un nombre absolu ; la fraction-rapport est absente. C'est l'obstacle du sens rapport/taux, documenté comme rarement travaillé à l'école primaire.",
                     },
                 ],
                 aRelire: true,
