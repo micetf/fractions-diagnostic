@@ -245,7 +245,7 @@ export const exercices = [
             "Additionner et soustraire des fractions (dénominateurs différents, multiple commun ≤ 60)",
         type: "compound",
         consigne:
-            "Calcule. À chaque fois, explique le changement de dénominateur avec une phrase ou un dessin.",
+            "Calcule. À chaque fois, explique le changement de dénominateur avec une phrase.",
         sousQuestions: [
             {
                 id: "a",

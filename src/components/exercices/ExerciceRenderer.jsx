@@ -179,7 +179,7 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                 onChange={(v) =>
                                     onChange({ ...val, __explication: v })
                                 }
-                                label="Explique avec un dessin ou des mots comment tu as trouvé :"
+                                label="Explique avec des mots comment tu as trouvé :"
                             />
                         )}
                     </div>

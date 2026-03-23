@@ -36,7 +36,7 @@ export const exercices = [
             "Établir des égalités entre fractions ; expliquer sans la règle algorithmique",
         type: "binary_choice",
         consigne:
-            "Tom dit que 6/8 et 3/4, c'est la même quantité. A-t-il raison ? Explique avec un dessin ou en mots pourquoi tu penses ça. (Tu n'as pas le droit d'utiliser les flèches × ou ÷.)",
+            "Tom dit que 6/8 et 3/4, c'est la même quantité. A-t-il raison ? Explique avec des mots pourquoi tu penses ça. (Tu n'as pas le droit d'utiliser les symboles × ou ÷.)",
         options: ["OUI", "NON"],
         attendu: "OUI",
         avecJustification: true,

@@ -288,7 +288,7 @@ export const exercices = [
             "Additionner et soustraire des fractions (dénominateur dont l'un est multiple de l'autre)",
         type: "compound",
         consigne:
-            "Calcule et explique chaque étape avec des mots ou un dessin.",
+            "Calcule et explique chaque étape avec des mots.",
         sousQuestions: [
             {
                 id: "a",

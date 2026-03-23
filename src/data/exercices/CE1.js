@@ -307,7 +307,7 @@ export const exercices = [
         competence: "Additionner des fractions de même dénominateur",
         type: "fraction_input",
         consigne:
-            "Lucie a mangé 1/5 d'un gâteau. Son frère a mangé 2/5 du même gâteau. Quelle fraction du gâteau ont-ils mangée en tout ? Complète : ils ont mangé ______ du gâteau. Explique avec un dessin ou des mots comment tu as trouvé.",
+            "Lucie a mangé 1/5 d'un gâteau. Son frère a mangé 2/5 du même gâteau. Quelle fraction du gâteau ont-ils mangée en tout ? Complète : ils ont mangé ______ du gâteau. Explique avec des mots comment tu as trouvé.",
         items: [
             {
                 id: "resultat",
