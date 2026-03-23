@@ -60,15 +60,6 @@ function AccueilEnseignant({ onNavigate }) {
                     sprint="S14"
                 />
             </div>
-            {/* Lien temporaire S9 — à retirer après validation */}
-            <button
-                onClick={() => onNavigate("s9")}
-                className="col-span-full text-xs text-amber-600 hover:text-amber-800
-                     underline underline-offset-2 transition-colors cursor-pointer
-                     text-left"
-            >
-                S9 → Tester ColoringFigure
-            </button>
         </div>
     );
 }
