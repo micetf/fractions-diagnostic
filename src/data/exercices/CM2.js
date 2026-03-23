@@ -35,15 +35,18 @@ export const exercices = [
         competence:
             "Représenter une fraction (inférieure ou supérieure à 1) par une figure géométrique",
         type: "compound",
+        // La consigne établit une fois pour toutes que chaque bande = 1 unité.
+        // L'élève n'a plus à "indiquer" l'unité — elle est donnée par le dispositif.
         consigne:
-            "Pour chaque fraction, colorie la représentation. " +
-            "Indique clairement ce qui représente l'unité (le tout).",
+            "Sur chaque ligne, les 4 bandes sont identiques et chacune représente 1 unité. " +
+            "Colorie le nombre de parts qui correspond à la fraction indiquée.",
         sousQuestions: [
             {
                 id: "a",
                 type: "coloring",
                 consigne: "Représente 5/8",
-                nbParts: 8,
+                nbUnites: 4,
+                partsParUnite: 8,
                 partiesAttendues: 5,
                 biaisDetectables: [],
                 aRelire: true,
@@ -51,18 +54,16 @@ export const exercices = [
             {
                 id: "b",
                 type: "coloring",
-                // 4 groupes de 4 = 16 cases avec séparateur tous les 4
-                // L'élève doit colorier 9 cases sur 16 — mais combien de groupes ?
                 consigne: "Représente 9/4",
-                nbParts: 16,
-                uniteSize: 4, // ← nouveau prop : séparateur visuel tous les 4
+                nbUnites: 4,
+                partsParUnite: 4,
                 partiesAttendues: 9,
                 biaisDetectables: [
                     {
                         code: "INVERSION_NUM_DENOM",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Colorier 4 cases sur 9 → inversion numérateur/dénominateur.",
+                            "Colorier 4 parts sur 9 → inversion numérateur/dénominateur.",
                     },
                 ],
                 aRelire: true,
@@ -71,14 +72,15 @@ export const exercices = [
                 id: "c",
                 type: "coloring",
                 consigne: "Représente 7/7",
-                nbParts: 7,
+                nbUnites: 4,
+                partsParUnite: 7,
                 partiesAttendues: 7,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Laisser vide ou colorier partiellement → 7/7 = 1 non reconnu.",
+                            "Colorier moins de 7 parts → 7/7 = 1 unité entière non reconnu.",
                     },
                 ],
                 aRelire: true,
@@ -86,17 +88,16 @@ export const exercices = [
             {
                 id: "d",
                 type: "coloring",
-                // 5 groupes de 3 = 15 cases avec séparateur tous les 3
                 consigne: "Représente 11/3",
-                nbParts: 15,
-                uniteSize: 3,
+                nbUnites: 4,
+                partsParUnite: 3,
                 partiesAttendues: 11,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Ne colorier qu'une seule unité ou bloquer → fraction > 1 non représentable.",
+                            "Colorier 3 parts seulement (= 1 unité) → fraction > 1 non représentable dans le répertoire de l'élève.",
                     },
                 ],
                 aRelire: true,

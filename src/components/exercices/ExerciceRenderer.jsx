@@ -70,31 +70,28 @@ function makeSegmentsAuto(n) {
 }
 
 /**
- * Génère des segments pour N parts réparties en groupes de uniteSize,
- * chaque groupe formant une bande-unité séparée visuellement.
+ * Génère des segments pour un exercice de représentation de fraction.
+ * Produit nbUnites bandes identiques, chacune subdivisée en partsParUnite parts.
+ * Les bandes sont espacées de GAP pixels — chaque bande est visuellement
+ * un "tout" identique. Le fractionnement seul varie selon la fraction.
  *
- * Utilisé pour CM2 Ex.1 (représentation de fractions > 1) :
- * chaque bande-unité est identique, espacée des autres, subdivisée
- * en parts égales. L'élève voit autant de bandes que nécessaire + 1
- * pour ne pas souffler la réponse.
+ * Utilisé pour CM2 Ex.1.
  *
- * @param {number} nbParts   - Nombre total de parts (ex. : 16 pour 9/4)
- * @param {number} uniteSize - Parts par unité (ex. : 4 pour /4)
+ * @param {number} nbUnites      - Nombre de bandes (toutes identiques).
+ * @param {number} partsParUnite - Nombre de parts dans chaque bande.
  * @returns {SegmentDef[]}
  */
-function makeSegmentsMultiUnite(nbParts, uniteSize) {
-    const nbUnites = Math.ceil(nbParts / uniteSize);
-    const GAP = 8; // px entre chaque bande-unité
+function makeSegmentsMultiUnite(nbUnites, partsParUnite) {
+    const GAP = 8;
     const Y = 10;
     const H = 60;
-    const totalGaps = (nbUnites - 1) * GAP;
-    const uniteW = (300 - totalGaps) / nbUnites;
-    const partW = uniteW / uniteSize;
+    const uniteW = (300 - (nbUnites - 1) * GAP) / nbUnites;
+    const partW = uniteW / partsParUnite;
 
     const segs = [];
     for (let u = 0; u < nbUnites; u++) {
         const xUnite = u * (uniteW + GAP);
-        for (let p = 0; p < uniteSize; p++) {
+        for (let p = 0; p < partsParUnite; p++) {
             segs.push({
                 shape: "rect",
                 label: `Unité ${u + 1}, part ${p + 1}`,
@@ -383,10 +380,18 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     </div>
                 );
             }
-            const n = exercice.nbParts ?? exercice.partiesAColorier ?? 2;
-            const segments = exercice.uniteSize
-                ? makeSegmentsMultiUnite(n, exercice.uniteSize)
+            const hasMultiUnite = exercice.nbUnites && exercice.partsParUnite;
+            const n = hasMultiUnite
+                ? exercice.nbUnites * exercice.partsParUnite
+                : (exercice.nbParts ?? exercice.partiesAColorier ?? 2);
+
+            const segments = hasMultiUnite
+                ? makeSegmentsMultiUnite(
+                      exercice.nbUnites,
+                      exercice.partsParUnite
+                  )
                 : makeSegmentsAuto(n);
+
             return (
                 <ColoringFigure
                     segments={segments}
