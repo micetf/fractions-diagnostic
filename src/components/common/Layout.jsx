@@ -91,7 +91,7 @@ function Layout({ mode, children }) {
                                             fontFamily: "Fredoka, sans-serif",
                                         }}
                                     >
-                                        Fraction Diagnostic
+                                        Fractions Diagnostic
                                     </span>
                                     {/* Badge de mode */}
                                     <span
@@ -159,7 +159,7 @@ function Layout({ mode, children }) {
                                 {/* Contact */}
                                 <li>
                                     <a
-                                        href="mailto:webmaster@micetf.fr?subject=À propos de /fraction-diagnostic"
+                                        href="mailto:webmaster@micetf.fr?subject=À propos de /fractions-diagnostic"
                                         className="px-3 py-2 bg-gray-600 text-white rounded
                                hover:bg-gray-700 transition my-1 mx-1 inline-block"
                                         title="Pour contacter le webmaster..."
