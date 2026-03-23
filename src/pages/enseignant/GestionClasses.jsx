@@ -1,33 +1,127 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
 
 const NIVEAUX = ["CE1", "CE2", "CM1", "CM2"];
 
+// ─── Utilitaire ──────────────────────────────────────────────────────────────
+
+/** Trie les élèves : nom de famille puis prénom, insensible à la casse. */
+function trierEleves(eleves) {
+    return [...eleves].sort((a, b) => {
+        const na = `${a.nom ?? ""} ${a.prenom}`.trim().toLowerCase();
+        const nb = `${b.nom ?? ""} ${b.prenom}`.trim().toLowerCase();
+        return na.localeCompare(nb, "fr");
+    });
+}
+
+/**
+ * Parse une saisie multi-ligne en liste d'élèves.
+ * Formats acceptés par ligne :
+ *   "Prénom"
+ *   "Prénom Nom"
+ *   "Nom, Prénom"  (convention tableur français)
+ *   "Prénom;Nom"
+ * @param {string} texte
+ * @returns {{ prenom: string, nom: string }[]}
+ */
+function parserListeEleves(texte) {
+    return texte
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean)
+        .map((ligne) => {
+            // Format "Nom, Prénom"
+            if (ligne.includes(",")) {
+                const [nom, prenom] = ligne.split(",").map((s) => s.trim());
+                return { prenom: prenom ?? "", nom: nom ?? "" };
+            }
+            // Format "Prénom;Nom"
+            if (ligne.includes(";")) {
+                const [prenom, nom] = ligne.split(";").map((s) => s.trim());
+                return { prenom, nom: nom ?? "" };
+            }
+            // Format "Prénom Nom" ou "Prénom" seul
+            const parts = ligne.split(" ");
+            const prenom = parts[0] ?? "";
+            const nom = parts.slice(1).join(" ");
+            return { prenom, nom };
+        })
+        .filter((e) => e.prenom);
+}
+
+// ─── Modale de confirmation ───────────────────────────────────────────────────
+
+/**
+ * ConfirmModal
+ * Modale légère pour confirmer une action destructrice.
+ */
+function ConfirmModal({ message, onConfirm, onCancel }) {
+    // Fermeture sur Échap
+    useEffect(() => {
+        function onKey(e) {
+            if (e.key === "Escape") onCancel();
+        }
+        window.addEventListener("keydown", onKey);
+        return () => window.removeEventListener("keydown", onKey);
+    }, [onCancel]);
+
+    return (
+        <div
+            className="fixed inset-0 z-50 flex items-center justify-center
+                 bg-black/30 backdrop-blur-sm"
+            onClick={onCancel}
+        >
+            <div
+                className="bg-white rounded-2xl shadow-xl p-6 max-w-sm w-full mx-4"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <p className="text-slate-800 text-base mb-6">{message}</p>
+                <div className="flex gap-3 justify-end">
+                    <button
+                        onClick={onCancel}
+                        className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600
+                       text-sm hover:bg-slate-50 transition-colors cursor-pointer"
+                    >
+                        Annuler
+                    </button>
+                    <button
+                        onClick={onConfirm}
+                        autoFocus
+                        className="px-4 py-2 rounded-lg bg-danger-500 hover:bg-danger-600
+                       text-white text-sm font-medium transition-colors cursor-pointer"
+                    >
+                        Confirmer
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+ConfirmModal.propTypes = {
+    message: PropTypes.string.isRequired,
+    onConfirm: PropTypes.func.isRequired,
+    onCancel: PropTypes.func.isRequired,
+};
+
+// ─── GestionClasses ───────────────────────────────────────────────────────────
+
 /**
  * GestionClasses
- *
  * Gestion complète des classes et de leurs élèves (SRS F-CLS-01 à F-CLS-04).
  *
- * Navigation interne :
- *   - vue 'liste'  : toutes les classes actives + formulaire de création
- *   - vue 'detail' : élèves d'une classe + formulaire d'ajout/suppression
- *
  * @param {object}   props
- * @param {function} props.onNavigate - Retour vers une autre page enseignant.
+ * @param {function} props.onNavigate
  */
 function GestionClasses({ onNavigate }) {
-    /** @type {[string|null, function]} identifiant de la classe en cours d'édition */
     const [classeActiveId, setClasseActiveId] = useState(null);
-
     const { state } = useAppContext();
-
     const classeActive =
         state.classes.find((c) => c.id === classeActiveId) ?? null;
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
-            {/* ── En-tête avec fil d'Ariane ──────────────────────────── */}
             <nav className="flex items-center gap-2 text-sm text-slate-500 mb-6">
                 <button
                     onClick={() => onNavigate("accueil")}
@@ -56,7 +150,6 @@ function GestionClasses({ onNavigate }) {
                 )}
             </nav>
 
-            {/* ── Vues ───────────────────────────────────────────────── */}
             {classeActive ? (
                 <VueDetailClasse
                     classe={classeActive}
@@ -69,54 +162,53 @@ function GestionClasses({ onNavigate }) {
     );
 }
 
-GestionClasses.propTypes = {
-    onNavigate: PropTypes.func.isRequired,
-};
+GestionClasses.propTypes = { onNavigate: PropTypes.func.isRequired };
 
-/* ══════════════════════════════════════════════════════════════════
-   VUE LISTE DES CLASSES
-   ══════════════════════════════════════════════════════════════════ */
+// ─── VueListeClasses ──────────────────────────────────────────────────────────
 
-/**
- * VueListeClasses
- *
- * Affiche les classes actives, les classes archivées (repliées),
- * et le formulaire de création d'une nouvelle classe.
- *
- * @param {object}   props
- * @param {function} props.onOuvrirClasse - Ouvre la vue détail d'une classe.
- */
 function VueListeClasses({ onOuvrirClasse }) {
     const { state, dispatch } = useAppContext();
-
-    const classesActives = state.classes.filter((c) => !c.archive);
-    const classesArchivees = state.classes.filter((c) => c.archive);
-
-    const [showArchivees, setShowArchivees] = useState(false);
     const [showForm, setShowForm] = useState(false);
+    const [showArchivees, setShowArchivees] = useState(false);
+    const [confirm, setConfirm] = useState(null); // { classeId }
 
-    function handleArchiver(classeId) {
-        const classe = state.classes.find((c) => c.id === classeId);
-        if (!classe) return;
-        dispatch({
-            type: "UPDATE_CLASSE",
-            payload: { ...classe, archive: true },
-        });
+    const classesActives = state.classes.filter((c) => !c.archivee);
+    const classesArchivees = state.classes.filter((c) => c.archivee);
+
+    function handleArchiver(id) {
+        setConfirm({ classeId: id });
     }
 
-    function handleDesarchiver(classeId) {
-        const classe = state.classes.find((c) => c.id === classeId);
+    function doArchiver() {
+        const classe = state.classes.find((c) => c.id === confirm.classeId);
         if (!classe) return;
         dispatch({
             type: "UPDATE_CLASSE",
-            payload: { ...classe, archive: false },
+            payload: { ...classe, archivee: true },
+        });
+        setConfirm(null);
+    }
+
+    function handleDesarchiver(id) {
+        const classe = state.classes.find((c) => c.id === id);
+        if (!classe) return;
+        dispatch({
+            type: "UPDATE_CLASSE",
+            payload: { ...classe, archivee: false },
         });
     }
 
     return (
-        <div>
-            {/* ── En-tête ─────────────────────────────────────────── */}
-            <div className="flex items-center justify-between mb-6">
+        <div className="space-y-4">
+            {confirm && (
+                <ConfirmModal
+                    message="Archiver cette classe ? Elle n'apparaîtra plus dans la liste principale."
+                    onConfirm={doArchiver}
+                    onCancel={() => setConfirm(null)}
+                />
+            )}
+
+            <div className="flex items-center justify-between mb-2">
                 <h1 className="text-2xl font-semibold text-slate-800">
                     Mes classes
                 </h1>
@@ -129,12 +221,10 @@ function VueListeClasses({ onOuvrirClasse }) {
                 </button>
             </div>
 
-            {/* ── Formulaire de création ───────────────────────────── */}
             {showForm && (
                 <FormulaireClasse onCreer={() => setShowForm(false)} />
             )}
 
-            {/* ── Classes actives ─────────────────────────────────── */}
             {classesActives.length === 0 && !showForm && (
                 <p className="text-sm text-slate-400 text-center py-10">
                     Aucune classe. Créez-en une pour commencer.
@@ -154,7 +244,6 @@ function VueListeClasses({ onOuvrirClasse }) {
                 ))}
             </ul>
 
-            {/* ── Classes archivées ────────────────────────────────── */}
             {classesArchivees.length > 0 && (
                 <div className="mt-8">
                     <button
@@ -165,7 +254,6 @@ function VueListeClasses({ onOuvrirClasse }) {
                         <span>{showArchivees ? "▾" : "▸"}</span>
                         Classes archivées ({classesArchivees.length})
                     </button>
-
                     {showArchivees && (
                         <ul className="mt-3 space-y-3">
                             {classesArchivees.map((classe) => (
@@ -188,36 +276,24 @@ function VueListeClasses({ onOuvrirClasse }) {
     );
 }
 
-VueListeClasses.propTypes = {
-    onOuvrirClasse: PropTypes.func.isRequired,
-};
+VueListeClasses.propTypes = { onOuvrirClasse: PropTypes.func.isRequired };
 
-/* ══════════════════════════════════════════════════════════════════
-   VUE DÉTAIL D'UNE CLASSE
-   ══════════════════════════════════════════════════════════════════ */
+// ─── VueDetailClasse ──────────────────────────────────────────────────────────
 
-/**
- * VueDetailClasse
- *
- * Liste les élèves d'une classe et permet d'en ajouter, modifier ou supprimer.
- * La suppression est désactivée si une passation terminée existe pour l'élève
- * (SRS F-CLS-03).
- *
- * @param {object}   props
- * @param {object}   props.classe   - Objet Classe.
- * @param {function} props.onRetour - Retour à la liste.
- */
-function VueDetailClasse({ classe }) {
+function VueDetailClasse({ classe, onRetour }) {
     const { state, dispatch } = useAppContext();
 
-    const [showFormEleve, setShowFormEleve] = useState(false);
-    const [eleveEnEdition, setEleveEnEdition] = useState(null);
+    // Mode d'ajout : 'simple' | 'multiple' | null
+    const [modeAjout, setModeAjout] = useState(null);
+    // Élève en édition inline (id)
+    const [editId, setEditId] = useState(null);
+    // Édition du titre de la classe
+    const [editClasse, setEditClasse] = useState(false);
+    // Confirmation de suppression
+    const [confirmSuppr, setConfirmSuppr] = useState(null); // { eleveId }
 
-    /**
-     * Vérifie si un élève a au moins une passation terminée (SRS F-CLS-03).
-     * @param {string} eleveId
-     * @returns {boolean}
-     */
+    const elevesTriees = trierEleves(classe.eleves);
+
     function aPassationTerminee(eleveId) {
         return state.passations.some(
             (p) => p.eleve_id === eleveId && p.statut === "terminee"
@@ -225,114 +301,152 @@ function VueDetailClasse({ classe }) {
     }
 
     function handleSupprimerEleve(eleveId) {
-        if (aPassationTerminee(eleveId)) return;
         const updated = {
             ...classe,
             eleves: classe.eleves.filter((e) => e.id !== eleveId),
         };
         dispatch({ type: "UPDATE_CLASSE", payload: updated });
+        setConfirmSuppr(null);
     }
 
-    function handleEditerEleve(eleve) {
-        setEleveEnEdition(eleve);
-        setShowFormEleve(true);
+    function handleUpdateEleve(eleveModifie) {
+        const updated = {
+            ...classe,
+            eleves: classe.eleves.map((e) =>
+                e.id === eleveModifie.id ? eleveModifie : e
+            ),
+        };
+        dispatch({ type: "UPDATE_CLASSE", payload: updated });
+        setEditId(null);
     }
 
-    function handleFermerForm() {
-        setShowFormEleve(false);
-        setEleveEnEdition(null);
+    function handleAjouterEleves(nouveaux) {
+        const updated = {
+            ...classe,
+            eleves: [
+                ...classe.eleves,
+                ...nouveaux.map((e) => ({ ...e, id: crypto.randomUUID() })),
+            ],
+        };
+        dispatch({ type: "UPDATE_CLASSE", payload: updated });
+        setModeAjout(null);
     }
 
     return (
         <div>
-            {/* ── En-tête ─────────────────────────────────────────── */}
-            <div className="flex items-center justify-between mb-2">
-                <h1 className="text-2xl font-semibold text-slate-800">
-                    {classe.nom}
-                </h1>
-                <button
-                    onClick={() => {
-                        setEleveEnEdition(null);
-                        setShowFormEleve((v) => !v);
-                    }}
-                    className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
-                     text-white text-sm font-medium transition-colors cursor-pointer"
-                >
-                    {showFormEleve && !eleveEnEdition
-                        ? "Annuler"
-                        : "+ Ajouter un élève"}
-                </button>
-            </div>
-
-            <p className="text-sm text-slate-400 mb-6">
-                {classe.niveau} — {classe.eleves.length} élève
-                {classe.eleves.length !== 1 ? "s" : ""}
-            </p>
-
-            {/* ── Formulaire ajout / édition ───────────────────────── */}
-            {showFormEleve && (
-                <FormulaireEleve
-                    classe={classe}
-                    eleveInitial={eleveEnEdition}
-                    onFermer={handleFermerForm}
+            {confirmSuppr && (
+                <ConfirmModal
+                    message="Supprimer cet élève définitivement ?"
+                    onConfirm={() => handleSupprimerEleve(confirmSuppr.eleveId)}
+                    onCancel={() => setConfirmSuppr(null)}
                 />
             )}
 
-            {/* ── Liste des élèves ─────────────────────────────────── */}
-            {classe.eleves.length === 0 && !showFormEleve && (
+            {/* ── En-tête éditable ─────────────────────────────────────── */}
+            <div className="flex items-start justify-between gap-4 mb-6">
+                <div className="flex-1">
+                    {editClasse ? (
+                        <FormEditClasse
+                            classe={classe}
+                            onSauvegarder={(updated) => {
+                                dispatch({
+                                    type: "UPDATE_CLASSE",
+                                    payload: updated,
+                                });
+                                setEditClasse(false);
+                            }}
+                            onAnnuler={() => setEditClasse(false)}
+                        />
+                    ) : (
+                        <div className="flex items-center gap-3">
+                            <div>
+                                <h1 className="text-2xl font-semibold text-slate-800">
+                                    {classe.nom}
+                                </h1>
+                                <p className="text-sm text-slate-400 mt-0.5">
+                                    {classe.niveau} — {classe.eleves.length}{" "}
+                                    élève
+                                    {classe.eleves.length !== 1 ? "s" : ""}
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setEditClasse(true)}
+                                title="Modifier le nom ou le niveau"
+                                className="text-slate-400 hover:text-brand-600 transition-colors
+                           cursor-pointer text-sm"
+                            >
+                                ✎
+                            </button>
+                        </div>
+                    )}
+                </div>
+
+                {/* Boutons ajout */}
+                {!editClasse && (
+                    <div className="flex gap-2 shrink-0">
+                        <button
+                            onClick={() =>
+                                setModeAjout((v) =>
+                                    v === "simple" ? null : "simple"
+                                )
+                            }
+                            className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
+                         text-white text-sm font-medium transition-colors cursor-pointer"
+                        >
+                            + Ajouter
+                        </button>
+                        <button
+                            onClick={() =>
+                                setModeAjout((v) =>
+                                    v === "multiple" ? null : "multiple"
+                                )
+                            }
+                            title="Coller une liste depuis un tableur ou l'ENT"
+                            className="px-4 py-2 rounded-lg border border-brand-300 hover:bg-brand-50
+                         text-brand-600 text-sm font-medium transition-colors cursor-pointer"
+                        >
+                            Importer liste
+                        </button>
+                    </div>
+                )}
+            </div>
+
+            {/* ── Formulaires d'ajout ───────────────────────────────────── */}
+            {modeAjout === "simple" && (
+                <FormulaireEleveSimple
+                    onAjouter={(e) => handleAjouterEleves([e])}
+                    onFermer={() => setModeAjout(null)}
+                />
+            )}
+            {modeAjout === "multiple" && (
+                <FormulaireEleveMultiple
+                    onAjouter={handleAjouterEleves}
+                    onFermer={() => setModeAjout(null)}
+                />
+            )}
+
+            {/* ── Liste des élèves ──────────────────────────────────────── */}
+            {elevesTriees.length === 0 && !modeAjout && (
                 <p className="text-sm text-slate-400 text-center py-10">
                     Aucun élève dans cette classe.
                 </p>
             )}
 
-            <ul className="divide-y divide-slate-100">
-                {[...classe.eleves]
-                    .sort((a, b) => a.prenom.localeCompare(b.prenom, "fr"))
-                    .map((eleve) => {
-                        const protege = aPassationTerminee(eleve.id);
-                        return (
-                            <li
-                                key={eleve.id}
-                                className="flex items-center justify-between py-3"
-                            >
-                                <span className="text-slate-800 font-medium">
-                                    {eleve.prenom}
-                                    {eleve.nom ? (
-                                        <span className="font-normal text-slate-500">
-                                            {" "}
-                                            {eleve.nom}
-                                        </span>
-                                    ) : null}
-                                </span>
-
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => handleEditerEleve(eleve)}
-                                        className="text-xs px-3 py-1 rounded-lg border border-slate-200
-                               hover:bg-slate-50 text-slate-600 transition-colors cursor-pointer"
-                                    >
-                                        Modifier
-                                    </button>
-                                    <button
-                                        onClick={() =>
-                                            handleSupprimerEleve(eleve.id)
-                                        }
-                                        disabled={protege}
-                                        title={
-                                            protege
-                                                ? "Cet élève a une passation enregistrée"
-                                                : ""
-                                        }
-                                        className="text-xs px-3 py-1 rounded-lg border border-danger-200
-                               text-danger-600 hover:bg-danger-50 transition-colors cursor-pointer
-                               disabled:opacity-40 disabled:cursor-not-allowed"
-                                    >
-                                        Supprimer
-                                    </button>
-                                </div>
-                            </li>
-                        );
-                    })}
+            <ul className="space-y-2 mt-2">
+                {elevesTriees.map((eleve) => (
+                    <LigneEleve
+                        key={eleve.id}
+                        eleve={eleve}
+                        enEdition={editId === eleve.id}
+                        protege={aPassationTerminee(eleve.id)}
+                        onEditer={() => setEditId(eleve.id)}
+                        onSauvegarder={handleUpdateEleve}
+                        onAnnuler={() => setEditId(null)}
+                        onSupprimer={() =>
+                            setConfirmSuppr({ eleveId: eleve.id })
+                        }
+                    />
+                ))}
             </ul>
         </div>
     );
@@ -343,257 +457,391 @@ VueDetailClasse.propTypes = {
     onRetour: PropTypes.func.isRequired,
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   FORMULAIRES
-   ══════════════════════════════════════════════════════════════════ */
+// ─── FormEditClasse ────────────────────────────────────────────────────────────
 
 /**
- * FormulaireClasse
- *
- * Création d'une nouvelle classe (SRS F-CLS-01).
- *
- * @param {object}   props
- * @param {function} props.onCreer - Appelé après création réussie.
+ * FormEditClasse
+ * Édition in-place du nom et du niveau d'une classe existante.
  */
-function FormulaireClasse({ onCreer }) {
-    const { dispatch } = useAppContext();
+function FormEditClasse({ classe, onSauvegarder, onAnnuler }) {
+    const [nom, setNom] = useState(classe.nom);
+    const [niveau, setNiveau] = useState(classe.niveau);
 
+    function handleKey(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            soumettre();
+        }
+        if (e.key === "Escape") onAnnuler();
+    }
+
+    function soumettre() {
+        const n = nom.trim();
+        if (!n) return;
+        onSauvegarder({ ...classe, nom: n, niveau });
+    }
+
+    return (
+        <div className="flex items-center gap-3 flex-wrap">
+            <input
+                autoFocus
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder="Nom de la classe"
+                className="flex-1 min-w-40 px-3 py-1.5 rounded-lg border-2 border-brand-300
+                   text-slate-800 text-base focus:outline-none focus:ring-2
+                   focus:ring-brand-400"
+            />
+            <select
+                value={niveau}
+                onChange={(e) => setNiveau(e.target.value)}
+                className="px-3 py-1.5 rounded-lg border-2 border-slate-200 text-slate-700
+                   text-sm focus:outline-none focus:ring-2 focus:ring-brand-400
+                   cursor-pointer"
+            >
+                {NIVEAUX.map((n) => (
+                    <option key={n} value={n}>
+                        {n}
+                    </option>
+                ))}
+            </select>
+            <button
+                onClick={soumettre}
+                className="px-4 py-1.5 rounded-lg bg-brand-500 hover:bg-brand-600
+                   text-white text-sm font-medium cursor-pointer"
+            >
+                Enregistrer
+            </button>
+            <button
+                onClick={onAnnuler}
+                className="px-4 py-1.5 rounded-lg border border-slate-200 text-slate-600
+                   text-sm hover:bg-slate-50 cursor-pointer"
+            >
+                Annuler
+            </button>
+        </div>
+    );
+}
+
+FormEditClasse.propTypes = {
+    classe: PropTypes.object.isRequired,
+    onSauvegarder: PropTypes.func.isRequired,
+    onAnnuler: PropTypes.func.isRequired,
+};
+
+// ─── LigneEleve ───────────────────────────────────────────────────────────────
+
+/**
+ * LigneEleve
+ * Affiche un élève. En mode édition, les champs deviennent des inputs inline.
+ */
+function LigneEleve({
+    eleve,
+    enEdition,
+    protege,
+    onEditer,
+    onSauvegarder,
+    onAnnuler,
+    onSupprimer,
+}) {
+    const [prenom, setPrenom] = useState(eleve.prenom);
+    const [nom, setNom] = useState(eleve.nom ?? "");
+
+    // Resync si un autre élève passe en édition
+    useEffect(() => {
+        if (!enEdition) {
+            setPrenom(eleve.prenom);
+            setNom(eleve.nom ?? "");
+        }
+    }, [enEdition, eleve]);
+
+    function handleKey(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            soumettre();
+        }
+        if (e.key === "Escape") onAnnuler();
+    }
+
+    function soumettre() {
+        const p = prenom.trim();
+        if (!p) return;
+        onSauvegarder({ ...eleve, prenom: p, nom: nom.trim() });
+    }
+
+    const affichage = [eleve.nom, eleve.prenom].filter(Boolean).join(" ");
+
+    if (enEdition) {
+        return (
+            <li
+                className="flex items-center gap-2 px-4 py-2 rounded-xl
+                     border-2 border-brand-300 bg-brand-50"
+            >
+                <input
+                    autoFocus
+                    value={prenom}
+                    onChange={(e) => setPrenom(e.target.value)}
+                    onKeyDown={handleKey}
+                    placeholder="Prénom *"
+                    className="flex-1 min-w-0 px-2 py-1 rounded-lg border border-slate-300
+                     text-slate-800 text-sm focus:outline-none focus:ring-2
+                     focus:ring-brand-400"
+                />
+                <input
+                    value={nom}
+                    onChange={(e) => setNom(e.target.value)}
+                    onKeyDown={handleKey}
+                    placeholder="Nom"
+                    className="flex-1 min-w-0 px-2 py-1 rounded-lg border border-slate-300
+                     text-slate-800 text-sm focus:outline-none focus:ring-2
+                     focus:ring-brand-400"
+                />
+                <button
+                    onClick={soumettre}
+                    className="px-3 py-1 rounded-lg bg-brand-500 hover:bg-brand-600
+                     text-white text-xs font-medium cursor-pointer shrink-0"
+                >
+                    ✓
+                </button>
+                <button
+                    onClick={onAnnuler}
+                    className="px-3 py-1 rounded-lg border border-slate-200 text-slate-500
+                     text-xs hover:bg-slate-50 cursor-pointer shrink-0"
+                >
+                    ✕
+                </button>
+            </li>
+        );
+    }
+
+    return (
+        <li
+            className="flex items-center justify-between px-4 py-3 rounded-xl
+                   border border-slate-200 bg-white hover:border-slate-300
+                   transition-colors gap-3"
+        >
+            <span className="text-sm text-slate-800 flex-1">{affichage}</span>
+            <div className="flex gap-2 shrink-0">
+                <button
+                    onClick={onEditer}
+                    className="text-xs px-3 py-1 rounded-lg border border-slate-200
+                     text-slate-500 hover:bg-slate-50 transition-colors cursor-pointer"
+                >
+                    Modifier
+                </button>
+                <button
+                    onClick={onSupprimer}
+                    disabled={protege}
+                    title={
+                        protege ? "Cet élève a une passation enregistrée" : ""
+                    }
+                    className="text-xs px-3 py-1 rounded-lg border border-danger-200
+                     text-danger-600 hover:bg-danger-50 transition-colors cursor-pointer
+                     disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                    Supprimer
+                </button>
+            </div>
+        </li>
+    );
+}
+
+LigneEleve.propTypes = {
+    eleve: PropTypes.object.isRequired,
+    enEdition: PropTypes.bool.isRequired,
+    protege: PropTypes.bool.isRequired,
+    onEditer: PropTypes.func.isRequired,
+    onSauvegarder: PropTypes.func.isRequired,
+    onAnnuler: PropTypes.func.isRequired,
+    onSupprimer: PropTypes.func.isRequired,
+};
+
+// ─── FormulaireEleveSimple ────────────────────────────────────────────────────
+
+/**
+ * FormulaireEleveSimple
+ * Ajoute un seul élève. Entrée valide avec Entrée, annule avec Échap.
+ */
+function FormulaireEleveSimple({ onAjouter, onFermer }) {
+    const [prenom, setPrenom] = useState("");
     const [nom, setNom] = useState("");
-    const [niveau, setNiveau] = useState("CE1");
     const [erreur, setErreur] = useState("");
 
-    function handleSubmit(e) {
+    function handleKey(e) {
+        if (e.key === "Escape") onFermer();
+    }
+
+    function soumettre(e) {
         e.preventDefault();
-        const nomTrimmed = nom.trim();
-        if (!nomTrimmed) {
-            setErreur("Le nom de la classe est obligatoire.");
+        const p = prenom.trim();
+        if (!p) {
+            setErreur("Le prénom est obligatoire.");
             return;
         }
-        dispatch({
-            type: "CREATE_CLASSE",
-            payload: {
-                id: crypto.randomUUID(),
-                nom: nomTrimmed,
-                niveau,
-                annee_scolaire:
-                    new Date().getFullYear() +
-                    "-" +
-                    (new Date().getFullYear() + 1),
-                archive: false,
-                eleves: [],
-            },
-        });
-        onCreer();
+        onAjouter({ prenom: p, nom: nom.trim() });
+        setPrenom("");
+        setNom("");
+        setErreur("");
     }
 
     return (
         <form
-            onSubmit={handleSubmit}
-            className="mb-6 p-5 rounded-xl border border-brand-200 bg-brand-50"
+            onSubmit={soumettre}
+            className="flex items-start gap-3 flex-wrap p-4 rounded-xl
+                 bg-brand-50 border border-brand-200 mb-4"
         >
-            <p className="text-sm font-semibold text-brand-800 mb-4">
-                Nouvelle classe
-            </p>
-
-            <div className="flex flex-col sm:flex-row gap-3 mb-3">
-                <div className="flex-1">
-                    <label
-                        className="block text-xs font-medium text-slate-600 mb-1"
-                        htmlFor="nom-classe"
-                    >
-                        Nom de la classe{" "}
-                        <span className="text-danger-500">*</span>
-                    </label>
-                    <input
-                        id="nom-classe"
-                        type="text"
-                        value={nom}
-                        onChange={(e) => {
-                            setNom(e.target.value);
-                            setErreur("");
-                        }}
-                        placeholder="ex. : CM2 B"
-                        autoFocus
-                        autoComplete="off"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent bg-white"
-                    />
-                </div>
-
-                <div>
-                    <label
-                        className="block text-xs font-medium text-slate-600 mb-1"
-                        htmlFor="niveau-classe"
-                    >
-                        Niveau
-                    </label>
-                    <select
-                        id="niveau-classe"
-                        value={niveau}
-                        onChange={(e) => setNiveau(e.target.value)}
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent bg-white cursor-pointer"
-                    >
-                        {NIVEAUX.map((n) => (
-                            <option key={n} value={n}>
-                                {n}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+            <div className="flex flex-col gap-1 flex-1 min-w-32">
+                <input
+                    autoFocus
+                    value={prenom}
+                    onChange={(e) => {
+                        setPrenom(e.target.value);
+                        setErreur("");
+                    }}
+                    onKeyDown={handleKey}
+                    placeholder="Prénom *"
+                    className="px-3 py-2 rounded-lg border border-slate-300 text-slate-800
+                     text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+                {erreur && <p className="text-xs text-danger-600">{erreur}</p>}
             </div>
-
-            {erreur && (
-                <p className="text-xs text-danger-600 mb-3" role="alert">
-                    {erreur}
-                </p>
-            )}
-
+            <input
+                value={nom}
+                onChange={(e) => setNom(e.target.value)}
+                onKeyDown={handleKey}
+                placeholder="Nom (optionnel)"
+                className="flex-1 min-w-32 px-3 py-2 rounded-lg border border-slate-300
+                   text-slate-800 text-sm focus:outline-none focus:ring-2
+                   focus:ring-brand-400"
+            />
             <button
                 type="submit"
-                className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
-                   text-white text-sm font-medium transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
+                   text-white text-sm font-medium cursor-pointer shrink-0"
             >
-                Créer la classe
+                Ajouter
+            </button>
+            <button
+                type="button"
+                onClick={onFermer}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600
+                   text-sm hover:bg-slate-50 cursor-pointer shrink-0"
+            >
+                Annuler
             </button>
         </form>
     );
 }
 
-FormulaireClasse.propTypes = {
-    onCreer: PropTypes.func.isRequired,
+FormulaireEleveSimple.propTypes = {
+    onAjouter: PropTypes.func.isRequired,
+    onFermer: PropTypes.func.isRequired,
 };
 
+// ─── FormulaireEleveMultiple ──────────────────────────────────────────────────
+
 /**
- * FormulaireEleve
+ * FormulaireEleveMultiple
  *
- * Ajout ou modification d'un élève dans une classe (SRS F-CLS-02, F-CLS-03).
- * Le prénom est obligatoire, le nom est optionnel.
+ * Coller / taper plusieurs élèves d'un coup.
+ * Formats acceptés (une ligne = un élève) :
+ *   Prénom
+ *   Prénom Nom
+ *   Nom, Prénom   (tableur français)
+ *   Prénom;Nom
  *
- * @param {object}      props
- * @param {object}      props.classe        - Classe parente.
- * @param {object|null} props.eleveInitial  - Élève à modifier, ou null pour un ajout.
- * @param {function}    props.onFermer      - Ferme le formulaire.
+ * Affiche un aperçu en temps réel avant validation.
  */
-function FormulaireEleve({ classe, eleveInitial = null, onFermer }) {
-    const { dispatch } = useAppContext();
-
-    const [prenom, setPrenom] = useState(eleveInitial?.prenom ?? "");
-    const [nom, setNom] = useState(eleveInitial?.nom ?? "");
+function FormulaireEleveMultiple({ onAjouter, onFermer }) {
+    const [texte, setTexte] = useState("");
     const [erreur, setErreur] = useState("");
+    const parsed = parserListeEleves(texte);
 
-    const isEdition = eleveInitial !== null;
-
-    function handleSubmit(e) {
+    function soumettre(e) {
         e.preventDefault();
-        const prenomTrimmed = prenom.trim();
-        if (!prenomTrimmed) {
-            setErreur("Le prénom est obligatoire.");
+        if (parsed.length === 0) {
+            setErreur("Aucun élève détecté. Vérifiez le format.");
             return;
         }
-
-        let nouvellesEleves;
-
-        if (isEdition) {
-            nouvellesEleves = classe.eleves.map((el) =>
-                el.id === eleveInitial.id
-                    ? { ...el, prenom: prenomTrimmed, nom: nom.trim() }
-                    : el
-            );
-        } else {
-            nouvellesEleves = [
-                ...classe.eleves,
-                {
-                    id: crypto.randomUUID(),
-                    prenom: prenomTrimmed,
-                    nom: nom.trim(),
-                },
-            ];
-        }
-
-        dispatch({
-            type: "UPDATE_CLASSE",
-            payload: { ...classe, eleves: nouvellesEleves },
-        });
-        onFermer();
+        onAjouter(parsed);
     }
 
     return (
         <form
-            onSubmit={handleSubmit}
-            className="mb-6 p-5 rounded-xl border border-brand-200 bg-brand-50"
+            onSubmit={soumettre}
+            className="p-4 rounded-xl bg-brand-50 border border-brand-200 mb-4 space-y-3"
         >
-            <p className="text-sm font-semibold text-brand-800 mb-4">
-                {isEdition ? "Modifier l'élève" : "Ajouter un élève"}
+            <p className="text-xs text-slate-500">
+                Collez la liste depuis un tableur ou un ENT. Un élève par ligne.
+                Formats : <span className="font-mono">Prénom Nom</span>,{" "}
+                <span className="font-mono">Nom, Prénom</span> ou{" "}
+                <span className="font-mono">Prénom;Nom</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 mb-3">
-                <div className="flex-1">
-                    <label
-                        className="block text-xs font-medium text-slate-600 mb-1"
-                        htmlFor="prenom-eleve"
-                    >
-                        Prénom <span className="text-danger-500">*</span>
-                    </label>
-                    <input
-                        id="prenom-eleve"
-                        type="text"
-                        value={prenom}
-                        onChange={(e) => {
-                            setPrenom(e.target.value);
-                            setErreur("");
-                        }}
-                        placeholder="Prénom"
-                        autoFocus
-                        autoComplete="off"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent bg-white"
-                    />
-                </div>
+            <textarea
+                autoFocus
+                value={texte}
+                onChange={(e) => {
+                    setTexte(e.target.value);
+                    setErreur("");
+                }}
+                rows={6}
+                placeholder={"Dupont Marie\nMartin Paul\nBernard, Louise"}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 text-slate-800
+                   text-sm font-mono focus:outline-none focus:ring-2
+                   focus:ring-brand-400 resize-y"
+            />
 
-                <div className="flex-1">
-                    <label
-                        className="block text-xs font-medium text-slate-600 mb-1"
-                        htmlFor="nom-eleve"
-                    >
-                        Nom <span className="text-slate-400">(optionnel)</span>
-                    </label>
-                    <input
-                        id="nom-eleve"
-                        type="text"
-                        value={nom}
-                        onChange={(e) => setNom(e.target.value)}
-                        placeholder="Nom de famille"
-                        autoComplete="off"
-                        className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent bg-white"
-                    />
-                </div>
-            </div>
+            {erreur && <p className="text-xs text-danger-600">{erreur}</p>}
 
-            {erreur && (
-                <p className="text-xs text-danger-600 mb-3" role="alert">
-                    {erreur}
-                </p>
+            {/* Aperçu */}
+            {parsed.length > 0 && (
+                <div className="rounded-lg bg-white border border-slate-200 p-3">
+                    <p className="text-xs font-semibold text-slate-500 mb-2 uppercase tracking-wide">
+                        Aperçu — {parsed.length} élève
+                        {parsed.length > 1 ? "s" : ""} détecté
+                        {parsed.length > 1 ? "s" : ""}
+                    </p>
+                    <ul className="space-y-1 max-h-40 overflow-y-auto">
+                        {parsed.map((e, i) => (
+                            <li
+                                key={i}
+                                className="text-sm text-slate-700 flex gap-2"
+                            >
+                                <span className="text-slate-300 font-mono w-5 text-right shrink-0">
+                                    {i + 1}
+                                </span>
+                                <span className="font-medium">{e.prenom}</span>
+                                {e.nom && (
+                                    <span className="text-slate-500">
+                                        {e.nom}
+                                    </span>
+                                )}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
                 <button
                     type="submit"
-                    className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
-                     text-white text-sm font-medium transition-colors cursor-pointer"
+                    disabled={parsed.length === 0}
+                    className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
+                     text-white text-sm font-medium cursor-pointer
+                     disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                    {isEdition ? "Enregistrer" : "Ajouter"}
+                    Ajouter{" "}
+                    {parsed.length > 0
+                        ? `${parsed.length} élève${parsed.length > 1 ? "s" : ""}`
+                        : ""}
                 </button>
                 <button
                     type="button"
                     onClick={onFermer}
-                    className="px-5 py-2 rounded-lg border border-slate-200 hover:bg-slate-50
-                     text-slate-600 text-sm font-medium transition-colors cursor-pointer"
+                    className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600
+                     text-sm hover:bg-slate-50 cursor-pointer"
                 >
                     Annuler
                 </button>
@@ -602,37 +850,118 @@ function FormulaireEleve({ classe, eleveInitial = null, onFermer }) {
     );
 }
 
-FormulaireEleve.propTypes = {
-    classe: PropTypes.object.isRequired,
-    eleveInitial: PropTypes.object,
+FormulaireEleveMultiple.propTypes = {
+    onAjouter: PropTypes.func.isRequired,
     onFermer: PropTypes.func.isRequired,
 };
 
-/* ══════════════════════════════════════════════════════════════════
-   CARTE CLASSE
-   ══════════════════════════════════════════════════════════════════ */
+// ─── FormulaireClasse ─────────────────────────────────────────────────────────
 
 /**
- * CarteClasse
- *
- * @param {object}   props
- * @param {object}   props.classe
- * @param {number}   props.nbEleves
- * @param {function} props.onOuvrir
- * @param {function} props.onArchiver
- * @param {boolean}  props.archive     - true = classe archivée.
+ * FormulaireClasse — création d'une nouvelle classe.
  */
+function FormulaireClasse({ onCreer }) {
+    const { dispatch } = useAppContext();
+    const [nom, setNom] = useState("");
+    const [niveau, setNiveau] = useState("CE1");
+    const [erreur, setErreur] = useState("");
+
+    function soumettre(e) {
+        e.preventDefault();
+        const n = nom.trim();
+        if (!n) {
+            setErreur("Le nom est obligatoire.");
+            return;
+        }
+        dispatch({
+            type: "CREATE_CLASSE",
+            payload: {
+                id: crypto.randomUUID(),
+                nom: n,
+                niveau,
+                eleves: [],
+                archivee: false,
+                creee_le: new Date().toISOString(),
+            },
+        });
+        onCreer();
+    }
+
+    function handleKey(e) {
+        if (e.key === "Escape") onCreer();
+    }
+
+    return (
+        <form
+            onSubmit={soumettre}
+            className="flex items-start gap-3 flex-wrap p-4 rounded-xl
+                 bg-brand-50 border border-brand-200 mb-4"
+        >
+            <div className="flex flex-col gap-1 flex-1 min-w-40">
+                <input
+                    autoFocus
+                    value={nom}
+                    onChange={(e) => {
+                        setNom(e.target.value);
+                        setErreur("");
+                    }}
+                    onKeyDown={handleKey}
+                    placeholder="Nom de la classe (ex. : CM1 B)"
+                    className="px-3 py-2 rounded-lg border border-slate-300 text-slate-800
+                     text-sm focus:outline-none focus:ring-2 focus:ring-brand-400"
+                />
+                {erreur && <p className="text-xs text-danger-600">{erreur}</p>}
+            </div>
+            <select
+                value={niveau}
+                onChange={(e) => setNiveau(e.target.value)}
+                className="px-3 py-2 rounded-lg border border-slate-300 text-slate-700
+                   text-sm focus:outline-none focus:ring-2 focus:ring-brand-400
+                   cursor-pointer"
+            >
+                {NIVEAUX.map((n) => (
+                    <option key={n} value={n}>
+                        {n}
+                    </option>
+                ))}
+            </select>
+            <button
+                type="submit"
+                className="px-4 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
+                   text-white text-sm font-medium cursor-pointer shrink-0"
+            >
+                Créer
+            </button>
+            <button
+                type="button"
+                onClick={onCreer}
+                className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600
+                   text-sm hover:bg-slate-50 cursor-pointer shrink-0"
+            >
+                Annuler
+            </button>
+        </form>
+    );
+}
+
+FormulaireClasse.propTypes = { onCreer: PropTypes.func.isRequired };
+
+// ─── CarteClasse ──────────────────────────────────────────────────────────────
+
 function CarteClasse({ classe, nbEleves, onOuvrir, onArchiver, archive }) {
     return (
         <li
-            className="flex items-center justify-between rounded-xl border border-slate-200
-                   bg-white px-5 py-4 gap-4"
+            className="flex items-center justify-between rounded-xl border
+                   border-slate-200 bg-white px-5 py-4 gap-4"
         >
             <button
                 onClick={onOuvrir}
                 className="flex-1 text-left group cursor-pointer"
             >
-                <p className="font-semibold text-slate-800 group-hover:text-brand-600 transition-colors">
+                <p
+                    className="font-semibold text-slate-800 group-hover:text-brand-600
+                      transition-colors"
+                >
                     {classe.nom}
                 </p>
                 <p className="text-xs text-slate-400 mt-0.5">
@@ -640,11 +969,11 @@ function CarteClasse({ classe, nbEleves, onOuvrir, onArchiver, archive }) {
                     {nbEleves !== 1 ? "s" : ""}
                 </p>
             </button>
-
             <button
                 onClick={onArchiver}
                 className="text-xs px-3 py-1.5 rounded-lg border border-slate-200
-                   hover:bg-slate-50 text-slate-500 transition-colors cursor-pointer shrink-0"
+                   hover:bg-slate-50 text-slate-500 transition-colors
+                   cursor-pointer shrink-0"
             >
                 {archive ? "Désarchiver" : "Archiver"}
             </button>
