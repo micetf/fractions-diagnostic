@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
 import { getBiais } from "@/data/biais";
-import { getExercice, getMetadonnees } from "@/data/index";
+import { getMetadonnees } from "@/data/index";
 import { construireDistribBiais, depasseSeuil } from "@/utils/analyseSession";
 
 /**
@@ -18,11 +18,7 @@ import { construireDistribBiais, depasseSeuil } from "@/utils/analyseSession";
 function VueBiais({ session, eleves }) {
     const { state } = useAppContext();
 
-    const distribBiais = construireDistribBiais(
-        session,
-        state.passations,
-        eleves
-    );
+    const distribBiais = construireDistribBiais(session, state.passations);
 
     const meta = getMetadonnees(session.niveau);
 

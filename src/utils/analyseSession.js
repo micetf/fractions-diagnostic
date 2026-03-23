@@ -5,8 +5,6 @@
  * aucune donnée d'analyse n'est persistée (SRS §5).
  */
 
-import { getExercice } from "@/data/index";
-
 /**
  * États possibles d'une cellule de la matrice.
  */
@@ -93,7 +91,7 @@ export function construireMatrice(session, passations, eleves) {
  * @returns {Map<string, { eleveIds: string[], exerciceNumeros: number[] }>}
  *   Clé = code biais, valeur = élèves et exercices concernés.
  */
-export function construireDistribBiais(session, passations, eleves) {
+export function construireDistribBiais(session, passations) {
     const passTerminees = passations.filter(
         (p) => p.session_id === session.id && p.statut === "terminee"
     );

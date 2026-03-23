@@ -2,7 +2,6 @@ import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
 import { getBiais } from "@/data/biais";
-import { getExercice } from "@/data/index";
 import { construireMatrice, etatReponse, ETATS } from "@/utils/analyseSession";
 
 /**
@@ -151,7 +150,6 @@ function MatriceResultats({ session, eleves, onVoirProfil }) {
                                                 {active && reponse && (
                                                     <DetailCellule
                                                         reponse={reponse}
-                                                        niveau={session.niveau}
                                                         onClose={() =>
                                                             setCelluleActive(
                                                                 null
@@ -250,7 +248,7 @@ MatriceResultats.propTypes = {
  * @param {string}   props.niveau
  * @param {function} props.onClose
  */
-function DetailCellule({ reponse, niveau, onClose }) {
+function DetailCellule({ reponse, onClose }) {
     const tousLesBiais = [
         ...(reponse.biais_auto ?? []),
         ...(reponse.biais_manuel ?? []),
@@ -347,7 +345,6 @@ function DetailCellule({ reponse, niveau, onClose }) {
 
 DetailCellule.propTypes = {
     reponse: PropTypes.object.isRequired,
-    niveau: PropTypes.string.isRequired,
     onClose: PropTypes.func.isRequired,
 };
 
