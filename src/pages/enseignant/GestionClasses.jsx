@@ -280,7 +280,7 @@ VueListeClasses.propTypes = { onOuvrirClasse: PropTypes.func.isRequired };
 
 // ─── VueDetailClasse ──────────────────────────────────────────────────────────
 
-function VueDetailClasse({ classe, onRetour }) {
+function VueDetailClasse({ classe }) {
     const { state, dispatch } = useAppContext();
 
     // Mode d'ajout : 'simple' | 'multiple' | null
@@ -435,7 +435,7 @@ function VueDetailClasse({ classe, onRetour }) {
             <ul className="space-y-2 mt-2">
                 {elevesTriees.map((eleve) => (
                     <LigneEleve
-                        key={eleve.id}
+                        key={`${eleve.id}-${editId === eleve.id}`}
                         eleve={eleve}
                         enEdition={editId === eleve.id}
                         protege={aPassationTerminee(eleve.id)}
@@ -547,14 +547,6 @@ function LigneEleve({
 }) {
     const [prenom, setPrenom] = useState(eleve.prenom);
     const [nom, setNom] = useState(eleve.nom ?? "");
-
-    // Resync si un autre élève passe en édition
-    useEffect(() => {
-        if (!enEdition) {
-            setPrenom(eleve.prenom);
-            setNom(eleve.nom ?? "");
-        }
-    }, [enEdition, eleve]);
 
     function handleKey(e) {
         if (e.key === "Enter") {
