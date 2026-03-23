@@ -5,17 +5,22 @@ import PropTypes from "prop-types";
  *
  * Écran affiché après la soumission du dernier exercice (SRS F-PAS-09, F-PAS-10).
  *
- * Contraintes sources :
- * - Message neutre — aucun score, aucun biais, aucune correction (F-PAS-09).
- * - Bouton "Appelle ton enseignant(e)" → déclenche la vérification du PIN (F-PAS-10).
+ * Deux actions disponibles :
+ * - « Élève suivant » : remet le mode élève à zéro pour le prochain élève,
+ *   sans quitter le mode élève ni demander le PIN.
+ * - « Appelle ton enseignant(e) » : déclenche la vérification du PIN
+ *   pour retourner au tableau de bord (F-PAS-10).
+ *
+ * Contrainte source : aucun score, aucun résultat, aucun biais affiché (F-PAS-09).
  *
  * @param {object}   props
- * @param {function} props.onAppelerEnseignant - Déclenche le PinGate de retour.
+ * @param {function} props.onSuivant             - Passe au prochain élève sans PIN.
+ * @param {function} props.onAppelerEnseignant   - Déclenche le PinGate de retour.
  */
-function FinPassation({ onAppelerEnseignant }) {
+function FinPassation({ onSuivant, onAppelerEnseignant }) {
     return (
         <div
-            className="min-h-[calc(100vh-88px)] flex flex-col items-center
+            className="min-h-[calc(100vh-56px)] flex flex-col items-center
                     justify-center px-4 py-10 gap-8"
         >
             {/* Carte principale */}
@@ -24,7 +29,6 @@ function FinPassation({ onAppelerEnseignant }) {
                       border border-success-100 p-8 flex flex-col
                       items-center gap-6 text-center"
             >
-                {/* Symbole de fin */}
                 <div
                     className="w-20 h-20 rounded-full bg-success-100 flex items-center
                      justify-center font-display font-bold text-4xl
@@ -42,18 +46,30 @@ function FinPassation({ onAppelerEnseignant }) {
                         Merci d'avoir répondu à tous les exercices.
                     </p>
                 </div>
-            </div>
 
-            {/* Bouton retour enseignant */}
-            <div className="text-center">
-                <p className="text-sm text-slate-400 mb-3">Tu as tout fini ?</p>
+                {/* Action principale : élève suivant */}
                 <button
-                    onClick={onAppelerEnseignant}
-                    className="px-6 py-3 rounded-xl bg-brand-500 hover:bg-brand-600
+                    onClick={onSuivant}
+                    className="w-full py-3.5 rounded-xl bg-brand-500 hover:bg-brand-600
                      text-white text-base font-semibold transition-colors
                      cursor-pointer"
                 >
-                    Appelle ton enseignant(e)
+                    Élève suivant →
+                </button>
+            </div>
+
+            {/* Action secondaire : retour enseignant */}
+            <div className="text-center">
+                <p className="text-sm text-slate-400 mb-3">
+                    Tous les élèves ont passé le diagnostic ?
+                </p>
+                <button
+                    onClick={onAppelerEnseignant}
+                    className="px-6 py-2.5 rounded-xl border border-slate-300
+                     hover:bg-slate-100 text-slate-600 text-sm font-medium
+                     transition-colors cursor-pointer"
+                >
+                    Retour mode enseignant
                 </button>
             </div>
         </div>
@@ -61,6 +77,7 @@ function FinPassation({ onAppelerEnseignant }) {
 }
 
 FinPassation.propTypes = {
+    onSuivant: PropTypes.func.isRequired,
     onAppelerEnseignant: PropTypes.func.isRequired,
 };
 

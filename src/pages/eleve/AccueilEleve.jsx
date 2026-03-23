@@ -9,16 +9,22 @@ import PassationRunner from "./PassationRunner";
 /**
  * AccueilEleve
  *
- * Orchestrateur du mode élève. Quatre états possibles :
- *   1. Pas de session active → écran d'attente
- *   2. Session active, élève non sélectionné → ChoixEleve
- *   3. Élève sélectionné, passation non terminée → PassationRunner
- *   4. Passation terminée → FinPassation
- *   + PinGate en superposition si l'élève appelle l'enseignant
+ * Orchestrateur du mode élève.
+ *
+ * Flux normal (plusieurs élèves sur le même poste) :
+ *   1. Session active → ChoixEleve
+ *   2. Élève sélectionné → PassationRunner
+ *   3. Passation terminée → FinPassation
+ *      ├─ "Élève suivant" → retour ChoixEleve (sans PIN)
+ *      └─ "Retour mode enseignant" → PinGate → callback onCallTeacher
+ *
+ * Flux dégradé :
+ *   - Pas de session active → écran d'attente
+ *   - Tous les élèves ont passé → ChoixEleve affiche un message vide
  *
  * @param {object}      props
- * @param {string|null} props.sessionActiveId  - Id de la session en cours.
- * @param {function}    props.onCallTeacher     - Succès PIN → retour enseignant.
+ * @param {string|null} props.sessionActiveId
+ * @param {function}    props.onCallTeacher
  */
 function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
     const { state } = useAppContext();
@@ -32,6 +38,15 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
             (s) => s.id === sessionActiveId && s.statut === "en_cours"
         ) ?? null;
 
+    /**
+     * Remet le mode élève à zéro pour l'élève suivant.
+     * Ne quitte pas le mode élève, ne demande pas le PIN.
+     */
+    function handleSuivant() {
+        setEleveId(null);
+        setTermine(false);
+    }
+
     // ── PinGate retour enseignant ───────────────────────────────────────────
     if (showPin) {
         return <PinGate mode="verify" onSuccess={onCallTeacher} />;
@@ -41,7 +56,7 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
     if (!session) {
         return (
             <div
-                className="min-h-[calc(100vh-88px)] flex flex-col items-center
+                className="min-h-[calc(100vh-56px)] flex flex-col items-center
                       justify-center px-4 py-10 gap-8"
             >
                 <div
@@ -82,7 +97,7 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
                     className="text-sm text-slate-400 hover:text-slate-600
                      underline underline-offset-2 transition-colors cursor-pointer"
                 >
-                    Appelle ton enseignant(e)
+                    Retour mode enseignant
                 </button>
             </div>
         );
@@ -90,12 +105,23 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
 
     // ── Passation terminée ──────────────────────────────────────────────────
     if (termine) {
-        return <FinPassation onAppelerEnseignant={() => setShowPin(true)} />;
+        return (
+            <FinPassation
+                onSuivant={handleSuivant}
+                onAppelerEnseignant={() => setShowPin(true)}
+            />
+        );
     }
 
-    // ── Élève non sélectionné ───────────────────────────────────────────────
+    // ── Élève non sélectionné → sélecteur ──────────────────────────────────
     if (!eleveId) {
-        return <ChoixEleve session={session} onChoix={setEleveId} />;
+        return (
+            <ChoixEleve
+                session={session}
+                onChoix={setEleveId}
+                onRetourEnseignant={() => setShowPin(true)}
+            />
+        );
     }
 
     // ── Passation en cours ──────────────────────────────────────────────────

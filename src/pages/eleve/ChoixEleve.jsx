@@ -4,14 +4,12 @@ import { useAppContext } from "@/context/useAppContext";
 /**
  * ChoixEleve
  *
- * Affiche la liste des élèves disponibles pour la session en cours.
- * Les élèves ayant déjà une passation terminée sont exclus (SRS F-PAS-02).
- *
  * @param {object}   props
- * @param {object}   props.session  - Session active.
- * @param {function} props.onChoix  - Appelé avec l'id de l'élève sélectionné.
+ * @param {object}   props.session
+ * @param {function} props.onChoix
+ * @param {function} props.onRetourEnseignant - Ouvre le PinGate sans passer par FinPassation.
  */
-function ChoixEleve({ session, onChoix }) {
+function ChoixEleve({ session, onChoix, onRetourEnseignant }) {
     const { state } = useAppContext();
 
     const classe =
@@ -32,8 +30,8 @@ function ChoixEleve({ session, onChoix }) {
 
     return (
         <div
-            className="min-h-[calc(100vh-88px)] flex flex-col items-center
-                    justify-center px-4 py-10"
+            className="min-h-[calc(100vh-56px)] flex flex-col items-center
+                    justify-center px-4 py-10 gap-8"
         >
             <div
                 className="w-full max-w-sm bg-white rounded-2xl shadow-sm
@@ -79,6 +77,15 @@ function ChoixEleve({ session, onChoix }) {
                     </ul>
                 )}
             </div>
+
+            {/* Retour enseignant discret — toujours accessible */}
+            <button
+                onClick={onRetourEnseignant}
+                className="text-sm text-slate-400 hover:text-slate-600
+                   underline underline-offset-2 transition-colors cursor-pointer"
+            >
+                Retour mode enseignant
+            </button>
         </div>
     );
 }
@@ -86,6 +93,7 @@ function ChoixEleve({ session, onChoix }) {
 ChoixEleve.propTypes = {
     session: PropTypes.object.isRequired,
     onChoix: PropTypes.func.isRequired,
+    onRetourEnseignant: PropTypes.func.isRequired,
 };
 
 export default ChoixEleve;
