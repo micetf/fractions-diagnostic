@@ -7,6 +7,7 @@ import GestionClasses from "@/pages/enseignant/GestionClasses";
 import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
+import AnalyseSession from "@/pages/enseignant/AnalyseSession";
 
 /**
  * App — composant racine.
@@ -20,6 +21,7 @@ function App() {
     const [teacherUnlocked, setTeacherUnlocked] = useState(false);
     const [teacherPage, setTeacherPage] = useState("accueil");
     const [sessionActiveId, setSessionActiveId] = useState(null);
+    const [sessionAnalyseId, setSessionAnalyseId] = useState(null);
 
     function handlePinSuccess() {
         setTeacherUnlocked(true);
@@ -65,12 +67,22 @@ function App() {
             <ListeSessions
                 onNavigate={setTeacherPage}
                 onRelancerSession={handleLancerSession}
+                onAnalyserSession={(id) => {
+                    setSessionAnalyseId(id);
+                    setTeacherPage("analyse");
+                }}
             />
         ),
         "creer-session": (
             <CreerSession
                 onNavigate={setTeacherPage}
                 onLancer={handleLancerSession}
+            />
+        ),
+        analyse: (
+            <AnalyseSession
+                sessionId={sessionAnalyseId}
+                onNavigate={setTeacherPage}
             />
         ),
     };

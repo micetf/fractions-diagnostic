@@ -11,7 +11,7 @@ import { useAppContext } from "@/context/useAppContext";
  * @param {function} props.onNavigate          - Navigation interne enseignant.
  * @param {function} props.onRelancerSession   - Bascule en mode élève avec la session.
  */
-function ListeSessions({ onNavigate, onRelancerSession }) {
+function ListeSessions({ onNavigate, onRelancerSession, onAnalyserSession }) {
     const { state, dispatch } = useAppContext();
 
     const sessions = [...state.sessions].sort(
@@ -139,6 +139,19 @@ function ListeSessions({ onNavigate, onRelancerSession }) {
                                                 >
                                                     Lancer passation
                                                 </button>
+                                                {/* Bouton analyser — toutes les sessions (en cours ou clôturées) */}
+                                                <button
+                                                    onClick={() =>
+                                                        onAnalyserSession(
+                                                            session.id
+                                                        )
+                                                    }
+                                                    className="px-4 py-1.5 rounded-lg border border-slate-200
+                               hover:bg-slate-50 text-slate-600 text-xs font-medium
+                               transition-colors cursor-pointer whitespace-nowrap"
+                                                >
+                                                    Analyser
+                                                </button>
                                                 <button
                                                     onClick={() =>
                                                         handleCloturer(
@@ -167,6 +180,7 @@ function ListeSessions({ onNavigate, onRelancerSession }) {
 ListeSessions.propTypes = {
     onNavigate: PropTypes.func.isRequired,
     onRelancerSession: PropTypes.func.isRequired,
+    onAnalyserSession: PropTypes.func.isRequired,
 };
 
 /* ── Sous-composant ────────────────────────────────────────────────── */
