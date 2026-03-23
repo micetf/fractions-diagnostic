@@ -90,6 +90,8 @@ export function getInitialValue(node) {
                 };
             }
             return "";
+        case "number_input":
+            return "";
         default:
             return "";
     }

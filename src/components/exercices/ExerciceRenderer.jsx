@@ -6,6 +6,8 @@ import FigureSelector from "./FigureSelector";
 import ColoringFigure from "./ColoringFigure";
 import NumberLine from "./NumberLine";
 import SortableFractions from "./SortableFractions";
+import NumberInput from "./NumberInput";
+import DemiDroiteTiers from "./figures/DemiDroiteTiers";
 import RulerWithPointP from "./figures/RulerWithPointP";
 import { figuresCE1Ex1 } from "./figures/CE1Ex1";
 import { figuresCE1Ex2 } from "./figures/CE1Ex2";
@@ -35,6 +37,7 @@ const ITEM_FIGURE_REGISTRY = {
  */
 const FIGURE_SUPPORT_ID_REGISTRY = {
     regle_huitiemes_point_P: () => <RulerWithPointP />,
+    demi_droite_tiers: () => <DemiDroiteTiers />,
 };
 
 /**
@@ -51,6 +54,7 @@ const SUPPORT_FIGURE_REGISTRY = {
  */
 const FIGURE_COMPOUND_REGISTRY = {
     "CE1-6": <DemiDisque />,
+    "CM1-4": <DemiDroiteTiers />,
 };
 
 function makeSegmentsAuto(n) {
@@ -335,20 +339,39 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     "#7c3aed",
                 ];
                 return (
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
                         {exercice.fractionsAplacer.map((f, i) => {
                             const key = `${f.n}/${f.d}`;
+                            const ptVal = val?.[key] ?? null;
                             return (
-                                <NumberLine
+                                <div
                                     key={key}
-                                    graduation={exercice.graduation}
-                                    value={val?.[key] ?? null}
-                                    onChange={(v) =>
-                                        onChange({ ...val, [key]: v })
-                                    }
-                                    couleur={COULEURS[i % COULEURS.length]}
-                                    etiquette={key}
-                                />
+                                    className="flex items-center gap-4"
+                                >
+                                    {/* Label de la fraction — toujours visible, jamais sur le point */}
+                                    <div
+                                        className="shrink-0 w-14 flex flex-col items-center
+                                  leading-none font-mono font-bold
+                                  text-slate-700 text-lg select-none"
+                                    >
+                                        <span>{f.n}</span>
+                                        <span className="w-full border-t-2 border-slate-700 my-0.5" />
+                                        <span>{f.d}</span>
+                                    </div>
+                                    <div className="flex-1">
+                                        <NumberLine
+                                            graduation={exercice.graduation}
+                                            value={ptVal}
+                                            onChange={(v) =>
+                                                onChange({ ...val, [key]: v })
+                                            }
+                                            couleur={
+                                                COULEURS[i % COULEURS.length]
+                                            }
+                                            showLabel={false}
+                                        />
+                                    </div>
+                                </div>
                             );
                         })}
                     </div>
@@ -509,10 +532,19 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                 <TextJustification
                     value={typeof val === "string" ? val : ""}
                     onChange={onChange}
-                    label={
-                        exercice.consigne ?? "Explique comment tu as trouvé :"
-                    }
+                    label={"Ta réponse :"}
                     placeholder="Écris ta réponse ici…"
+                />
+            );
+        }
+
+        // ── Saisie numérique ──────────────────────────────────────────────
+        case "number_input": {
+            return (
+                <NumberInput
+                    value={typeof val === "string" ? val : ""}
+                    onChange={onChange}
+                    unite={exercice.unite ?? ""}
                 />
             );
         }

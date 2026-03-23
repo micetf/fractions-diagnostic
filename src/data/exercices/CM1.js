@@ -242,14 +242,71 @@ export const exercices = [
         titre: "Quel nombre est ce point ?",
         competence:
             "Repérer une fraction à partir d'un point placé sur la demi-droite graduée",
-        type: "text",
+        type: "compound",
         consigne:
-            "Voici une demi-droite graduée en tiers (0, 1/3, 2/3, 1, 4/3, 5/3, 2…). Trois points A, B et C sont placés dessus.",
-        // Les positions exactes des points A, B, C ne sont pas spécifiées dans le document source.
-        // TODO : définir les positions exactes lors de la conception graphique.
-        // D'après les erreurs documentées, B est entre 1 et 2 (fraction > 1), C est à 6/3 = 2.
-        biaisDetectables: [],
-        aRelire: true,
+            "Voici une demi-droite graduée en tiers. Trois points A, B et C sont placés dessus.",
+        figureSupportId: "demi_droite_tiers",
+        sousQuestions: [
+            {
+                id: "a",
+                type: "fraction_input",
+                consigne: "Quelle fraction correspond au point A ?",
+                items: [
+                    {
+                        id: "resultat",
+                        attendu: { numerateur: 2, denominateur: 3 },
+                    },
+                ],
+                biaisDetectables: [],
+                aRelire: false,
+            },
+            {
+                id: "b",
+                type: "fraction_input",
+                consigne: "Quelle fraction correspond au point B ?",
+                items: [
+                    {
+                        id: "resultat",
+                        attendu: { numerateur: 5, denominateur: 3 },
+                    },
+                ],
+                biaisDetectables: [
+                    {
+                        code: "FRACTION_TOUJOURS_INF_1",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Répondre une fraction < 1 pour B → l'élève refuse de lire une valeur supérieure à l'unité sur la droite.",
+                    },
+                ],
+                aRelire: true,
+            },
+            {
+                id: "c",
+                type: "fraction_input",
+                consigne: "Quelle fraction correspond au point C ?",
+                items: [
+                    {
+                        id: "resultat",
+                        attendu: { numerateur: 6, denominateur: 3 },
+                    },
+                ],
+                biaisDetectables: [
+                    {
+                        code: "N_SUR_N_NON_ACQUIS",
+                        declencheur: {
+                            type: "item_fraction_equals",
+                            itemId: "resultat",
+                            numerateur: 2,
+                            denominateur: 1,
+                        },
+                        ceQueRevele:
+                            "Répondre 6/3 sans reconnaître que 6/3 = 2 → connexion fraction / entier non disponible.",
+                    },
+                ],
+                aRelire: false,
+            },
+        ],
+        aRelire: false,
     },
 
     // ── Exercice 5 ────────────────────────────────────────────────────────────
@@ -287,8 +344,7 @@ export const exercices = [
         competence:
             "Additionner et soustraire des fractions (dénominateur dont l'un est multiple de l'autre)",
         type: "compound",
-        consigne:
-            "Calcule et explique chaque étape avec des mots.",
+        consigne: "Calcule et explique chaque étape avec des mots.",
         sousQuestions: [
             {
                 id: "a",
@@ -398,42 +454,60 @@ export const exercices = [
         sousQuestions: [
             {
                 id: "a",
-                type: "text",
+                type: "number_input",
                 consigne:
-                    "Une étagère mesure 60 cm. Quelle est la longueur d'un quart de cette étagère ? Explique comment tu as trouvé.",
+                    "Une étagère mesure 60 cm. Quelle est la longueur d'un quart de cette étagère ?",
+                unite: "cm",
                 attendu: 15,
                 biaisDetectables: [
                     {
                         code: "FRACTION_OPERATEUR_NON_CONSTRUITE",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre 56 (60 − 4) ou 64 (60 + 4) → la fraction est traitée comme un nombre entier à additionner ou soustraire ; la fraction-opérateur n'est pas construite.",
+                            "Répondre 56 (60 − 4) ou 64 (60 + 4) → la fraction traitée comme un entier à additionner ou soustraire.",
                     },
                 ],
                 aRelire: true,
             },
             {
                 id: "b",
-                type: "text",
+                type: "number_input",
                 consigne:
-                    "Dans un panier, il y a 12 œufs. Un tiers des œufs est cassé. Combien d'œufs sont cassés ? Explique.",
+                    "Dans un panier, il y a 12 œufs. Un tiers des œufs est cassé. Combien d'œufs sont cassés ?",
+                unite: "œufs",
                 attendu: 4,
                 biaisDetectables: [
                     {
                         code: "FRACTION_OPERATEUR_NON_CONSTRUITE",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre 3 (division par 4 au lieu de 3) ou 4 (confusion numérateur/dénominateur) → le sens du dénominateur comme « nombre de parts égales » n'est pas stabilisé.",
+                            "Répondre 3 ou 4 par confusion numérateur/dénominateur → sens du dénominateur non stabilisé.",
                     },
                 ],
                 aRelire: true,
             },
             {
                 id: "c",
-                type: "text",
+                type: "number_input",
                 consigne: "1/5 de 500 g de farine, c'est combien ?",
+                unite: "g",
                 attendu: 100,
                 biaisDetectables: [],
+                aRelire: true,
+            },
+            {
+                id: "d",
+                type: "text",
+                consigne:
+                    "Peux-tu trouver 1/4 de 10 mètres ? Explique ta méthode.",
+                biaisDetectables: [
+                    {
+                        code: "FRACTION_OPERATEUR_NON_CONSTRUITE",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Bloquer car 10 n'est pas divisible par 4 en entier → résultat fractionnaire 2,5 m non accepté.",
+                    },
+                ],
                 aRelire: true,
             },
             {
@@ -462,14 +536,69 @@ export const exercices = [
         titre: "Un problème à plusieurs étapes",
         competence:
             "Mobiliser la fraction avec des sens variés (partie d'un tout, mesure, opérateur) dans un problème",
-        type: "text",
+        type: "compound",
         consigne:
-            "Un sentier mesure 1 unité de longueur. Trois randonneurs le parcourent en deux jours.",
-        // Les données exactes pour Lou, Max et Éva ne sont pas spécifiées dans le document source
-        // (seules les erreurs sont documentées).
-        // TODO : définir les fractions de chaque randonneur lors de la conception de l'exercice.
-        // D'après les erreurs : Lou parcourt 3/4 + 1/4, Max dépasse 1 unité, Éva parcourt 4 × 1/4.
-        biaisDetectables: [],
-        aRelire: true,
+            "Un sentier mesure 1 unité de longueur. Trois randonneurs le parcourent en deux jours.\n\nLou : 3/4 le matin + 1/4 l'après-midi.\nMax : 3/4 le matin + 2/4 l'après-midi.\nÉva : 4 fois 1/4.",
+        sousQuestions: [
+            {
+                id: "a",
+                type: "binary_choice",
+                consigne: "Lou a-t-il parcouru tout le sentier ? Justifie.",
+                options: ["OUI", "NON"],
+                attendu: "OUI",
+                avecJustification: true,
+                biaisDetectables: [
+                    {
+                        code: "ADDITION_DENOMINATEURS",
+                        declencheur: { type: "choice_equals", valeur: "NON" },
+                        ceQueRevele:
+                            "Répondre NON → additionner 3/4 + 1/4 = 4/8 et ne pas identifier 4/4 = 1.",
+                    },
+                ],
+                aRelire: true,
+            },
+            {
+                id: "b",
+                type: "compound",
+                consigne: "Max a-t-il dépassé la longueur du sentier ?",
+                sousQuestions: [
+                    {
+                        id: "b_choix",
+                        type: "binary_choice",
+                        consigne: "A-t-il dépassé ?",
+                        options: ["OUI", "NON"],
+                        attendu: "OUI",
+                        biaisDetectables: [],
+                        aRelire: false,
+                    },
+                    {
+                        id: "b_depassement",
+                        type: "fraction_input",
+                        consigne: "De combien a-t-il dépassé ?",
+                        items: [
+                            {
+                                id: "resultat",
+                                attendu: { numerateur: 1, denominateur: 4 },
+                            },
+                        ],
+                        biaisDetectables: [],
+                        aRelire: true,
+                    },
+                ],
+                aRelire: false,
+            },
+            {
+                id: "c",
+                type: "binary_choice",
+                consigne:
+                    "Éva dit qu'elle a marché autant que Lou. A-t-elle raison ? Montre-le.",
+                options: ["OUI", "NON"],
+                attendu: "OUI",
+                avecJustification: true,
+                biaisDetectables: [],
+                aRelire: true,
+            },
+        ],
+        aRelire: false,
     },
 ];
