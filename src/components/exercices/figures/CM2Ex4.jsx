@@ -5,52 +5,7 @@
  * Réponses attendues : 6/9, 8/12, 10/15, 14/21, 4/6.
  */
 
-import PropTypes from "prop-types";
-
-const W = 76;
-const H = 52;
-
-function FractionLabel({ n, d }) {
-    return (
-        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
-            <text
-                x={W / 2}
-                y={H / 2 - 6}
-                textAnchor="middle"
-                fontSize="15"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-                fill="#1e293b"
-            >
-                {n}
-            </text>
-            <line
-                x1={W / 2 - 16}
-                y1={H / 2 + 1}
-                x2={W / 2 + 16}
-                y2={H / 2 + 1}
-                stroke="#1e293b"
-                strokeWidth="1.5"
-            />
-            <text
-                x={W / 2}
-                y={H / 2 + 18}
-                textAnchor="middle"
-                fontSize="15"
-                fontFamily="ui-monospace, monospace"
-                fontWeight="600"
-                fill="#1e293b"
-            >
-                {d}
-            </text>
-        </svg>
-    );
-}
-
-FractionLabel.propTypes = {
-    n: PropTypes.number.isRequired,
-    d: PropTypes.number.isRequired,
-};
+import FractionLabel from "./FractionLabel";
 
 export const figuresCM2Ex4 = [
     {
