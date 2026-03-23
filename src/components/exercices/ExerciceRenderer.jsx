@@ -23,8 +23,15 @@ const FIGURE_REGISTRY = {
 };
 
 /**
+ * Registre des figures illustrant chaque item d'un exercice fraction_input.
+ * Clé : "NIVEAU-NUMERO". Valeur : objet { itemId → ReactNode }.
+ */
+const ITEM_FIGURE_REGISTRY = {
+    "CE1-2": figuresCE1Ex2,
+};
+
+/**
  * Génère des segments rectangulaires égaux pour une bande de N parts.
- * Utilisé pour les exercices de coloriage sans SVG spécifique.
  *
  * @param {number} n
  * @returns {Array}
@@ -43,9 +50,8 @@ function makeSegmentsAuto(n) {
 
 /**
  * Retourne les segments pour une figure de coloriage.
- * Cas particulier : triangle (CE1 Ex.3 figure D).
  *
- * @param {object} figure - Définition de la figure (depuis les data).
+ * @param {object} figure
  * @returns {Array}
  */
 function makeSegmentsForFigure(figure) {
@@ -58,16 +64,16 @@ function makeSegmentsForFigure(figure) {
 /**
  * ExerciceRenderer
  *
- * Renders any exercise or sous-question node using the appropriate
- * interactive component. Handles all types recursively for 'compound'.
+ * Sélectionne et rend le composant de saisie approprié pour un exercice
+ * ou une sous-question. Gère tous les types définis dans les données sources,
+ * y compris les types composés (récursion sur sousQuestions).
  *
- * Aucun retour de justesse n'est donné à l'élève (SRS F-PAS-05) :
- * ce composant affiche uniquement les champs de saisie.
+ * Aucun retour de justesse n'est donné à l'élève (SRS F-PAS-05).
  *
  * @param {object}   props
  * @param {object}   props.exercice  - Nœud exercice ou sous-question.
  * @param {string}   props.niveau    - 'CE1' | 'CE2' | 'CM1' | 'CM2'.
- * @param {any}      props.value     - Valeur courante (structure selon le type).
+ * @param {any}      props.value     - Valeur courante.
  * @param {function} props.onChange  - Appelé avec la nouvelle valeur.
  */
 function ExerciceRenderer({ exercice, niveau, value, onChange }) {
@@ -77,53 +83,73 @@ function ExerciceRenderer({ exercice, niveau, value, onChange }) {
         // ── Fraction input ────────────────────────────────────────────────────
         case "fraction_input": {
             if (exercice.items?.length > 0) {
-                // Registre des figures illustrant chaque item
-                const ITEM_FIGURES = {
-                    "CE1-2": figuresCE1Ex2,
-                };
                 const itemFigures =
-                    ITEM_FIGURES[`${niveau}-${exercice.numero}`] ?? {};
+                    ITEM_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`] ?? {};
 
                 return (
-                    <div className="flex flex-wrap gap-8 items-start">
-                        {exercice.items.map((item) => (
-                            <div
-                                key={item.id}
-                                className="flex flex-col items-center gap-3"
-                            >
-                                {/* Figure illustrative si disponible */}
-                                {itemFigures[item.id] && (
-                                    <div className="flex items-center justify-center">
-                                        {itemFigures[item.id]}
-                                    </div>
-                                )}
-                                {/* Description texte si pas de figure */}
-                                {!itemFigures[item.id] && item.description && (
-                                    <p className="text-sm text-slate-500 text-center max-w-32">
-                                        {item.description}
-                                    </p>
-                                )}
-                                {/* Libellé de l'item */}
-                                <span className="text-xs font-mono text-slate-400 uppercase">
-                                    Figure {item.id}
-                                </span>
-                                <FractionInput
-                                    value={
-                                        val[item.id] ?? {
-                                            numerateur: null,
-                                            denominateur: null,
+                    <div className="flex flex-col gap-6">
+                        {/* Items : figure + FractionInput */}
+                        <div className="flex flex-wrap gap-8 items-end">
+                            {exercice.items.map((item) => (
+                                <div
+                                    key={item.id}
+                                    className="flex flex-col items-center gap-3"
+                                >
+                                    {/* Figure illustrative si disponible */}
+                                    {itemFigures[item.id] ? (
+                                        <div className="flex items-center justify-center">
+                                            {itemFigures[item.id]}
+                                        </div>
+                                    ) : item.description ? (
+                                        /* Description texte si pas de figure */
+                                        <p className="text-sm text-slate-500 text-center max-w-36">
+                                            {item.description}
+                                        </p>
+                                    ) : null}
+
+                                    {/* Label de l'item uniquement si plusieurs items */}
+                                    {exercice.items.length > 1 && (
+                                        <span className="text-xs font-mono text-slate-400">
+                                            {item.id}
+                                        </span>
+                                    )}
+
+                                    <FractionInput
+                                        value={
+                                            val[item.id] ?? {
+                                                numerateur: null,
+                                                denominateur: null,
+                                            }
                                         }
-                                    }
-                                    onChange={(v) =>
-                                        onChange({ ...val, [item.id]: v })
-                                    }
-                                    idPrefix={`fraction-${item.id}`}
-                                />
-                            </div>
-                        ))}
+                                        onChange={(v) =>
+                                            onChange({ ...val, [item.id]: v })
+                                        }
+                                        idPrefix={`fraction-${item.id}`}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Champ d'explication si l'exercice est marqué aRelire
+                (CE1 Ex.7, CE2 Ex.7, CM1 Ex.6, CM2 Ex.6) */}
+                        {exercice.aRelire && (
+                            <TextJustification
+                                value={
+                                    typeof val.__explication === "string"
+                                        ? val.__explication
+                                        : ""
+                                }
+                                onChange={(v) =>
+                                    onChange({ ...val, __explication: v })
+                                }
+                                label="Explique avec un dessin ou des mots comment tu as trouvé :"
+                            />
+                        )}
                     </div>
                 );
             }
+
+            // Item unique
             return (
                 <FractionInput
                     value={val}
@@ -157,7 +183,6 @@ function ExerciceRenderer({ exercice, niveau, value, onChange }) {
             const key = `${niveau}-${exercice.numero}`;
             const figures = FIGURE_REGISTRY[key] ?? [];
             if (figures.length === 0) {
-                // Fallback texte si pas de figures SVG pour cet exercice
                 return (
                     <TextJustification
                         value={typeof val === "string" ? val : ""}
@@ -258,7 +283,6 @@ function ExerciceRenderer({ exercice, niveau, value, onChange }) {
                     </div>
                 );
             }
-            // Point unique
             return (
                 <NumberLine
                     graduation={exercice.graduation}

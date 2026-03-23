@@ -17,12 +17,15 @@ export function getInitialValue(node) {
     switch (node.type) {
         case "fraction_input":
             if (node.items?.length > 0) {
-                return Object.fromEntries(
+                const base = Object.fromEntries(
                     node.items.map((item) => [
                         item.id,
                         { numerateur: null, denominateur: null },
                     ])
                 );
+                // Réserver la clé __explication si l'exercice demande une justification
+                if (node.aRelire) base.__explication = "";
+                return base;
             }
             return { numerateur: null, denominateur: null };
 
