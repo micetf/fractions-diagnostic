@@ -511,7 +511,6 @@ export const exercices = [
                 ],
                 aRelire: false,
             },
-            ,
         ],
         aRelire: false,
     },
