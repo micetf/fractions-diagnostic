@@ -10,6 +10,7 @@ import { figuresCE1Ex2 } from "./figures/CE1Ex2";
 import { figuresCE2Ex2 } from "./figures/CE2Ex2";
 import { figuresCM2Ex4 } from "./figures/CM2Ex4";
 import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
+import DemiDisque from "./figures/DemiDisque";
 import { getInitialValue } from "@/utils/initialValues";
 
 /** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
@@ -22,6 +23,14 @@ const FIGURE_REGISTRY = {
 /** Registre figures pour les items fraction_input. Clé : "NIVEAU-NUMERO". */
 const ITEM_FIGURE_REGISTRY = {
     "CE1-2": figuresCE1Ex2,
+};
+
+/**
+ * Figures support pour les exercices compound qui affichent un objet
+ * avant leurs sous-questions. Clé : "NIVEAU-NUMERO".
+ */
+const FIGURE_COMPOUND_REGISTRY = {
+    "CE1-6": <DemiDisque />,
 };
 
 function makeSegmentsAuto(n) {
@@ -482,8 +491,17 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
 
         // ── Composé (sous-questions) ──────────────────────────────────────────
         case "compound": {
+            const figureSupport =
+                FIGURE_COMPOUND_REGISTRY[`${niveau}-${exercice.numero}`];
             return (
                 <div className="flex flex-col gap-6">
+                    {/* Figure support si présente (ex. : demi-disque CE1 Ex.6) */}
+                    {figureSupport && (
+                        <div className="flex items-center justify-center py-2">
+                            {figureSupport}
+                        </div>
+                    )}
+
                     {(exercice.sousQuestions ?? []).map((sq) => (
                         <div key={sq.id} className="flex flex-col gap-3">
                             {sq.consigne && (
