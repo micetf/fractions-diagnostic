@@ -13,6 +13,7 @@ import { figuresCE1Ex1 } from "./figures/CE1Ex1";
 import { figuresCE1Ex2 } from "./figures/CE1Ex2";
 import { figuresCE2Ex2 } from "./figures/CE2Ex2";
 import { figuresCM2Ex4 } from "./figures/CM2Ex4";
+import DemiDroiteCM2Ex3B from "./figures/DemiDroiteCM2Ex3B";
 import DemiDisque from "./figures/DemiDisque";
 import RegletteSegments from "./figures/RegletteSegments";
 import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
@@ -38,6 +39,7 @@ const ITEM_FIGURE_REGISTRY = {
 const FIGURE_SUPPORT_ID_REGISTRY = {
     regle_huitiemes_point_P: () => <RulerWithPointP />,
     demi_droite_tiers: () => <DemiDroiteTiers />,
+    demi_droite_cm2_ex3b: () => <DemiDroiteCM2Ex3B />,
 };
 
 /**
@@ -668,67 +670,153 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
             );
         }
 
-        // ── Encadrement d'une fraction entre deux entiers consécutifs ─────────
-        // Utilisé pour CM2 Ex.2 — deux champs numériques flanquant la fraction.
+        // ── Encadrement d'une fraction entre deux bornes ───────────────────────
         case "encadrement": {
-            const inf = val?.inf ?? "";
-            const sup = val?.sup ?? "";
-            const { n, d } = exercice.fraction;
+            const inf = String(val?.inf ?? "");
+            const sup = String(val?.sup ?? "");
+
+            // lecture_A : fraction null — on affiche n/denominateur comme bornes
+            const hasFraction = exercice.fraction != null;
+            const den = exercice.denominateur ?? null;
 
             return (
                 <div className="flex items-center gap-3 flex-wrap">
                     {/* Borne inférieure */}
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        value={inf}
-                        onChange={(e) =>
-                            onChange({ ...val, inf: e.target.value })
-                        }
-                        placeholder="?"
-                        aria-label="Borne inférieure"
-                        className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
-                       text-slate-800 text-xl font-mono text-center
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent"
-                    />
+                    <div className="flex items-center gap-1">
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={inf}
+                            onChange={(e) =>
+                                onChange({ ...val, inf: e.target.value })
+                            }
+                            placeholder="?"
+                            aria-label="Borne inférieure"
+                            className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                         text-slate-800 text-xl font-mono text-center
+                         focus:outline-none focus:ring-2 focus:ring-brand-400
+                         focus:border-transparent"
+                        />
+                        {/* Affiche /3 si denominateur fourni sans fraction */}
+                        {!hasFraction && den && (
+                            <span className="text-slate-500 text-lg font-mono">
+                                /{den}
+                            </span>
+                        )}
+                    </div>
 
-                    {/* Opérateur < */}
                     <span className="text-slate-400 text-xl font-light select-none">
                         &lt;
                     </span>
 
-                    {/* Fraction — affichée en grand comme référent visuel */}
-                    <span
-                        className="inline-flex flex-col items-center leading-none
-                           font-mono font-bold text-slate-800 text-2xl
-                           select-none px-2"
-                    >
-                        <span>{n}</span>
-                        <span className="w-full border-t-2 border-slate-800 my-1" />
-                        <span>{d}</span>
-                    </span>
+                    {/* Valeur centrale — fraction ou étiquette */}
+                    {hasFraction ? (
+                        <span
+                            className="inline-flex flex-col items-center leading-none
+                             font-mono font-bold text-slate-800 text-2xl
+                             select-none px-2"
+                        >
+                            <span>{exercice.fraction.n}</span>
+                            <span className="w-full border-t-2 border-slate-800 my-1" />
+                            <span>{exercice.fraction.d}</span>
+                        </span>
+                    ) : (
+                        <span className="font-bold text-slate-700 text-xl select-none px-2">
+                            A
+                        </span>
+                    )}
 
-                    {/* Opérateur < */}
                     <span className="text-slate-400 text-xl font-light select-none">
                         &lt;
                     </span>
 
                     {/* Borne supérieure */}
+                    <div className="flex items-center gap-1">
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={sup}
+                            onChange={(e) =>
+                                onChange({ ...val, sup: e.target.value })
+                            }
+                            placeholder="?"
+                            aria-label="Borne supérieure"
+                            className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                         text-slate-800 text-xl font-mono text-center
+                         focus:outline-none focus:ring-2 focus:ring-brand-400
+                         focus:border-transparent"
+                        />
+                        {!hasFraction && den && (
+                            <span className="text-slate-500 text-lg font-mono">
+                                /{den}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
+        // ── Décomposition signée : entier ± fraction ──────────────────────────
+        // Utilisé pour CM2 Ex.3 lectures B (3+2/3, 4−1/3).
+        case "decomposition_addition":
+        case "decomposition_soustraction": {
+            const signe =
+                exercice.type === "decomposition_addition" ? "+" : "−";
+            const entier = String(val?.entier ?? "");
+            const num = String(val?.num ?? "");
+            const den = String(val?.den ?? "");
+
+            return (
+                <div className="flex items-center gap-3 flex-wrap">
                     <input
                         type="number"
                         inputMode="numeric"
-                        value={sup}
+                        value={entier}
                         onChange={(e) =>
-                            onChange({ ...val, sup: e.target.value })
+                            onChange({ ...val, entier: e.target.value })
                         }
                         placeholder="?"
-                        aria-label="Borne supérieure"
-                        className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                        aria-label="Partie entière"
+                        className="w-16 px-3 py-2.5 rounded-xl border-2 border-slate-200
                        text-slate-800 text-xl font-mono text-center
-                       focus:outline-none focus:ring-2 focus:ring-brand-400
-                       focus:border-transparent"
+                       focus:outline-none focus:ring-2 focus:ring-brand-400"
                     />
+
+                    <span className="text-slate-500 text-xl font-light select-none">
+                        {signe}
+                    </span>
+
+                    <div className="flex flex-col items-center leading-none">
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={num}
+                            onChange={(e) =>
+                                onChange({ ...val, num: e.target.value })
+                            }
+                            placeholder="?"
+                            aria-label="Numérateur"
+                            className="w-16 px-2 py-1.5 rounded-t-lg border-2 border-b-0
+                         border-slate-200 text-slate-800 text-lg font-mono
+                         text-center focus:outline-none focus:ring-2
+                         focus:ring-brand-400"
+                        />
+                        <div className="w-16 border-t-2 border-slate-400" />
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={den}
+                            onChange={(e) =>
+                                onChange({ ...val, den: e.target.value })
+                            }
+                            placeholder="?"
+                            aria-label="Dénominateur"
+                            className="w-16 px-2 py-1.5 rounded-b-lg border-2 border-t-0
+                         border-slate-200 text-slate-800 text-lg font-mono
+                         text-center focus:outline-none focus:ring-2
+                         focus:ring-brand-400"
+                        />
+                    </div>
                 </div>
             );
         }

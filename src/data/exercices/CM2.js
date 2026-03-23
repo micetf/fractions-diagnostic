@@ -188,16 +188,18 @@ export const exercices = [
         consigne:
             "Voici une demi-droite graduée en tiers, avec 0, 1, 2, 3 et 4 marqués.",
         sousQuestions: [
+            // ── Partie A — Placement ─────────────────────────────────────────
             {
                 id: "placement",
                 type: "number_line",
-                consigne: "Place : 5/3 — 7/3 — 10/3 — 9/3",
+                consigne:
+                    "Place ces fractions sur la demi-droite : 5/3 — 7/3 — 9/3 — 10/3",
                 graduation: { denominateur: 3, min: 0, max: 4 },
                 fractionsAplacer: [
                     { n: 5, d: 3 },
                     { n: 7, d: 3 },
-                    { n: 10, d: 3 },
                     { n: 9, d: 3 },
+                    { n: 10, d: 3 },
                 ],
                 biaisDetectables: [
                     {
@@ -207,18 +209,97 @@ export const exercices = [
                             fraction: { n: 9, d: 3 },
                         },
                         ceQueRevele:
-                            "Placer 9/3 entre 8/3 et 10/3 sans reconnaître que 9/3 = 3 → incapacité à connecter fraction et entier sur la droite.",
+                            "Placer 9/3 entre 8/3 et 10/3 sans reconnaître que 9/3 = 3.",
                     },
                 ],
                 aRelire: false,
             },
+
+            // ── Partie B — Lecture ───────────────────────────────────────────
+
+            // B1 : lire une position non entière
             {
-                id: "lecture",
-                type: "text",
+                id: "lecture_A",
+                type: "encadrement",
+                figureSupportId: "demi_droite_cm2_ex3b",
+                // Le point A est visible sur la droite entre 7/3 et 8/3.
+                // On demande l'encadrement — pas l'exactitude — pour révéler
+                // si l'élève lit une mesure ou compte des traits.
+                fraction: null, // pas une fraction à encadrer : c'est un point visuel
                 consigne:
-                    "Le point A est entre 7/3 et 8/3. Donne trois écritures différentes de la valeur 3 sur cette demi-droite. Le point B est à l'abscisse 11/3. Écris deux autres façons d'écrire cette valeur.",
-                biaisDetectables: [],
+                    "Le point A est placé sur la demi-droite entre deux graduations. " +
+                    "Entre quelles graduations se trouve-t-il ?",
+                attendu: { min: 7, max: 8 }, // en tiers : entre 7/3 et 8/3
+                denominateur: 3, // affiché comme n/3
+                biaisDetectables: [
+                    {
+                        code: "N_SUR_N_NON_ACQUIS",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Répondre « le 3ᵉ trait » ou compter les traits sans lire une " +
+                            "mesure fractionnaire → lecture ordinale de la graduation.",
+                    },
+                ],
                 aRelire: true,
+            },
+
+            // B2 : trois écritures de l'entier 3
+            {
+                id: "lecture_3",
+                type: "fraction_input",
+                consigne:
+                    "Le nombre 3 est marqué sur la demi-droite. Écris-le comme une fraction en tiers :",
+                items: [
+                    { id: "r", attendu: { numerateur: 9, denominateur: 3 } },
+                ],
+                biaisDetectables: [
+                    {
+                        code: "EQUIVALENCE_PARTIELLE",
+                        declencheur: { type: "text_review" },
+                        ceQueRevele:
+                            "Ne pas trouver 9/3 → l'entier 3 et la graduation 9/3 " +
+                            "ne sont pas connectés sur la droite.",
+                    },
+                ],
+                aRelire: true,
+            },
+
+            // B3 : deux autres écritures de 11/3
+            {
+                id: "lecture_B",
+                type: "compound",
+                consigne:
+                    "Le point B est à l'abscisse 11/3. " +
+                    "Écris cette valeur de deux autres façons.",
+                sousQuestions: [
+                    {
+                        // 3 + 2/3
+                        id: "ecriture_addition",
+                        type: "decomposition_addition",
+                        consigne: "Sous la forme entier + fraction :",
+                        attendu: { entier: 3, numerateur: 2, denominateur: 3 },
+                        biaisDetectables: [],
+                        aRelire: false,
+                    },
+                    {
+                        // 4 − 1/3
+                        id: "ecriture_soustraction",
+                        type: "decomposition_soustraction",
+                        consigne: "Sous la forme entier − fraction :",
+                        attendu: { entier: 4, numerateur: 1, denominateur: 3 },
+                        biaisDetectables: [
+                            {
+                                code: "N_SUR_N_NON_ACQUIS",
+                                declencheur: { type: "text_review" },
+                                ceQueRevele:
+                                    "Ne pas trouver 3+2/3 ni 4−1/3 → décomposition " +
+                                    "entier+fraction non opératoire dans le sens droite → écriture.",
+                            },
+                        ],
+                        aRelire: true,
+                    },
+                ],
+                aRelire: false,
             },
         ],
         aRelire: false,

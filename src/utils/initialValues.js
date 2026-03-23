@@ -77,6 +77,10 @@ export function getInitialValue(node) {
         case "encadrement":
             return { inf: "", sup: "" };
 
+        case "decomposition_addition":
+        case "decomposition_soustraction":
+            return { entier: "", num: "", den: "" };
+
         case "text":
             if (node.comparaisons?.length > 0) {
                 const base = Object.fromEntries(
