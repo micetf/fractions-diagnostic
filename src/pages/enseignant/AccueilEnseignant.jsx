@@ -60,14 +60,14 @@ function AccueilEnseignant({ onNavigate }) {
                     sprint="S14"
                 />
             </div>
-            {/* Lien temporaire S7 — à retirer après validation */}
+            {/* Lien temporaire S8 — à retirer après validation */}
             <button
-                onClick={() => onNavigate("s7")}
+                onClick={() => onNavigate("s8")}
                 className="col-span-full text-xs text-amber-600 hover:text-amber-800
                      underline underline-offset-2 transition-colors cursor-pointer
                      text-left"
             >
-                S7 → Tester BinaryChoice + TextJustification
+                S8 → Tester FigureSelector
             </button>
         </div>
     );
