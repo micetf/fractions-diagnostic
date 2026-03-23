@@ -191,647 +191,692 @@ FractionSVG.propTypes = {
 function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
     const val = value ?? getInitialValue(exercice);
 
-    switch (exercice.type) {
-        // ── Fraction input ────────────────────────────────────────────────────
-        case "fraction_input": {
-            if (exercice.items?.length > 0) {
-                const itemFigures =
-                    ITEM_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`] ?? {};
-                const figureSupport =
-                    SUPPORT_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`];
-                // Figure support identifiée par id (ex. : règle avec point P)
-                const figureParId = exercice.figureSupportId
-                    ? FIGURE_SUPPORT_ID_REGISTRY[exercice.figureSupportId]?.()
-                    : null;
+    // ── Figure support par id — s'applique à TOUS les types ────────────────
+    // Déclarée ici pour être disponible dans le wrapper de retour.
+    const figureParId = exercice.figureSupportId
+        ? (FIGURE_SUPPORT_ID_REGISTRY[exercice.figureSupportId]?.() ?? null)
+        : null;
+    function renderInput() {
+        switch (exercice.type) {
+            // ── Fraction input ────────────────────────────────────────────────────
+            case "fraction_input": {
+                if (exercice.items?.length > 0) {
+                    const itemFigures =
+                        ITEM_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`] ??
+                        {};
+                    const figureSupport =
+                        SUPPORT_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`];
 
-                return (
-                    <div className="flex flex-col gap-6">
-                        {/* Figure support par id (ex. : CE2 Ex.4 encadrement) */}
-                        {figureParId && (
-                            <div className="w-full">{figureParId}</div>
-                        )}
-                        {/* Figure support par NIVEAU-NUMERO */}
-                        {figureSupport && (
-                            <div className="w-full">{figureSupport}</div>
-                        )}
-
-                        <div className="flex flex-wrap gap-8 items-end">
-                            {exercice.items.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="flex flex-col items-center gap-3"
-                                >
-                                    {itemFigures[item.id] ? (
-                                        <div className="flex items-center justify-center">
-                                            {itemFigures[item.id]}
-                                        </div>
-                                    ) : item.description ? (
-                                        <p className="text-sm text-slate-500 text-center max-w-36">
-                                            {item.description}
-                                        </p>
-                                    ) : null}
-                                    {exercice.items.length > 1 && (
-                                        <span className="text-xs font-mono text-slate-400">
-                                            {item.id}
-                                        </span>
-                                    )}
-                                    <FractionInput
-                                        value={
-                                            val[item.id] ?? {
-                                                numerateur: null,
-                                                denominateur: null,
-                                            }
-                                        }
-                                        onChange={(v) =>
-                                            onChange({ ...val, [item.id]: v })
-                                        }
-                                        idPrefix={`fraction-${item.id}`}
-                                    />
-                                </div>
-                            ))}
-                        </div>
-                        {/* Explication uniquement si avecExplication !== false */}
-                        {exercice.aRelire &&
-                            exercice.avecExplication !== false && (
-                                <TextJustification
-                                    value={
-                                        typeof val.__explication === "string"
-                                            ? val.__explication
-                                            : ""
-                                    }
-                                    onChange={(v) =>
-                                        onChange({ ...val, __explication: v })
-                                    }
-                                    label="Explique comment tu as trouvé :"
-                                />
+                    return (
+                        <div className="flex flex-col gap-6">
+                            {/* Figure support par NIVEAU-NUMERO */}
+                            {figureSupport && (
+                                <div className="w-full">{figureSupport}</div>
                             )}
-                    </div>
-                );
-            }
-            return (
-                <FractionInput
-                    value={val}
-                    onChange={onChange}
-                    idPrefix={`fraction-${exercice.id ?? exercice.numero}`}
-                />
-            );
-        }
 
-        // ── Choix binaire ─────────────────────────────────────────────────────
-        case "binary_choice": {
-            return (
-                <div className="flex flex-col gap-4">
-                    <BinaryChoice
-                        options={exercice.options}
-                        value={val.choix}
-                        onChange={(choix) => onChange({ ...val, choix })}
-                    />
-                    {exercice.avecJustification && (
-                        <TextJustification
-                            value={val.texte ?? ""}
-                            onChange={(texte) => onChange({ ...val, texte })}
-                        />
-                    )}
-                </div>
-            );
-        }
-
-        // ── Sélection de figures ──────────────────────────────────────────────
-        case "selection": {
-            const key = `${niveau}-${exercice.numero}`;
-            const figures = FIGURE_REGISTRY[key] ?? [];
-            if (figures.length === 0) {
-                return (
-                    <TextJustification
-                        value={typeof val === "string" ? val : ""}
-                        onChange={onChange}
-                        label="Indique ta réponse :"
-                    />
-                );
-            }
-            return (
-                <div className="flex flex-col gap-4">
-                    <FigureSelector
-                        figures={figures}
-                        value={
-                            Array.isArray(val)
-                                ? val
-                                : Array.isArray(val?.selection)
-                                  ? val.selection
-                                  : []
-                        }
-                        onChange={(sel) =>
-                            exercice.aRelire
-                                ? onChange({ ...(val ?? {}), selection: sel })
-                                : onChange(sel)
-                        }
-                        multiple
-                    />
-                    {/* Justification requise sur les exercices de sélection avec aRelire */}
-                    {exercice.aRelire && (
-                        <TextJustification
-                            value={
-                                typeof val.__justification === "string"
-                                    ? val.__justification
-                                    : ""
-                            }
-                            onChange={(v) =>
-                                onChange({ ...val, __justification: v })
-                            }
-                            label="Justifie tes choix :"
-                        />
-                    )}
-                </div>
-            );
-        }
-
-        // ── Coloriage ─────────────────────────────────────────────────────────
-        case "coloring": {
-            // ── Multi-figures (CE1 Ex.3, CM1 Ex.2…) ─────────────────────────
-            if (exercice.figures) {
-                return (
-                    <div className="flex flex-col gap-6">
-                        {exercice.figures.map((fig) => {
-                            const segs = makeSegmentsForFigure(fig);
-                            const figVal =
-                                val?.[fig.id] ??
-                                Array(fig.nbParts ?? 2).fill(false);
-                            const desc = fig.description?.toLowerCase() ?? "";
-                            const isTriangle = desc.includes("triangle");
-                            const isDisque = desc.includes("disque");
-                            return (
-                                <div key={fig.id}>
-                                    <p className="text-sm text-slate-500 mb-2">
-                                        Figure {fig.id}
-                                        {fig.description
-                                            ? ` — ${fig.description}`
-                                            : ""}
-                                    </p>
-                                    <ColoringFigure
-                                        segments={segs}
-                                        value={figVal}
-                                        onChange={(v) =>
-                                            onChange({ ...val, [fig.id]: v })
-                                        }
-                                        viewBoxW={
-                                            isTriangle || isDisque ? 80 : 300
-                                        }
-                                        viewBoxH={80}
-                                    />
-                                </div>
-                            );
-                        })}
-                    </div>
-                );
-            }
-
-            // ── Figure unique ────────────────────────────────────────────────
-            const hasMultiUnite = exercice.nbUnites && exercice.partsParUnite;
-
-            // makeSegmentsMultiUnite retourne { segments, viewBoxW }
-            // makeSegmentsAuto       retourne un tableau directement
-            const { segments: segs, viewBoxW: vbW } = hasMultiUnite
-                ? makeSegmentsMultiUnite(
-                      exercice.nbUnites,
-                      exercice.partsParUnite
-                  )
-                : {
-                      segments: makeSegmentsAuto(
-                          exercice.nbParts ?? exercice.partiesAColorier ?? 2
-                      ),
-                      viewBoxW: 300,
-                  };
-
-            const n = segs.length;
-
-            return (
-                <ColoringFigure
-                    segments={segs}
-                    value={Array.isArray(val) ? val : Array(n).fill(false)}
-                    onChange={onChange}
-                    viewBoxW={vbW}
-                    viewBoxH={80}
-                />
-            );
-        }
-
-        // ── Droite graduée ────────────────────────────────────────────────────
-        case "number_line": {
-            if (exercice.fractionsAplacer?.length > 0) {
-                const COULEURS = [
-                    "#2f5ee8",
-                    "#d97706",
-                    "#15803d",
-                    "#b91c1c",
-                    "#7c3aed",
-                ];
-                return (
-                    <div className="flex flex-col gap-4">
-                        {exercice.fractionsAplacer.map((f, i) => {
-                            const key = `${f.n}/${f.d}`;
-                            const ptVal = val?.[key] ?? null;
-                            return (
-                                <div
-                                    key={key}
-                                    className="flex items-center gap-4"
-                                >
-                                    {/* Label de la fraction — toujours visible, jamais sur le point */}
+                            <div className="flex flex-wrap gap-8 items-end">
+                                {exercice.items.map((item) => (
                                     <div
-                                        className="shrink-0 w-14 flex flex-col items-center
-                                  leading-none font-mono font-bold
-                                  text-slate-700 text-lg select-none"
+                                        key={item.id}
+                                        className="flex flex-col items-center gap-3"
                                     >
-                                        <span>{f.n}</span>
-                                        <span className="w-full border-t-2 border-slate-700 my-0.5" />
-                                        <span>{f.d}</span>
-                                    </div>
-                                    <div className="flex-1">
-                                        <NumberLine
-                                            graduation={exercice.graduation}
-                                            value={ptVal}
+                                        {itemFigures[item.id] ? (
+                                            <div className="flex items-center justify-center">
+                                                {itemFigures[item.id]}
+                                            </div>
+                                        ) : item.description ? (
+                                            <p className="text-sm text-slate-500 text-center max-w-36">
+                                                {item.description}
+                                            </p>
+                                        ) : null}
+                                        {exercice.items.length > 1 && (
+                                            <span className="text-xs font-mono text-slate-400">
+                                                {item.id}
+                                            </span>
+                                        )}
+                                        <FractionInput
+                                            value={
+                                                val[item.id] ?? {
+                                                    numerateur: null,
+                                                    denominateur: null,
+                                                }
+                                            }
                                             onChange={(v) =>
-                                                onChange({ ...val, [key]: v })
-                                            }
-                                            couleur={
-                                                COULEURS[i % COULEURS.length]
-                                            }
-                                            showLabel={false}
-                                        />
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                );
-            }
-            return (
-                <NumberLine
-                    graduation={exercice.graduation}
-                    value={val}
-                    onChange={onChange}
-                />
-            );
-        }
-
-        // ── Texte (simple ou structuré) ───────────────────────────────────────
-        case "text": {
-            // ── CE2 Ex.6 — Comparaisons de fractions (< / > / =) ───────────────
-            // Source : exercice 6 CE2, comparaisons[].{gauche, droite, attendu}
-            if (exercice.comparaisons?.length > 0) {
-                const objVal =
-                    typeof val === "object" &&
-                    val !== null &&
-                    !Array.isArray(val)
-                        ? val
-                        : {};
-                return (
-                    <div className="flex flex-col gap-6">
-                        {exercice.comparaisons.map((comp) => (
-                            <div
-                                key={comp.id}
-                                className="flex items-center gap-4 flex-wrap"
-                            >
-                                {/* Fraction gauche */}
-                                <div className="flex items-center justify-center w-12">
-                                    <FractionSVG
-                                        n={comp.gauche.n}
-                                        d={comp.gauche.d}
-                                    />
-                                </div>
-
-                                {/* Boutons <, >, = */}
-                                <div className="flex gap-2">
-                                    {["<", ">", "="].map((signe) => (
-                                        <button
-                                            key={signe}
-                                            type="button"
-                                            onClick={() =>
                                                 onChange({
-                                                    ...objVal,
-                                                    [comp.id]: signe,
+                                                    ...val,
+                                                    [item.id]: v,
                                                 })
                                             }
-                                            className={`w-10 h-10 rounded-lg text-lg font-bold border-2
+                                            idPrefix={`fraction-${item.id}`}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                            {/* Explication uniquement si avecExplication !== false */}
+                            {exercice.aRelire &&
+                                exercice.avecExplication !== false && (
+                                    <TextJustification
+                                        value={
+                                            typeof val.__explication ===
+                                            "string"
+                                                ? val.__explication
+                                                : ""
+                                        }
+                                        onChange={(v) =>
+                                            onChange({
+                                                ...val,
+                                                __explication: v,
+                                            })
+                                        }
+                                        label="Explique comment tu as trouvé :"
+                                    />
+                                )}
+                        </div>
+                    );
+                }
+                return (
+                    <FractionInput
+                        value={val}
+                        onChange={onChange}
+                        idPrefix={`fraction-${exercice.id ?? exercice.numero}`}
+                    />
+                );
+            }
+
+            // ── Choix binaire ─────────────────────────────────────────────────────
+            case "binary_choice": {
+                return (
+                    <div className="flex flex-col gap-4">
+                        <BinaryChoice
+                            options={exercice.options}
+                            value={val.choix}
+                            onChange={(choix) => onChange({ ...val, choix })}
+                        />
+                        {exercice.avecJustification && (
+                            <TextJustification
+                                value={val.texte ?? ""}
+                                onChange={(texte) =>
+                                    onChange({ ...val, texte })
+                                }
+                            />
+                        )}
+                    </div>
+                );
+            }
+
+            // ── Sélection de figures ──────────────────────────────────────────────
+            case "selection": {
+                const key = `${niveau}-${exercice.numero}`;
+                const figures = FIGURE_REGISTRY[key] ?? [];
+                if (figures.length === 0) {
+                    return (
+                        <TextJustification
+                            value={typeof val === "string" ? val : ""}
+                            onChange={onChange}
+                            label="Indique ta réponse :"
+                        />
+                    );
+                }
+                return (
+                    <div className="flex flex-col gap-4">
+                        <FigureSelector
+                            figures={figures}
+                            value={
+                                Array.isArray(val)
+                                    ? val
+                                    : Array.isArray(val?.selection)
+                                      ? val.selection
+                                      : []
+                            }
+                            onChange={(sel) =>
+                                exercice.aRelire
+                                    ? onChange({
+                                          ...(val ?? {}),
+                                          selection: sel,
+                                      })
+                                    : onChange(sel)
+                            }
+                            multiple
+                        />
+                        {/* Justification requise sur les exercices de sélection avec aRelire */}
+                        {exercice.aRelire && (
+                            <TextJustification
+                                value={
+                                    typeof val.__justification === "string"
+                                        ? val.__justification
+                                        : ""
+                                }
+                                onChange={(v) =>
+                                    onChange({ ...val, __justification: v })
+                                }
+                                label="Justifie tes choix :"
+                            />
+                        )}
+                    </div>
+                );
+            }
+
+            // ── Coloriage ─────────────────────────────────────────────────────────
+            case "coloring": {
+                // ── Multi-figures (CE1 Ex.3, CM1 Ex.2…) ─────────────────────────
+                if (exercice.figures) {
+                    return (
+                        <div className="flex flex-col gap-6">
+                            {exercice.figures.map((fig) => {
+                                const segs = makeSegmentsForFigure(fig);
+                                const figVal =
+                                    val?.[fig.id] ??
+                                    Array(fig.nbParts ?? 2).fill(false);
+                                const desc =
+                                    fig.description?.toLowerCase() ?? "";
+                                const isTriangle = desc.includes("triangle");
+                                const isDisque = desc.includes("disque");
+                                return (
+                                    <div key={fig.id}>
+                                        <p className="text-sm text-slate-500 mb-2">
+                                            Figure {fig.id}
+                                            {fig.description
+                                                ? ` — ${fig.description}`
+                                                : ""}
+                                        </p>
+                                        <ColoringFigure
+                                            segments={segs}
+                                            value={figVal}
+                                            onChange={(v) =>
+                                                onChange({
+                                                    ...val,
+                                                    [fig.id]: v,
+                                                })
+                                            }
+                                            viewBoxW={
+                                                isTriangle || isDisque
+                                                    ? 80
+                                                    : 300
+                                            }
+                                            viewBoxH={80}
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                }
+
+                // ── Figure unique ────────────────────────────────────────────────
+                const hasMultiUnite =
+                    exercice.nbUnites && exercice.partsParUnite;
+
+                // makeSegmentsMultiUnite retourne { segments, viewBoxW }
+                // makeSegmentsAuto       retourne un tableau directement
+                const { segments: segs, viewBoxW: vbW } = hasMultiUnite
+                    ? makeSegmentsMultiUnite(
+                          exercice.nbUnites,
+                          exercice.partsParUnite
+                      )
+                    : {
+                          segments: makeSegmentsAuto(
+                              exercice.nbParts ?? exercice.partiesAColorier ?? 2
+                          ),
+                          viewBoxW: 300,
+                      };
+
+                const n = segs.length;
+
+                return (
+                    <ColoringFigure
+                        segments={segs}
+                        value={Array.isArray(val) ? val : Array(n).fill(false)}
+                        onChange={onChange}
+                        viewBoxW={vbW}
+                        viewBoxH={80}
+                    />
+                );
+            }
+
+            // ── Droite graduée ────────────────────────────────────────────────────
+            case "number_line": {
+                if (exercice.fractionsAplacer?.length > 0) {
+                    const COULEURS = [
+                        "#2f5ee8",
+                        "#d97706",
+                        "#15803d",
+                        "#b91c1c",
+                        "#7c3aed",
+                    ];
+                    return (
+                        <div className="flex flex-col gap-4">
+                            {exercice.fractionsAplacer.map((f, i) => {
+                                const key = `${f.n}/${f.d}`;
+                                const ptVal = val?.[key] ?? null;
+                                return (
+                                    <div
+                                        key={key}
+                                        className="flex items-center gap-4"
+                                    >
+                                        {/* Label de la fraction — toujours visible, jamais sur le point */}
+                                        <div
+                                            className="shrink-0 w-14 flex flex-col items-center
+                                  leading-none font-mono font-bold
+                                  text-slate-700 text-lg select-none"
+                                        >
+                                            <span>{f.n}</span>
+                                            <span className="w-full border-t-2 border-slate-700 my-0.5" />
+                                            <span>{f.d}</span>
+                                        </div>
+                                        <div className="flex-1">
+                                            <NumberLine
+                                                graduation={exercice.graduation}
+                                                value={ptVal}
+                                                onChange={(v) =>
+                                                    onChange({
+                                                        ...val,
+                                                        [key]: v,
+                                                    })
+                                                }
+                                                couleur={
+                                                    COULEURS[
+                                                        i % COULEURS.length
+                                                    ]
+                                                }
+                                                showLabel={false}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    );
+                }
+                return (
+                    <NumberLine
+                        graduation={exercice.graduation}
+                        value={val}
+                        onChange={onChange}
+                    />
+                );
+            }
+
+            // ── Texte (simple ou structuré) ───────────────────────────────────────
+            case "text": {
+                // ── CE2 Ex.6 — Comparaisons de fractions (< / > / =) ───────────────
+                // Source : exercice 6 CE2, comparaisons[].{gauche, droite, attendu}
+                if (exercice.comparaisons?.length > 0) {
+                    const objVal =
+                        typeof val === "object" &&
+                        val !== null &&
+                        !Array.isArray(val)
+                            ? val
+                            : {};
+                    return (
+                        <div className="flex flex-col gap-6">
+                            {exercice.comparaisons.map((comp) => (
+                                <div
+                                    key={comp.id}
+                                    className="flex items-center gap-4 flex-wrap"
+                                >
+                                    {/* Fraction gauche */}
+                                    <div className="flex items-center justify-center w-12">
+                                        <FractionSVG
+                                            n={comp.gauche.n}
+                                            d={comp.gauche.d}
+                                        />
+                                    </div>
+
+                                    {/* Boutons <, >, = */}
+                                    <div className="flex gap-2">
+                                        {["<", ">", "="].map((signe) => (
+                                            <button
+                                                key={signe}
+                                                type="button"
+                                                onClick={() =>
+                                                    onChange({
+                                                        ...objVal,
+                                                        [comp.id]: signe,
+                                                    })
+                                                }
+                                                className={`w-10 h-10 rounded-lg text-lg font-bold border-2
                                   transition-colors cursor-pointer select-none
                         ${
                             objVal[comp.id] === signe
                                 ? "bg-brand-500 border-brand-600 text-white"
                                 : "bg-white border-slate-300 text-slate-700 hover:border-brand-400 hover:bg-brand-50"
                         }`}
-                                        >
-                                            {signe}
-                                        </button>
-                                    ))}
+                                            >
+                                                {signe}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* Fraction droite */}
+                                    <div className="flex items-center justify-center w-12">
+                                        <FractionSVG
+                                            n={comp.droite.n}
+                                            d={comp.droite.d}
+                                        />
+                                    </div>
+
+                                    {/* Label lettre */}
+                                    <span className="text-xs text-slate-400 font-mono">
+                                        ({comp.id})
+                                    </span>
                                 </div>
+                            ))}
 
-                                {/* Fraction droite */}
-                                <div className="flex items-center justify-center w-12">
-                                    <FractionSVG
-                                        n={comp.droite.n}
-                                        d={comp.droite.d}
-                                    />
-                                </div>
-
-                                {/* Label lettre */}
-                                <span className="text-xs text-slate-400 font-mono">
-                                    ({comp.id})
-                                </span>
-                            </div>
-                        ))}
-
-                        <TextJustification
-                            value={
-                                typeof objVal.__explication === "string"
-                                    ? objVal.__explication
-                                    : ""
-                            }
-                            onChange={(v) =>
-                                onChange({ ...objVal, __explication: v })
-                            }
-                            label="Explique ta réponse en une phrase pour chaque comparaison :"
-                        />
-                    </div>
-                );
-            }
-
-            // ── CM1 Ex.5 / CM2 Ex.5 — Fractions à ranger ───────────────────────
-            // Source : exercice 5 CM1/CM2, fractions[].{n, d}
-            if (exercice.fractions?.length > 0) {
-                const items = exercice.fractions.map((f) => ({
-                    id: `${f.n}/${f.d}`,
-                    fraction: f,
-                }));
-                const objVal =
-                    val && typeof val === "object" && "ordre" in val
-                        ? val
-                        : { ordre: items.map((it) => it.id), explication: "" };
-                return (
-                    <div className="flex flex-col gap-5">
-                        <SortableFractions
-                            items={items}
-                            value={objVal.ordre}
-                            onChange={(ordre) => onChange({ ...objVal, ordre })}
-                        />
-                        <TextJustification
-                            value={objVal.explication ?? ""}
-                            onChange={(explication) =>
-                                onChange({ ...objVal, explication })
-                            }
-                            label="Explique ta stratégie :"
-                        />
-                    </div>
-                );
-            }
-
-            // ── CE2 Ex.5 — Fractions documentées (personnes + fractions) ────────
-            // Source : exercice 5 CE2, fractionsDocumentees[].{prenom, fraction{n,d}}
-            // Note : le document source ne spécifie que 3 amis sur 5.
-            if (exercice.fractionsDocumentees?.length > 0) {
-                const items = exercice.fractionsDocumentees.map((it) => ({
-                    id: it.prenom,
-                    prenom: it.prenom,
-                    fraction: it.fraction,
-                }));
-                const objVal =
-                    val && typeof val === "object" && "ordre" in val
-                        ? val
-                        : { ordre: items.map((it) => it.id), explication: "" };
-                return (
-                    <div className="flex flex-col gap-5">
-                        <SortableFractions
-                            items={items}
-                            value={objVal.ordre}
-                            onChange={(ordre) => onChange({ ...objVal, ordre })}
-                        />
-                        <TextJustification
-                            value={objVal.explication ?? ""}
-                            onChange={(explication) =>
-                                onChange({ ...objVal, explication })
-                            }
-                            label="Explique comment tu as trouvé :"
-                        />
-                    </div>
-                );
-            }
-
-            // ── Texte libre par défaut ───────────────────────────────────────────
-            return (
-                <TextJustification
-                    value={typeof val === "string" ? val : ""}
-                    onChange={onChange}
-                    label={"Ta réponse :"}
-                    placeholder="Écris ta réponse ici…"
-                />
-            );
-        }
-
-        // ── Saisie numérique ──────────────────────────────────────────────
-        case "number_input": {
-            return (
-                <NumberInput
-                    value={typeof val === "string" ? val : ""}
-                    onChange={onChange}
-                    unite={exercice.unite ?? ""}
-                />
-            );
-        }
-
-        // ── Composé (sous-questions) ──────────────────────────────────────────
-        case "compound": {
-            const figureSupport =
-                FIGURE_COMPOUND_REGISTRY[`${niveau}-${exercice.numero}`];
-            return (
-                <div className="flex flex-col gap-6">
-                    {/* Figure support si présente (ex. : demi-disque CE1 Ex.6) */}
-                    {figureSupport && (
-                        <div className="flex items-center justify-center py-2">
-                            {figureSupport}
-                        </div>
-                    )}
-
-                    {(exercice.sousQuestions ?? []).map((sq) => (
-                        <div key={sq.id} className="flex flex-col gap-3">
-                            {sq.consigne && (
-                                <p className="text-base text-slate-700">
-                                    {sq.consigne}
-                                </p>
-                            )}
-                            <ExerciceRenderer
-                                exercice={sq}
-                                niveau={niveau}
-                                value={val?.[sq.id] ?? getInitialValue(sq)}
-                                onChange={(sqVal) =>
-                                    onChange({ ...val, [sq.id]: sqVal })
+                            <TextJustification
+                                value={
+                                    typeof objVal.__explication === "string"
+                                        ? objVal.__explication
+                                        : ""
                                 }
+                                onChange={(v) =>
+                                    onChange({ ...objVal, __explication: v })
+                                }
+                                label="Explique ta réponse en une phrase pour chaque comparaison :"
                             />
                         </div>
-                    ))}
-                </div>
-            );
-        }
+                    );
+                }
 
-        // ── Encadrement d'une fraction entre deux bornes ───────────────────────
-        case "encadrement": {
-            const inf = String(val?.inf ?? "");
-            const sup = String(val?.sup ?? "");
+                // ── CM1 Ex.5 / CM2 Ex.5 — Fractions à ranger ───────────────────────
+                // Source : exercice 5 CM1/CM2, fractions[].{n, d}
+                if (exercice.fractions?.length > 0) {
+                    const items = exercice.fractions.map((f) => ({
+                        id: `${f.n}/${f.d}`,
+                        fraction: f,
+                    }));
+                    const objVal =
+                        val && typeof val === "object" && "ordre" in val
+                            ? val
+                            : {
+                                  ordre: items.map((it) => it.id),
+                                  explication: "",
+                              };
+                    return (
+                        <div className="flex flex-col gap-5">
+                            <SortableFractions
+                                items={items}
+                                value={objVal.ordre}
+                                onChange={(ordre) =>
+                                    onChange({ ...objVal, ordre })
+                                }
+                            />
+                            <TextJustification
+                                value={objVal.explication ?? ""}
+                                onChange={(explication) =>
+                                    onChange({ ...objVal, explication })
+                                }
+                                label="Explique ta stratégie :"
+                            />
+                        </div>
+                    );
+                }
 
-            // lecture_A : fraction null — on affiche n/denominateur comme bornes
-            const hasFraction = exercice.fraction != null;
-            const den = exercice.denominateur ?? null;
+                // ── CE2 Ex.5 — Fractions documentées (personnes + fractions) ────────
+                // Source : exercice 5 CE2, fractionsDocumentees[].{prenom, fraction{n,d}}
+                // Note : le document source ne spécifie que 3 amis sur 5.
+                if (exercice.fractionsDocumentees?.length > 0) {
+                    const items = exercice.fractionsDocumentees.map((it) => ({
+                        id: it.prenom,
+                        prenom: it.prenom,
+                        fraction: it.fraction,
+                    }));
+                    const objVal =
+                        val && typeof val === "object" && "ordre" in val
+                            ? val
+                            : {
+                                  ordre: items.map((it) => it.id),
+                                  explication: "",
+                              };
+                    return (
+                        <div className="flex flex-col gap-5">
+                            <SortableFractions
+                                items={items}
+                                value={objVal.ordre}
+                                onChange={(ordre) =>
+                                    onChange({ ...objVal, ordre })
+                                }
+                            />
+                            <TextJustification
+                                value={objVal.explication ?? ""}
+                                onChange={(explication) =>
+                                    onChange({ ...objVal, explication })
+                                }
+                                label="Explique comment tu as trouvé :"
+                            />
+                        </div>
+                    );
+                }
 
-            return (
-                <div className="flex items-center gap-3 flex-wrap">
-                    {/* Borne inférieure */}
-                    <div className="flex items-center gap-1">
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            value={inf}
-                            onChange={(e) =>
-                                onChange({ ...val, inf: e.target.value })
-                            }
-                            placeholder="?"
-                            aria-label="Borne inférieure"
-                            className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                // ── Texte libre par défaut ───────────────────────────────────────────
+                return (
+                    <TextJustification
+                        value={typeof val === "string" ? val : ""}
+                        onChange={onChange}
+                        label={"Ta réponse :"}
+                        placeholder="Écris ta réponse ici…"
+                    />
+                );
+            }
+
+            // ── Saisie numérique ──────────────────────────────────────────────
+            case "number_input": {
+                return (
+                    <NumberInput
+                        value={typeof val === "string" ? val : ""}
+                        onChange={onChange}
+                        unite={exercice.unite ?? ""}
+                    />
+                );
+            }
+
+            // ── Composé (sous-questions) ──────────────────────────────────────────
+            case "compound": {
+                const figureSupport =
+                    FIGURE_COMPOUND_REGISTRY[`${niveau}-${exercice.numero}`];
+                return (
+                    <div className="flex flex-col gap-6">
+                        {/* Figure support si présente (ex. : demi-disque CE1 Ex.6) */}
+                        {figureSupport && (
+                            <div className="flex items-center justify-center py-2">
+                                {figureSupport}
+                            </div>
+                        )}
+
+                        {(exercice.sousQuestions ?? []).map((sq) => (
+                            <div key={sq.id} className="flex flex-col gap-3">
+                                {sq.consigne && (
+                                    <p className="text-base text-slate-700">
+                                        {sq.consigne}
+                                    </p>
+                                )}
+                                <ExerciceRenderer
+                                    exercice={sq}
+                                    niveau={niveau}
+                                    value={val?.[sq.id] ?? getInitialValue(sq)}
+                                    onChange={(sqVal) =>
+                                        onChange({ ...val, [sq.id]: sqVal })
+                                    }
+                                />
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+
+            // ── Encadrement d'une fraction entre deux bornes ───────────────────────
+            case "encadrement": {
+                const inf = String(val?.inf ?? "");
+                const sup = String(val?.sup ?? "");
+
+                // lecture_A : fraction null — on affiche n/denominateur comme bornes
+                const hasFraction = exercice.fraction != null;
+                const den = exercice.denominateur ?? null;
+
+                return (
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {/* Borne inférieure */}
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                value={inf}
+                                onChange={(e) =>
+                                    onChange({ ...val, inf: e.target.value })
+                                }
+                                placeholder="?"
+                                aria-label="Borne inférieure"
+                                className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
                          text-slate-800 text-xl font-mono text-center
                          focus:outline-none focus:ring-2 focus:ring-brand-400
                          focus:border-transparent"
-                        />
-                        {/* Affiche /3 si denominateur fourni sans fraction */}
-                        {!hasFraction && den && (
-                            <span className="text-slate-500 text-lg font-mono">
-                                /{den}
-                            </span>
-                        )}
-                    </div>
+                            />
+                            {/* Affiche /3 si denominateur fourni sans fraction */}
+                            {!hasFraction && den && (
+                                <span className="text-slate-500 text-lg font-mono">
+                                    /{den}
+                                </span>
+                            )}
+                        </div>
 
-                    <span className="text-slate-400 text-xl font-light select-none">
-                        &lt;
-                    </span>
+                        <span className="text-slate-400 text-xl font-light select-none">
+                            &lt;
+                        </span>
 
-                    {/* Valeur centrale — fraction ou étiquette */}
-                    {hasFraction ? (
-                        <span
-                            className="inline-flex flex-col items-center leading-none
+                        {/* Valeur centrale — fraction ou étiquette */}
+                        {hasFraction ? (
+                            <span
+                                className="inline-flex flex-col items-center leading-none
                              font-mono font-bold text-slate-800 text-2xl
                              select-none px-2"
-                        >
-                            <span>{exercice.fraction.n}</span>
-                            <span className="w-full border-t-2 border-slate-800 my-1" />
-                            <span>{exercice.fraction.d}</span>
-                        </span>
-                    ) : (
-                        <span className="font-bold text-slate-700 text-xl select-none px-2">
-                            A
-                        </span>
-                    )}
+                            >
+                                <span>{exercice.fraction.n}</span>
+                                <span className="w-full border-t-2 border-slate-800 my-1" />
+                                <span>{exercice.fraction.d}</span>
+                            </span>
+                        ) : (
+                            <span className="font-bold text-slate-700 text-xl select-none px-2">
+                                A
+                            </span>
+                        )}
 
-                    <span className="text-slate-400 text-xl font-light select-none">
-                        &lt;
-                    </span>
+                        <span className="text-slate-400 text-xl font-light select-none">
+                            &lt;
+                        </span>
 
-                    {/* Borne supérieure */}
-                    <div className="flex items-center gap-1">
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            value={sup}
-                            onChange={(e) =>
-                                onChange({ ...val, sup: e.target.value })
-                            }
-                            placeholder="?"
-                            aria-label="Borne supérieure"
-                            className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                        {/* Borne supérieure */}
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                value={sup}
+                                onChange={(e) =>
+                                    onChange({ ...val, sup: e.target.value })
+                                }
+                                placeholder="?"
+                                aria-label="Borne supérieure"
+                                className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
                          text-slate-800 text-xl font-mono text-center
                          focus:outline-none focus:ring-2 focus:ring-brand-400
                          focus:border-transparent"
-                        />
-                        {!hasFraction && den && (
-                            <span className="text-slate-500 text-lg font-mono">
-                                /{den}
-                            </span>
-                        )}
+                            />
+                            {!hasFraction && den && (
+                                <span className="text-slate-500 text-lg font-mono">
+                                    /{den}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                </div>
-            );
-        }
+                );
+            }
 
-        // ── Décomposition signée : entier ± fraction ──────────────────────────
-        // Utilisé pour CM2 Ex.3 lectures B (3+2/3, 4−1/3).
-        case "decomposition_addition":
-        case "decomposition_soustraction": {
-            const signe =
-                exercice.type === "decomposition_addition" ? "+" : "−";
-            const entier = String(val?.entier ?? "");
-            const num = String(val?.num ?? "");
-            const den = String(val?.den ?? "");
+            // ── Décomposition signée : entier ± fraction ──────────────────────────
+            // Utilisé pour CM2 Ex.3 lectures B (3+2/3, 4−1/3).
+            case "decomposition_addition":
+            case "decomposition_soustraction": {
+                const signe =
+                    exercice.type === "decomposition_addition" ? "+" : "−";
+                const entier = String(val?.entier ?? "");
+                const num = String(val?.num ?? "");
+                const den = String(val?.den ?? "");
 
-            return (
-                <div className="flex items-center gap-3 flex-wrap">
-                    <input
-                        type="number"
-                        inputMode="numeric"
-                        value={entier}
-                        onChange={(e) =>
-                            onChange({ ...val, entier: e.target.value })
-                        }
-                        placeholder="?"
-                        aria-label="Partie entière"
-                        className="w-16 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                return (
+                    <div className="flex items-center gap-3 flex-wrap">
+                        <input
+                            type="number"
+                            inputMode="numeric"
+                            value={entier}
+                            onChange={(e) =>
+                                onChange({ ...val, entier: e.target.value })
+                            }
+                            placeholder="?"
+                            aria-label="Partie entière"
+                            className="w-16 px-3 py-2.5 rounded-xl border-2 border-slate-200
                        text-slate-800 text-xl font-mono text-center
                        focus:outline-none focus:ring-2 focus:ring-brand-400"
-                    />
+                        />
 
-                    <span className="text-slate-500 text-xl font-light select-none">
-                        {signe}
-                    </span>
+                        <span className="text-slate-500 text-xl font-light select-none">
+                            {signe}
+                        </span>
 
-                    <div className="flex flex-col items-center leading-none">
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            value={num}
-                            onChange={(e) =>
-                                onChange({ ...val, num: e.target.value })
-                            }
-                            placeholder="?"
-                            aria-label="Numérateur"
-                            className="w-16 px-2 py-1.5 rounded-t-lg border-2 border-b-0
+                        <div className="flex flex-col items-center leading-none">
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                value={num}
+                                onChange={(e) =>
+                                    onChange({ ...val, num: e.target.value })
+                                }
+                                placeholder="?"
+                                aria-label="Numérateur"
+                                className="w-16 px-2 py-1.5 rounded-t-lg border-2 border-b-0
                          border-slate-200 text-slate-800 text-lg font-mono
                          text-center focus:outline-none focus:ring-2
                          focus:ring-brand-400"
-                        />
-                        <div className="w-16 border-t-2 border-slate-400" />
-                        <input
-                            type="number"
-                            inputMode="numeric"
-                            value={den}
-                            onChange={(e) =>
-                                onChange({ ...val, den: e.target.value })
-                            }
-                            placeholder="?"
-                            aria-label="Dénominateur"
-                            className="w-16 px-2 py-1.5 rounded-b-lg border-2 border-t-0
+                            />
+                            <div className="w-16 border-t-2 border-slate-400" />
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                value={den}
+                                onChange={(e) =>
+                                    onChange({ ...val, den: e.target.value })
+                                }
+                                placeholder="?"
+                                aria-label="Dénominateur"
+                                className="w-16 px-2 py-1.5 rounded-b-lg border-2 border-t-0
                          border-slate-200 text-slate-800 text-lg font-mono
                          text-center focus:outline-none focus:ring-2
                          focus:ring-brand-400"
-                        />
+                            />
+                        </div>
                     </div>
-                </div>
-            );
-        }
+                );
+            }
 
-        // ── Fallback ──────────────────────────────────────────────────────────
-        default: {
-            return (
-                <TextJustification
-                    value={typeof val === "string" ? val : ""}
-                    onChange={onChange}
-                    label="Ta réponse :"
-                />
-            );
+            // ── Fallback ──────────────────────────────────────────────────────────
+            default: {
+                return (
+                    <TextJustification
+                        value={typeof val === "string" ? val : ""}
+                        onChange={onChange}
+                        label="Ta réponse :"
+                    />
+                );
+            }
         }
     }
+    // ── Wrapper : figure support + composant de saisie ──────────────────────
+    if (figureParId) {
+        return (
+            <div className="flex flex-col gap-4">
+                <div className="w-full">{figureParId}</div>
+                {renderInput()}
+            </div>
+        );
+    }
+
+    return renderInput();
 }
 
 ExerciceRenderer.propTypes = {
