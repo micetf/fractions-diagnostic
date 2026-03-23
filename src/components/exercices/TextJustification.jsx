@@ -24,7 +24,13 @@ import PropTypes from "prop-types";
  * @param {string}   [props.placeholder]
  * @param {boolean}  [props.disabled=false]
  */
-function TextJustification({ value, onChange, label, placeholder, disabled }) {
+function TextJustification({
+    value,
+    onChange,
+    label = "Explique comment tu as trouvé :",
+    placeholder = "Écris ta réponse ici…",
+    disabled = false,
+}) {
     return (
         <div className="flex flex-col gap-1.5 w-full">
             {label && (
@@ -55,12 +61,6 @@ TextJustification.propTypes = {
     label: PropTypes.string,
     placeholder: PropTypes.string,
     disabled: PropTypes.bool,
-};
-
-TextJustification.defaultProps = {
-    label: "Explique comment tu as trouvé :",
-    placeholder: "Écris ta réponse ici…",
-    disabled: false,
 };
 
 export default TextJustification;

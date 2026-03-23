@@ -21,7 +21,13 @@ import PropTypes from "prop-types";
  * @param {boolean}   [props.multiple=true]  - true = sélection multiple.
  * @param {boolean}   [props.disabled=false]
  */
-function FigureSelector({ figures, value, onChange, multiple, disabled }) {
+function FigureSelector({
+    figures,
+    value,
+    onChange,
+    multiple = true,
+    disabled = false,
+}) {
     function handleClick(id) {
         if (disabled) return;
         if (multiple) {
@@ -87,11 +93,6 @@ FigureSelector.propTypes = {
     onChange: PropTypes.func.isRequired,
     multiple: PropTypes.bool,
     disabled: PropTypes.bool,
-};
-
-FigureSelector.defaultProps = {
-    multiple: true,
-    disabled: false,
 };
 
 export default FigureSelector;

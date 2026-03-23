@@ -19,7 +19,7 @@ import PropTypes from "prop-types";
  * @param {function} props.onChange       - Appelé avec le libellé sélectionné.
  * @param {boolean}  [props.disabled=false]
  */
-function BinaryChoice({ options, value, onChange, disabled }) {
+function BinaryChoice({ options, value = null, onChange, disabled = false }) {
     return (
         <div
             className="flex flex-wrap gap-3"
@@ -59,11 +59,6 @@ BinaryChoice.propTypes = {
     value: PropTypes.string,
     onChange: PropTypes.func.isRequired,
     disabled: PropTypes.bool,
-};
-
-BinaryChoice.defaultProps = {
-    value: null,
-    disabled: false,
 };
 
 export default BinaryChoice;

@@ -86,11 +86,11 @@ AccueilEnseignant.propTypes = {
 function NavCard({
     titre,
     description,
-    actif,
-    accent,
-    onClick,
-    sprint,
-    badge,
+    actif = false,
+    accent = false,
+    onClick = undefined,
+    sprint = undefined,
+    badge = undefined,
 }) {
     const base =
         "rounded-xl border p-5 flex flex-col gap-2 transition-colors text-left";
@@ -160,14 +160,6 @@ NavCard.propTypes = {
     onClick: PropTypes.func,
     sprint: PropTypes.string,
     badge: PropTypes.string,
-};
-
-NavCard.defaultProps = {
-    actif: false,
-    accent: false,
-    onClick: undefined,
-    sprint: undefined,
-    badge: undefined,
 };
 
 export default AccueilEnseignant;

@@ -76,7 +76,7 @@ function makeSegmentsForFigure(figure) {
  * @param {any}      props.value     - Valeur courante.
  * @param {function} props.onChange  - Appelé avec la nouvelle valeur.
  */
-function ExerciceRenderer({ exercice, niveau, value, onChange }) {
+function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
     const val = value ?? getInitialValue(exercice);
 
     switch (exercice.type) {
@@ -349,10 +349,6 @@ ExerciceRenderer.propTypes = {
     niveau: PropTypes.oneOf(["CE1", "CE2", "CM1", "CM2"]).isRequired,
     value: PropTypes.any,
     onChange: PropTypes.func.isRequired,
-};
-
-ExerciceRenderer.defaultProps = {
-    value: undefined,
 };
 
 export default ExerciceRenderer;

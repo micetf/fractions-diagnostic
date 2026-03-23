@@ -25,7 +25,12 @@ import PropTypes from "prop-types";
  *   FractionInput coexistent sur la même page).
  * @param {boolean}  [props.disabled=false]
  */
-function FractionInput({ value, onChange, idPrefix, disabled }) {
+function FractionInput({
+    value,
+    onChange,
+    idPrefix = "fraction",
+    disabled = false,
+}) {
     /**
      * Convertit la valeur d'un champ en entier ou null.
      * @param {string} raw
@@ -105,11 +110,6 @@ FractionInput.propTypes = {
     onChange: PropTypes.func.isRequired,
     idPrefix: PropTypes.string,
     disabled: PropTypes.bool,
-};
-
-FractionInput.defaultProps = {
-    idPrefix: "fraction",
-    disabled: false,
 };
 
 export default FractionInput;

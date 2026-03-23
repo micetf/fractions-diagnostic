@@ -477,7 +477,7 @@ FormulaireClasse.propTypes = {
  * @param {object|null} props.eleveInitial  - Élève à modifier, ou null pour un ajout.
  * @param {function}    props.onFermer      - Ferme le formulaire.
  */
-function FormulaireEleve({ classe, eleveInitial, onFermer }) {
+function FormulaireEleve({ classe, eleveInitial = null, onFermer }) {
     const { dispatch } = useAppContext();
 
     const [prenom, setPrenom] = useState(eleveInitial?.prenom ?? "");
@@ -606,10 +606,6 @@ FormulaireEleve.propTypes = {
     classe: PropTypes.object.isRequired,
     eleveInitial: PropTypes.object,
     onFermer: PropTypes.func.isRequired,
-};
-
-FormulaireEleve.defaultProps = {
-    eleveInitial: null,
 };
 
 /* ══════════════════════════════════════════════════════════════════

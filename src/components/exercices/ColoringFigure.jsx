@@ -28,10 +28,10 @@ function ColoringFigure({
     segments,
     value,
     onChange,
-    couleur,
-    disabled,
-    viewBoxW,
-    viewBoxH,
+    couleur = "#bbd1ff",
+    disabled = false,
+    viewBoxW = 300,
+    viewBoxH = 80,
 }) {
     function handleClick(index) {
         if (disabled) return;
@@ -121,13 +121,6 @@ ColoringFigure.propTypes = {
     disabled: PropTypes.bool,
     viewBoxW: PropTypes.number,
     viewBoxH: PropTypes.number,
-};
-
-ColoringFigure.defaultProps = {
-    couleur: "#bbd1ff",
-    disabled: false,
-    viewBoxW: 300,
-    viewBoxH: 80,
 };
 
 export default ColoringFigure;

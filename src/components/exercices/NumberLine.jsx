@@ -96,7 +96,13 @@ function buildGraduations(denominateur, min, max) {
  * @param {string}  [props.couleur='#2f5ee8'] - Couleur du point.
  * @param {string}  [props.etiquette]         - Libellé affiché sous le point.
  */
-function NumberLine({ graduation, value, onChange, couleur, etiquette }) {
+function NumberLine({
+    graduation,
+    value = null,
+    onChange,
+    couleur = "#2f5ee8",
+    etiquette = undefined,
+}) {
     const { denominateur, min, max } = graduation;
     const svgRef = useRef(null);
     const [dragging, setDragging] = useState(false);
@@ -309,12 +315,6 @@ NumberLine.propTypes = {
     onChange: PropTypes.func.isRequired,
     couleur: PropTypes.string,
     etiquette: PropTypes.string,
-};
-
-NumberLine.defaultProps = {
-    value: null,
-    couleur: "#2f5ee8",
-    etiquette: undefined,
 };
 
 export default NumberLine;
