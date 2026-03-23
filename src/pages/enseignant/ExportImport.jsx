@@ -1,8 +1,12 @@
 import { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { exporterJSON, importerJSON } from "@/utils/exportData";
-import { exporterCSV } from "@/utils/exportData";
+import {
+    exporterJSON,
+    importerJSON,
+    exporterCSV,
+    reinitialiser,
+} from "@/utils/exportData";
 
 /**
  * ExportImport
@@ -24,6 +28,8 @@ function ExportImport({ onNavigate }) {
     const [importStatut, setImportStatut] = useState(null); // null | 'confirm' | 'ok' | 'erreur'
     const [importErreur, setImportErreur] = useState("");
     const [fichierImport, setFichierImport] = useState(null);
+    const [resetStatut, setResetStatut] = useState(null); // null | 'confirm' | 'saisie'
+    const [resetSaisie, setResetSaisie] = useState("");
     const fileInputRef = useRef(null);
 
     const sessionsTerminees = state.sessions.filter(
@@ -213,6 +219,109 @@ function ExportImport({ onNavigate }) {
                                     onClick={handleAnnulerImport}
                                     className="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-50
                              text-slate-600 text-sm font-medium transition-colors cursor-pointer"
+                                >
+                                    Annuler
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </Section>
+
+                {/* ── Remise à zéro ───────────────────────────────────────────── */}
+                <Section
+                    titre="Remise à zéro"
+                    description="Efface toutes les données : classes, élèves, sessions, passations et code PIN. L'application revient à l'état du premier lancement. Effectuez un export JSON avant de continuer."
+                    accent="danger"
+                >
+                    {resetStatut === null && (
+                        <button
+                            onClick={() => setResetStatut("confirm")}
+                            className="px-5 py-2 rounded-lg border border-danger-300
+                         bg-white hover:bg-danger-50 text-danger-700
+                         text-sm font-medium transition-colors cursor-pointer"
+                        >
+                            Effacer toutes les données…
+                        </button>
+                    )}
+
+                    {resetStatut === "confirm" && (
+                        <div className="rounded-lg border border-danger-200 bg-danger-50 p-4">
+                            <p className="text-sm font-semibold text-danger-700 mb-1">
+                                Avez-vous bien exporté une sauvegarde JSON ?
+                            </p>
+                            <p className="text-xs text-danger-600 mb-4">
+                                Cette action est irréversible. Toutes les
+                                données seront perdues si vous n'avez pas de
+                                sauvegarde.
+                            </p>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => setResetStatut("saisie")}
+                                    className="px-4 py-2 rounded-lg bg-danger-100 hover:bg-danger-200
+                             text-danger-700 text-sm font-medium
+                             transition-colors cursor-pointer"
+                                >
+                                    J'ai ma sauvegarde, continuer
+                                </button>
+                                <button
+                                    onClick={() => setResetStatut(null)}
+                                    className="px-4 py-2 rounded-lg border border-slate-200
+                             hover:bg-slate-50 text-slate-600 text-sm font-medium
+                             transition-colors cursor-pointer"
+                                >
+                                    Annuler
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {resetStatut === "saisie" && (
+                        <div className="rounded-lg border border-danger-200 bg-danger-50 p-4">
+                            <p className="text-sm font-semibold text-danger-700 mb-1">
+                                Confirmation définitive
+                            </p>
+                            <p className="text-xs text-danger-600 mb-3">
+                                Tapez{" "}
+                                <span className="font-mono font-bold">
+                                    EFFACER
+                                </span>{" "}
+                                pour confirmer la remise à zéro complète.
+                            </p>
+                            <input
+                                type="text"
+                                value={resetSaisie}
+                                onChange={(e) => setResetSaisie(e.target.value)}
+                                placeholder="EFFACER"
+                                autoFocus
+                                autoComplete="off"
+                                className="w-full px-3 py-2 rounded-lg border border-danger-300
+                           text-sm font-mono mb-3
+                           focus:outline-none focus:ring-2 focus:ring-danger-400
+                           focus:border-transparent bg-white"
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => {
+                                        if (resetSaisie !== "EFFACER") return;
+                                        reinitialiser();
+                                        window.location.reload();
+                                    }}
+                                    disabled={resetSaisie !== "EFFACER"}
+                                    className="px-4 py-2 rounded-lg bg-danger-500 hover:bg-danger-600
+                             text-white text-sm font-medium transition-colors
+                             cursor-pointer disabled:opacity-40
+                             disabled:cursor-not-allowed"
+                                >
+                                    Effacer définitivement
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setResetStatut(null);
+                                        setResetSaisie("");
+                                    }}
+                                    className="px-4 py-2 rounded-lg border border-slate-200
+                             hover:bg-slate-50 text-slate-600 text-sm font-medium
+                             transition-colors cursor-pointer"
                                 >
                                     Annuler
                                 </button>

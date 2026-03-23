@@ -192,6 +192,17 @@ function appReducer(state, action) {
                 ),
             };
 
+        /**
+         * Remet l'application à l'état initial (début d'année scolaire).
+         * Efface classes, sessions, passations et config.
+         * Le rechargement de la page est géré côté composant.
+         */
+        case "RESET_ALL":
+            return {
+                ...initialState,
+                _hydrated: true,
+            };
+
         default:
             return state;
     }

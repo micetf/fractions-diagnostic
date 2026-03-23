@@ -255,3 +255,18 @@ export async function importerJSON(fichier) {
         reader.readAsText(fichier, "utf-8");
     });
 }
+
+/**
+ * Efface toutes les données de l'application dans le localStorage.
+ * À appeler après confirmation explicite de l'utilisateur.
+ * Le composant appelant doit recharger la page après cet appel.
+ */
+export function reinitialiser() {
+    Object.values(KEYS).forEach((key) => {
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            /* silencieux */
+        }
+    });
+}
