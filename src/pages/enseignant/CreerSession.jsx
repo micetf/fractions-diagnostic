@@ -47,7 +47,7 @@ function CreerSession({ onNavigate, onLancer }) {
             return;
         }
         // Pré-remplir le niveau depuis celui de la classe
-        setNiveau(classeChoisie?.niveau ?? "CE1");
+        // setNiveau(classeChoisie?.niveau ?? "CE1");
         setSelection([]);
         setErreur("");
         setEtape(2);
