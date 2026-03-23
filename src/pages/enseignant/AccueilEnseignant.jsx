@@ -57,7 +57,8 @@ function AccueilEnseignant({ onNavigate }) {
                 <NavCard
                     titre="Analyse des résultats"
                     description="Matrice de résultats, profils élèves, biais détectés."
-                    sprint="S14"
+                    onClick={() => onNavigate("sessions")}
+                    actif
                 />
                 <NavCard
                     titre="Export / Import"
