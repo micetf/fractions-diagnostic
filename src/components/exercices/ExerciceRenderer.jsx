@@ -317,6 +317,7 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                             const desc = fig.description?.toLowerCase() ?? "";
                             const isTriangle = desc.includes("triangle");
                             const isDisque = desc.includes("disque");
+
                             return (
                                 <div key={fig.id}>
                                     <p className="text-sm text-slate-500 mb-2">
@@ -335,6 +336,7 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                             isTriangle || isDisque ? 80 : 300
                                         }
                                         viewBoxH={80}
+                                        uniteSize={exercice.uniteSize}
                                     />
                                 </div>
                             );
@@ -350,6 +352,7 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     onChange={onChange}
                     viewBoxW={300}
                     viewBoxH={80}
+                    uniteSize={exercice.uniteSize}
                 />
             );
         }
