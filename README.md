@@ -92,8 +92,8 @@ Pas de TypeScript, pas de React Router, pas de dépendances d'état externes.
 
 ```bash
 # Cloner le dépôt
-git clone https://github.com/micetf/fraction-diagnostic.git
-cd fraction-diagnostic
+git clone https://github.com/micetf/fractions-diagnostic.git
+cd fractions-diagnostic
 
 # Installer les dépendances
 pnpm install
