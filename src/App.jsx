@@ -7,8 +7,7 @@ import GestionClasses from "@/pages/enseignant/GestionClasses";
 import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
-import SpikeFractionInput from "@/pages/enseignant/SpikeFractionInput";
-
+import SpikeS7 from "@/pages/enseignant/SpikeS7";
 /**
  * App — composant racine.
  *
@@ -88,7 +87,7 @@ function App() {
                 onLancer={handleLancerSession}
             />
         ),
-        "s6-fraction-input": <SpikeFractionInput onNavigate={setTeacherPage} />,
+        s7: <SpikeS7 onNavigate={setTeacherPage} />,
     };
 
     return (

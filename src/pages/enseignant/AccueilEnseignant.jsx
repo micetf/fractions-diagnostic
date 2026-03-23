@@ -60,14 +60,14 @@ function AccueilEnseignant({ onNavigate }) {
                     sprint="S14"
                 />
             </div>
-            {/* Lien temporaire S6 — à retirer après validation */}
+            {/* Lien temporaire S7 — à retirer après validation */}
             <button
-                onClick={() => onNavigate("s6-fraction-input")}
+                onClick={() => onNavigate("s7")}
                 className="col-span-full text-xs text-amber-600 hover:text-amber-800
                      underline underline-offset-2 transition-colors cursor-pointer
                      text-left"
             >
-                S6 → Tester FractionInput
+                S7 → Tester BinaryChoice + TextJustification
             </button>
         </div>
     );
