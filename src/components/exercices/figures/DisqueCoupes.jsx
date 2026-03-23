@@ -4,14 +4,13 @@ import PropTypes from "prop-types";
  * DisqueCoupes
  *
  * Disque partagé en N secteurs égaux, les K premiers coloriés.
- * Utilisé dans CE1 Ex.2 (figure B).
  *
  * @param {object} props
- * @param {number} props.n    - Nombre total de secteurs.
- * @param {number} props.k    - Nombre de secteurs coloriés.
- * @param {number} [props.size=80] - Largeur et hauteur du SVG (carré).
+ * @param {number} props.n
+ * @param {number} props.k
+ * @param {number} [props.size=80]
  */
-function DisqueCoupes({ n, k, size }) {
+function DisqueCoupes({ n, k, size = 80 }) {
     const cx = size / 2;
     const cy = size / 2;
     const r = size / 2 - 6;
@@ -52,10 +51,6 @@ DisqueCoupes.propTypes = {
     n: PropTypes.number.isRequired,
     k: PropTypes.number.isRequired,
     size: PropTypes.number,
-};
-
-DisqueCoupes.defaultProps = {
-    size: 80,
 };
 
 export default DisqueCoupes;

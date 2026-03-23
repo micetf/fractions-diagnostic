@@ -4,15 +4,14 @@ import PropTypes from "prop-types";
  * BandeColoriee
  *
  * Bande horizontale partagée en N parts égales, les K premières coloriées.
- * Utilisée dans CE1 Ex.2 (figures A et C).
  *
  * @param {object} props
- * @param {number} props.n - Nombre total de parts.
- * @param {number} props.k - Nombre de parts coloriées (depuis la gauche).
- * @param {number} [props.w=180] - Largeur totale du SVG.
- * @param {number} [props.h=48]  - Hauteur totale du SVG.
+ * @param {number} props.n
+ * @param {number} props.k
+ * @param {number} [props.w=180]
+ * @param {number} [props.h=48]
  */
-function BandeColoriee({ n, k, w, h }) {
+function BandeColoriee({ n, k, w = 180, h = 48 }) {
     const partW = w / n;
     const fill = "#bbd1ff";
     const stroke = "#475569";
@@ -40,11 +39,6 @@ BandeColoriee.propTypes = {
     k: PropTypes.number.isRequired,
     w: PropTypes.number,
     h: PropTypes.number,
-};
-
-BandeColoriee.defaultProps = {
-    w: 180,
-    h: 48,
 };
 
 export default BandeColoriee;

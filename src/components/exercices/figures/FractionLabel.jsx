@@ -2,19 +2,12 @@ import PropTypes from "prop-types";
 
 /**
  * FractionLabel
- *
- * Affiche une fraction sous forme d'écriture mathématique (numérateur,
- * barre, dénominateur) dans un SVG de dimensions fixes.
- *
- * Utilisé dans les figures de CE2 Ex.2 et CM2 Ex.4.
- *
- * @param {object} props
- * @param {number} props.n  - Numérateur.
- * @param {number} props.d  - Dénominateur.
- * @param {number} [props.w=76] - Largeur du SVG.
- * @param {number} [props.h=52] - Hauteur du SVG.
+ * @param {number} props.n
+ * @param {number} props.d
+ * @param {number} [props.w=76]
+ * @param {number} [props.h=52]
  */
-function FractionLabel({ n, d, w, h }) {
+function FractionLabel({ n, d, w = 76, h = 52 }) {
     return (
         <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} aria-hidden="true">
             <text
@@ -56,11 +49,6 @@ FractionLabel.propTypes = {
     d: PropTypes.number.isRequired,
     w: PropTypes.number,
     h: PropTypes.number,
-};
-
-FractionLabel.defaultProps = {
-    w: 76,
-    h: 52,
 };
 
 export default FractionLabel;
