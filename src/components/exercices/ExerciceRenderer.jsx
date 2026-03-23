@@ -69,6 +69,45 @@ function makeSegmentsAuto(n) {
     }));
 }
 
+/**
+ * Génère des segments pour N parts réparties en groupes de uniteSize,
+ * chaque groupe formant une bande-unité séparée visuellement.
+ *
+ * Utilisé pour CM2 Ex.1 (représentation de fractions > 1) :
+ * chaque bande-unité est identique, espacée des autres, subdivisée
+ * en parts égales. L'élève voit autant de bandes que nécessaire + 1
+ * pour ne pas souffler la réponse.
+ *
+ * @param {number} nbParts   - Nombre total de parts (ex. : 16 pour 9/4)
+ * @param {number} uniteSize - Parts par unité (ex. : 4 pour /4)
+ * @returns {SegmentDef[]}
+ */
+function makeSegmentsMultiUnite(nbParts, uniteSize) {
+    const nbUnites = Math.ceil(nbParts / uniteSize);
+    const GAP = 8; // px entre chaque bande-unité
+    const Y = 10;
+    const H = 60;
+    const totalGaps = (nbUnites - 1) * GAP;
+    const uniteW = (300 - totalGaps) / nbUnites;
+    const partW = uniteW / uniteSize;
+
+    const segs = [];
+    for (let u = 0; u < nbUnites; u++) {
+        const xUnite = u * (uniteW + GAP);
+        for (let p = 0; p < uniteSize; p++) {
+            segs.push({
+                shape: "rect",
+                label: `Unité ${u + 1}, part ${p + 1}`,
+                x: xUnite + p * partW,
+                y: Y,
+                w: partW,
+                h: H,
+            });
+        }
+    }
+    return segs;
+}
+
 function makeSegmentsForFigure(figure) {
     const desc = figure.description?.toLowerCase() ?? "";
     if (desc.includes("triangle")) return segmentsCE1Ex3TriangleD;
@@ -345,14 +384,16 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                 );
             }
             const n = exercice.nbParts ?? exercice.partiesAColorier ?? 2;
+            const segments = exercice.uniteSize
+                ? makeSegmentsMultiUnite(n, exercice.uniteSize)
+                : makeSegmentsAuto(n);
             return (
                 <ColoringFigure
-                    segments={makeSegmentsAuto(n)}
+                    segments={segments}
                     value={Array.isArray(val) ? val : Array(n).fill(false)}
                     onChange={onChange}
                     viewBoxW={300}
                     viewBoxH={80}
-                    uniteSize={exercice.uniteSize}
                 />
             );
         }
