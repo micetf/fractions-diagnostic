@@ -99,7 +99,7 @@ export const exercices = [
             },
             {
                 id: "C",
-                description: "Segment C (dépasse l'unité)",
+                description: "Segment C",
                 // Biais documenté source : refus de mesurer car dépasse l'unité
                 attendu: { numerateur: 5, denominateur: 4 },
             },

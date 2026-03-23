@@ -40,6 +40,26 @@ function RegletteSegments() {
             viewBox="0 0 460 198"
             aria-label="Règle graduée en quarts avec trois segments à mesurer"
         >
+            {/* Marqueur visuel de l'unité */}
+            <rect
+                x={X0 - 2}
+                y={RULER_Y - 16}
+                width={UNIT + 4}
+                height={3}
+                fill="#2f5ee8"
+                rx="1"
+                opacity="0.25"
+            />
+            <text
+                x={X0 + UNIT / 2}
+                y={RULER_Y - 20}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#2f5ee8"
+                fontFamily="ui-sans-serif, sans-serif"
+            >
+                1 unité
+            </text>
             {/* Ligne d'alignement verticale au zéro */}
             <line
                 x1={X0}
