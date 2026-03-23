@@ -560,26 +560,31 @@ export const exercices = [
         numero: 8,
         titre: "Un problème à plusieurs sens",
         competence:
-            "Mobiliser les fractions avec des sens variés (partie d'un tout, mesure, opérateur, rapport) dans un problème complexe",
+            "Mobiliser les fractions avec des sens variés (partie d'un tout, " +
+            "mesure, opérateur, rapport) dans un problème complexe",
         type: "compound",
         consigne: "Dans une classe de 30 élèves, 2/5 sont des filles.",
         sousQuestions: [
+            // ── a : opérateur non unitaire ───────────────────────────────────
             {
                 id: "a",
                 type: "number_input",
-                unite: "filles",
                 consigne: "Combien y a-t-il de filles dans cette classe ?",
+                unite: "filles",
                 attendu: 12,
                 biaisDetectables: [
                     {
                         code: "FRACTION_OP_NON_UNITAIRE",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre 6 (30 ÷ 5 = 6 sans multiplier par 2) → fraction non unitaire réduite à la fraction unitaire.",
+                            "Répondre 6 (30 ÷ 5 sans multiplier par 2) → " +
+                            "fraction non unitaire réduite à la fraction unitaire.",
                     },
                 ],
                 aRelire: true,
             },
+
+            // ── b : complément à 1 ────────────────────────────────────────────
             {
                 id: "b",
                 type: "fraction_input",
@@ -593,16 +598,21 @@ export const exercices = [
                 biaisDetectables: [],
                 aRelire: false,
             },
+
+            // ── c : opérateur itéré — REFORMULÉ avec prénom ──────────────────
+            // Cible : 4 × 3/4 = 12/4 = 3 livres > 1
+            // Biais : 3/4+3/4+3/4+3/4 = 12/16 (addition des dénominateurs)
             {
                 id: "c",
                 type: "compound",
                 consigne:
-                    "Les filles ont lu en moyenne 3/4 d'un livre par semaine pendant 4 semaines. Quelle fraction d'un livre ont-elles lue en tout ? Est-ce plus qu'un livre entier ?",
+                    "Lola lit 3/4 d'un livre chaque semaine pendant 4 semaines.",
                 sousQuestions: [
                     {
                         id: "c_calcul",
                         type: "fraction_input",
-                        consigne: "Fraction d'un livre lue en tout :",
+                        consigne:
+                            "Quelle fraction d'un livre a-t-elle lue en tout ?",
                         items: [
                             {
                                 id: "resultat",
@@ -619,7 +629,8 @@ export const exercices = [
                                     denominateur: 16,
                                 },
                                 ceQueRevele:
-                                    "Répondre 12/16 → addition des dénominateurs sur une addition itérée.",
+                                    "Répondre 12/16 → addition des dénominateurs sur " +
+                                    "une addition itérée de fractions identiques.",
                             },
                         ],
                         aRelire: false,
@@ -627,7 +638,7 @@ export const exercices = [
                     {
                         id: "c_comparaison",
                         type: "binary_choice",
-                        consigne: "Est-ce plus qu'un livre entier ?",
+                        consigne: "A-t-elle lu plus d'un livre entier ?",
                         options: ["OUI", "NON"],
                         attendu: "OUI",
                         biaisDetectables: [],
@@ -636,21 +647,50 @@ export const exercices = [
                 ],
                 aRelire: false,
             },
+
+            // ── d : fraction-rapport — compound binary + text ─────────────────
+            // Cible : SENS_RAPPORT_TAUX_ABSENT
+            // L'élève qui répond OUI confond fraction-rapport et effectif absolu.
             {
                 id: "d",
-                type: "text",
+                type: "compound",
                 consigne:
                     "Dans une autre classe, 3/5 des élèves sont des filles. " +
-                    "Peut-on dire que cette classe a plus de filles que la première ? Explique.",
-                biaisDetectables: [
+                    "Peut-on dire que cette classe a plus de filles que la première ?",
+                sousQuestions: [
                     {
-                        code: "SENS_RAPPORT_TAUX_ABSENT",
-                        declencheur: { type: "text_review" },
-                        ceQueRevele:
-                            "Répondre OUI sans condition → 3/5 d'une classe inconnue est confondu avec un nombre absolu ; la fraction-rapport est absente. C'est l'obstacle du sens rapport/taux, documenté comme rarement travaillé à l'école primaire.",
+                        id: "d_choix",
+                        type: "binary_choice",
+                        consigne: "Cette classe a-t-elle plus de filles ?",
+                        options: ["OUI", "NON"],
+                        // NON : sans connaître l'effectif total de la 2ᵉ classe,
+                        // on ne peut pas conclure — 3/5 d'une classe inconnue
+                        // n'est pas comparable à 2/5 de 30 élèves.
+                        attendu: "NON",
+                        biaisDetectables: [
+                            {
+                                code: "SENS_RAPPORT_TAUX_ABSENT",
+                                declencheur: {
+                                    type: "choice_equals",
+                                    valeur: "OUI",
+                                },
+                                ceQueRevele:
+                                    "Répondre OUI sans condition → la fraction-rapport " +
+                                    "est confondue avec un nombre absolu ; 3/5 d'une classe " +
+                                    "inconnue ne peut être comparé à 2/5 de 30 élèves.",
+                            },
+                        ],
+                        aRelire: false,
+                    },
+                    {
+                        id: "d_explication",
+                        type: "text",
+                        consigne: "Explique ta réponse :",
+                        biaisDetectables: [],
+                        aRelire: true,
                     },
                 ],
-                aRelire: true,
+                aRelire: false,
             },
         ],
         aRelire: false,
