@@ -22,7 +22,7 @@ import {
  * @param {function} props.onNavigate
  */
 function ExportImport({ onNavigate }) {
-    const { state, dispatch } = useAppContext();
+    const { state } = useAppContext();
 
     const [sessionCSV, setSessionCSV] = useState("");
     const [importStatut, setImportStatut] = useState(null); // null | 'confirm' | 'ok' | 'erreur'
