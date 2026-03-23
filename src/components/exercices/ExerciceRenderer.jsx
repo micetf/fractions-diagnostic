@@ -344,7 +344,6 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
         }
 
         // ── Coloriage ─────────────────────────────────────────────────────────
-        // ── Coloriage ─────────────────────────────────────────────────────────
         case "coloring": {
             // ── Multi-figures (CE1 Ex.3, CM1 Ex.2…) ─────────────────────────
             if (exercice.figures) {
@@ -665,6 +664,71 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                             />
                         </div>
                     ))}
+                </div>
+            );
+        }
+
+        // ── Encadrement d'une fraction entre deux entiers consécutifs ─────────
+        // Utilisé pour CM2 Ex.2 — deux champs numériques flanquant la fraction.
+        case "encadrement": {
+            const inf = val?.inf ?? "";
+            const sup = val?.sup ?? "";
+            const { n, d } = exercice.fraction;
+
+            return (
+                <div className="flex items-center gap-3 flex-wrap">
+                    {/* Borne inférieure */}
+                    <input
+                        type="number"
+                        inputMode="numeric"
+                        value={inf}
+                        onChange={(e) =>
+                            onChange({ ...val, inf: e.target.value })
+                        }
+                        placeholder="?"
+                        aria-label="Borne inférieure"
+                        className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                       text-slate-800 text-xl font-mono text-center
+                       focus:outline-none focus:ring-2 focus:ring-brand-400
+                       focus:border-transparent"
+                    />
+
+                    {/* Opérateur < */}
+                    <span className="text-slate-400 text-xl font-light select-none">
+                        &lt;
+                    </span>
+
+                    {/* Fraction — affichée en grand comme référent visuel */}
+                    <span
+                        className="inline-flex flex-col items-center leading-none
+                           font-mono font-bold text-slate-800 text-2xl
+                           select-none px-2"
+                    >
+                        <span>{n}</span>
+                        <span className="w-full border-t-2 border-slate-800 my-1" />
+                        <span>{d}</span>
+                    </span>
+
+                    {/* Opérateur < */}
+                    <span className="text-slate-400 text-xl font-light select-none">
+                        &lt;
+                    </span>
+
+                    {/* Borne supérieure */}
+                    <input
+                        type="number"
+                        inputMode="numeric"
+                        value={sup}
+                        onChange={(e) =>
+                            onChange({ ...val, sup: e.target.value })
+                        }
+                        placeholder="?"
+                        aria-label="Borne supérieure"
+                        className="w-20 px-3 py-2.5 rounded-xl border-2 border-slate-200
+                       text-slate-800 text-xl font-mono text-center
+                       focus:outline-none focus:ring-2 focus:ring-brand-400
+                       focus:border-transparent"
+                    />
                 </div>
             );
         }

@@ -113,49 +113,69 @@ export const exercices = [
         competence: "Encadrer une fraction entre deux entiers consécutifs",
         type: "compound",
         consigne:
-            "Sans poser de division, écris entre quels nombres entiers se trouve chaque fraction. Explique comment tu as trouvé.",
+            "Sans poser de division, écris entre quels nombres entiers se trouve chaque fraction.",
         sousQuestions: [
             {
                 id: "a",
-                type: "text",
-                consigne: "43/8 est entre ______ et ______",
+                type: "encadrement",
+                fraction: { n: 43, d: 8 },
                 attendu: { min: 5, max: 6 },
-                biaisDetectables: [],
-                aRelire: true,
+                biaisDetectables: [
+                    {
+                        code: "N_SUR_N_NON_ACQUIS",
+                        declencheur: {
+                            type: "encadrement_wrong",
+                            borneInf: 4,
+                            borneSup: 5,
+                        },
+                        ceQueRevele:
+                            "Répondre entre 4 et 5 → raisonnement flottant sans lien avec 40/8=5 et 48/8=6.",
+                    },
+                ],
+                aRelire: false,
             },
             {
                 id: "b",
-                type: "text",
-                consigne: "58/7 est entre ______ et ______",
+                type: "encadrement",
+                fraction: { n: 58, d: 7 },
                 attendu: { min: 8, max: 9 },
                 biaisDetectables: [],
-                aRelire: true,
+                aRelire: false,
             },
             {
                 id: "c",
-                type: "text",
-                consigne: "21/4 est entre ______ et ______",
+                type: "encadrement",
+                fraction: { n: 21, d: 4 },
                 attendu: { min: 5, max: 6 },
                 biaisDetectables: [],
-                aRelire: true,
+                aRelire: false,
             },
             {
                 id: "d",
                 type: "number_input",
-                consigne: "30/6 = ______ (cherche le nombre entier exact)",
+                consigne: "30/6 = ______  (entier exact)",
                 attendu: 5,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "30/6 = 5 non identifié ; 6×n/6 = n non disponible.",
+                            "30/6 = 5 non identifié comme entier exact ; 6n/6 = n non disponible.",
                     },
                 ],
                 aRelire: true,
             },
+            {
+                // Explication globale — révèle si l'élève utilise n/n=1 ou la division
+                id: "strategie",
+                type: "text",
+                consigne:
+                    "Explique comment tu as trouvé (sans poser de division) :",
+                biaisDetectables: [],
+                aRelire: true,
+            },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 3 ────────────────────────────────────────────────────────────

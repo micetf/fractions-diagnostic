@@ -113,6 +113,12 @@ function evaluerDeclencheur(declencheur, valeur) {
             // Jamais détectable automatiquement — géré via aRelire
             return false;
 
+        case "encadrement_wrong": {
+            const inf = parseInt(valeur?.inf, 10);
+            const sup = parseInt(valeur?.sup, 10);
+            return inf === declencheur.borneInf && sup === declencheur.borneSup;
+        }
+
         default:
             return false;
     }
