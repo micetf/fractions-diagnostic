@@ -38,9 +38,13 @@ export function getInitialValue(node) {
             if (node.aRelire) return { selection: [], __justification: "" };
             return [];
 
-        case "coloring":
+        case "coloring": {
+            // Fractions > 1 : nbUnites × partsParUnite cases (CM2 Ex.1)
+            if (node.nbUnites && node.partsParUnite) {
+                return Array(node.nbUnites * node.partsParUnite).fill(false);
+            }
+            // Multi-figures (CE1 Ex.3…) : objet { [id]: boolean[] }
             if (node.figures) {
-                // Plusieurs figures indépendantes (CE1 Ex.3)
                 return Object.fromEntries(
                     node.figures.map((f) => [
                         f.id,
@@ -48,10 +52,11 @@ export function getInitialValue(node) {
                     ])
                 );
             }
-            // Figure unique avec nbParts
+            // Figure unique standard
             return Array(node.nbParts ?? node.partiesAColorier ?? 2).fill(
                 false
             );
+        }
 
         case "number_line":
             if (node.fractionsAplacer?.length > 0) {

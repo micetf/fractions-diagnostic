@@ -70,29 +70,29 @@ function makeSegmentsAuto(n) {
 }
 
 /**
- * Génère les segments et la viewBoxW optimale pour un exercice
- * de représentation de fraction (nbUnites bandes × partsParUnite parts).
+ * Génère les segments pour nbUnites bandes identiques × partsParUnite parts.
  *
- * La largeur est calculée pour garantir CELL_MIN_W pixels par case,
- * quelle que soit la densité de fractionnement.
+ * UNITE_W est fixe : toutes les représentations d'un même exercice ont
+ * des bandes de même largeur visuelle. Seule la largeur des cases internes
+ * varie selon le fractionnement. viewBoxW est donc identique pour toutes
+ * les sous-questions de CM2 Ex.1.
  *
- * @param {number} nbUnites       - Nombre de bandes identiques.
- * @param {number} partsParUnite  - Parts par bande.
+ * @param {number} nbUnites      - Nombre de bandes (identiques).
+ * @param {number} partsParUnite - Parts par bande.
  * @returns {{ segments: SegmentDef[], viewBoxW: number }}
  */
 function makeSegmentsMultiUnite(nbUnites, partsParUnite) {
-    const CELL_MIN_W = 22; // px minimum par case — lisible au doigt
-    const GAP = 10; // px entre bandes-unités
+    const UNITE_W = 160; // largeur fixe d'une bande-unité, identique pour toutes les lignes
+    const GAP = 12; // espace entre bandes
     const Y = 10;
     const H = 60;
 
-    const uniteW = partsParUnite * CELL_MIN_W;
-    const totalW = nbUnites * uniteW + (nbUnites - 1) * GAP;
-    const partW = CELL_MIN_W;
+    const viewBoxW = nbUnites * UNITE_W + (nbUnites - 1) * GAP;
+    const partW = UNITE_W / partsParUnite;
 
     const segs = [];
     for (let u = 0; u < nbUnites; u++) {
-        const xUnite = u * (uniteW + GAP);
+        const xUnite = u * (UNITE_W + GAP);
         for (let p = 0; p < partsParUnite; p++) {
             segs.push({
                 shape: "rect",
@@ -105,7 +105,7 @@ function makeSegmentsMultiUnite(nbUnites, partsParUnite) {
         }
     }
 
-    return { segments: segs, viewBoxW: totalW };
+    return { segments: segs, viewBoxW };
 }
 
 function makeSegmentsForFigure(figure) {
