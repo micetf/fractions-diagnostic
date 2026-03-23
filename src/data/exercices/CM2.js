@@ -453,11 +453,42 @@ export const exercices = [
             },
             {
                 id: "d",
-                type: "text",
+                type: "compound",
                 consigne:
-                    "Johanna a tracé un triangle de périmètre 7 + 1/4 unités. Un côté mesure 2 + 1/8 unités et un autre 1 + 1/2 unités. Quelle est la longueur du troisième côté ?",
-                biaisDetectables: [],
-                aRelire: true,
+                    "Johanna a tracé un triangle de périmètre 7 + 1/4 unités. " +
+                    "Un côté mesure 2 + 1/8 unités et un autre 1 + 1/2 unités. " +
+                    "Quelle est la longueur du troisième côté ?",
+                sousQuestions: [
+                    {
+                        id: "d_resultat",
+                        type: "decomposition_addition",
+                        consigne: "Longueur du troisième côté :",
+                        // Attendu : 3 + 5/8
+                        // Calcul : (7+1/4) − (2+1/8) − (1+1/2)
+                        //        = 4 + (2/8 − 1/8 − 4/8) = 4 − 3/8 = 3 + 5/8
+                        attendu: { entier: 3, numerateur: 5, denominateur: 8 },
+                        biaisDetectables: [
+                            {
+                                code: "ADDITION_DENOMINATEURS",
+                                declencheur: { type: "text_review" },
+                                ceQueRevele:
+                                    "Bloquer ou donner une réponse incohérente → les fractions " +
+                                    "mixtes ne sont pas traitées comme des nombres ; " +
+                                    "l'élève ne sait pas convertir 1/4 et 1/2 en huitièmes " +
+                                    "dans un contexte entier + fraction.",
+                            },
+                        ],
+                        aRelire: true,
+                    },
+                    {
+                        id: "d_explication",
+                        type: "text",
+                        consigne: "Explique comment tu as trouvé :",
+                        biaisDetectables: [],
+                        aRelire: true,
+                    },
+                ],
+                aRelire: false,
             },
         ],
         aRelire: false,
