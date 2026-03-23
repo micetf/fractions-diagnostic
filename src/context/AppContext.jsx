@@ -203,6 +203,31 @@ function appReducer(state, action) {
                 _hydrated: true,
             };
 
+        /**
+         * Définit la session active (lancée par l'enseignant).
+         * Persiste en localStorage via l'effet habituel.
+         * payload : { session_id: string }
+         */
+        case "SET_SESSION_ACTIVE":
+            return {
+                ...state,
+                config: {
+                    ...state.config,
+                    session_en_cours_id: action.payload.session_id,
+                },
+            };
+
+        /**
+         * Efface la session active (retour mode enseignant).
+         */
+        case "CLEAR_SESSION_ACTIVE":
+            return {
+                ...state,
+                config: {
+                    ...state.config,
+                    session_en_cours_id: null,
+                },
+            };
         default:
             return state;
     }

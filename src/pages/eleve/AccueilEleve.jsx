@@ -25,8 +25,13 @@ import PassationRunner from "./PassationRunner";
  * @param {object}      props
  * @param {string|null} props.sessionActiveId
  * @param {function}    props.onCallTeacher
+ * @param {function}    props.onCallTeacherSuccess  - Appelé après succès du PIN.
  */
-function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
+function AccueilEleve({
+    sessionActiveId = null,
+    onCallTeacher,
+    onCallTeacherSuccess,
+}) {
     const { state } = useAppContext();
 
     const [eleveId, setEleveId] = useState(null);
@@ -49,7 +54,12 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
 
     // ── PinGate retour enseignant ───────────────────────────────────────────
     if (showPin) {
-        return <PinGate mode="verify" onSuccess={onCallTeacher} />;
+        return (
+            <PinGate
+                mode="verify"
+                onSuccess={onCallTeacher ?? onCallTeacherSuccess}
+            />
+        );
     }
 
     // ── Pas de session active ───────────────────────────────────────────────
@@ -137,6 +147,7 @@ function AccueilEleve({ sessionActiveId = null, onCallTeacher }) {
 AccueilEleve.propTypes = {
     sessionActiveId: PropTypes.string,
     onCallTeacher: PropTypes.func.isRequired,
+    onCallTeacherSuccess: PropTypes.func,
 };
 
 export default AccueilEleve;
