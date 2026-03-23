@@ -47,7 +47,7 @@ function PassationRunner({ session, eleveId, onTermine }) {
     const [passationId, setPassationId] = useState(null);
     const [valeurCourante, setValeurCourante] = useState(null);
 
-    const debutTempsRef = useRef(Date.now());
+    const debutTempsRef = useRef(null);
     const termineRef = useRef(false);
 
     // ── Trouver ou créer la passation ────────────────────────────────────────
@@ -104,7 +104,7 @@ function PassationRunner({ session, eleveId, onTermine }) {
         if (!exercice) return;
         setValeurCourante(getInitialValue(exercice));
         debutTempsRef.current = Date.now();
-    }, [exercice?.numero]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [exercice?.numero]);
 
     // ── Détecter la fin de passation ─────────────────────────────────────────
     useEffect(() => {
