@@ -59,6 +59,12 @@ function AccueilEnseignant({ onNavigate }) {
                     description="Matrice de résultats, profils élèves, biais détectés."
                     sprint="S14"
                 />
+                <NavCard
+                    titre="Export / Import"
+                    description="Sauvegarder et restaurer les données."
+                    onClick={() => onNavigate("export-import")}
+                    actif
+                />
             </div>
         </div>
     );

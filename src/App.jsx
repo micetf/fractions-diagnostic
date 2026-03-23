@@ -8,6 +8,7 @@ import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
 import AnalyseSession from "@/pages/enseignant/AnalyseSession";
+import ExportImport from "@/pages/enseignant/ExportImport";
 
 /**
  * App — composant racine.
@@ -85,6 +86,7 @@ function App() {
                 onNavigate={setTeacherPage}
             />
         ),
+        "export-import": <ExportImport onNavigate={setTeacherPage} />,
     };
 
     return (
