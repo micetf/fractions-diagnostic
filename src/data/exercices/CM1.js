@@ -36,8 +36,6 @@ export const exercices = [
         type: "compound",
         consigne:
             "Pour chaque fraction, entoure la bonne réponse sans poser de calcul. Explique ta réponse en une phrase.",
-        // Chaque item est un choix parmi 3 options.
-        // Remarque : le composant BinaryChoice devra gérer 3 options (< 1, = 1, > 1).
         sousQuestions: [
             {
                 id: "a",
@@ -50,8 +48,9 @@ export const exercices = [
                     "plus grande que 1",
                 ],
                 attendu: "plus petite que 1",
+                avecJustification: true,
                 biaisDetectables: [],
-                aRelire: false,
+                aRelire: true,
             },
             {
                 id: "b",
@@ -64,6 +63,7 @@ export const exercices = [
                     "plus grande que 1",
                 ],
                 attendu: "égale à 1",
+                avecJustification: true,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
@@ -72,10 +72,10 @@ export const exercices = [
                             valeur: "plus petite que 1",
                         },
                         ceQueRevele:
-                            "Répondre « plus petite que 1 » pour 7/7 → n/n = 1 non acquis, fondement de tout le travail sur les fractions > 1.",
+                            "Répondre « plus petite que 1 » pour 7/7 → n/n = 1 non acquis.",
                     },
                 ],
-                aRelire: false,
+                aRelire: true,
             },
             {
                 id: "c",
@@ -88,6 +88,7 @@ export const exercices = [
                     "plus grande que 1",
                 ],
                 attendu: "plus grande que 1",
+                avecJustification: true,
                 biaisDetectables: [
                     {
                         code: "FRACTION_TOUJOURS_INF_1",
@@ -96,10 +97,10 @@ export const exercices = [
                             valeur: "plus petite que 1",
                         },
                         ceQueRevele:
-                            "Répondre « plus petite que 1 » pour 9/4 → la fraction est encore exclusivement une « partie d'un tout », donc toujours inférieure à 1 ; le statut de nombre n'est pas construit.",
+                            "Répondre « plus petite que 1 » pour 9/4 → fraction perçue comme toujours < 1.",
                     },
                 ],
-                aRelire: false,
+                aRelire: true,
             },
             {
                 id: "d",
@@ -112,8 +113,9 @@ export const exercices = [
                     "plus grande que 1",
                 ],
                 attendu: "plus petite que 1",
+                avecJustification: true,
                 biaisDetectables: [],
-                aRelire: false,
+                aRelire: true,
             },
             {
                 id: "e",
@@ -126,6 +128,7 @@ export const exercices = [
                     "plus grande que 1",
                 ],
                 attendu: "plus grande que 1",
+                avecJustification: true,
                 biaisDetectables: [
                     {
                         code: "FRACTION_TOUJOURS_INF_1",
@@ -134,10 +137,10 @@ export const exercices = [
                             valeur: "plus petite que 1",
                         },
                         ceQueRevele:
-                            "Répondre « plus petite que 1 » pour 12/10 → même obstacle : la fraction comme nombre pouvant dépasser 1 n'est pas construite.",
+                            "Répondre « plus petite que 1 » pour 12/10 → même obstacle que pour 9/4.",
                     },
                 ],
-                aRelire: false,
+                aRelire: true,
             },
         ],
         aRelire: false,
@@ -150,49 +153,114 @@ export const exercices = [
         competence:
             "Écrire une fraction supérieure à 1 comme somme d'un entier et d'une fraction inférieure à 1",
         type: "compound",
-        consigne:
-            "Complète les phrases et les égalités. Appuie-toi sur un dessin si tu veux.",
+        consigne: "Complète les phrases et les égalités.",
         sousQuestions: [
+            // ── a : 7/4 de pizza ─────────────────────────────────────────────
             {
                 id: "a",
-                type: "text",
+                type: "compound",
                 consigne:
-                    "7/4 de pizza, c'est ______ pizza(s) entière(s) et ______ quart(s) de pizza. On écrit : 7/4 = ______ + ______",
-                // Attendu : 1 + 3/4
+                    "7/4 de pizza, c'est ______ pizza(s) entière(s) et ______ quart(s) de pizza.\nOn écrit : 7/4 = ______ + ______",
+                sousQuestions: [
+                    {
+                        id: "a_entier",
+                        type: "number_input",
+                        consigne: "Nombre de pizzas entières :",
+                        unite: "pizza(s) entière(s)",
+                        attendu: 1,
+                        biaisDetectables: [],
+                        aRelire: false,
+                    },
+                    {
+                        id: "a_fraction",
+                        type: "fraction_input",
+                        consigne: "Fraction restante :",
+                        items: [
+                            {
+                                id: "resultat",
+                                attendu: { numerateur: 3, denominateur: 4 },
+                            },
+                        ],
+                        biaisDetectables: [],
+                        aRelire: false,
+                    },
+                ],
                 biaisDetectables: [],
                 aRelire: true,
             },
+
+            // ── b : 9/3 = entier ──────────────────────────────────────────────
             {
                 id: "b",
-                type: "fraction_input",
-                consigne: "9/3 = ______",
-                items: [
-                    {
-                        id: "resultat",
-                        attendu: { numerateur: 3, denominateur: 1 },
-                    },
-                ],
+                type: "number_input",
+                consigne: "9/3 =",
+                // Attendu : 3. Un entier, pas une fraction.
+                // L'élève qui bloque révèle que n/n = 1 n'est pas généralisé.
+                attendu: 3,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
                         declencheur: { type: "text_review" },
                         ceQueRevele:
-                            "Répondre 9/3 ou bloquer → n/n = 1 non généralisé ; ne pas reconnaître que 9/3 = 3.",
+                            "Bloquer ou donner une valeur ≠ 3 → 9/3 = 3 non reconnu ; n/n = 1 non généralisé.",
                     },
                 ],
                 aRelire: true,
             },
+
+            // ── c : 11/4 = entier + fraction ──────────────────────────────────
             {
                 id: "c",
-                type: "text",
+                type: "compound",
                 consigne:
-                    "11/4 = ______ + ______. Écris maintenant 11/4 autrement en une seule phrase.",
-                // Attendu : 2 + 3/4
+                    "11/4 = ______ + ______\nÉcris maintenant 11/4 autrement en une seule phrase.",
+                sousQuestions: [
+                    {
+                        id: "c_entier",
+                        type: "number_input",
+                        consigne: "Partie entière :",
+                        attendu: 2,
+                        biaisDetectables: [],
+                        aRelire: false,
+                    },
+                    {
+                        id: "c_fraction",
+                        type: "fraction_input",
+                        consigne: "Fraction restante :",
+                        items: [
+                            {
+                                id: "resultat",
+                                attendu: { numerateur: 3, denominateur: 4 },
+                            },
+                        ],
+                        biaisDetectables: [
+                            {
+                                code: "N_SUR_N_NON_ACQUIS",
+                                declencheur: {
+                                    type: "item_fraction_equals",
+                                    itemId: "resultat",
+                                    numerateur: 4,
+                                    denominateur: 4,
+                                },
+                                ceQueRevele:
+                                    "Répondre 11/4 = 2 + 4/4 → 4/4 = 1 non connecté à l'entier ; conservation du dénominateur non stabilisée.",
+                            },
+                        ],
+                        aRelire: false,
+                    },
+                    {
+                        id: "c_phrase",
+                        type: "text",
+                        consigne: "Écris 11/4 autrement en une seule phrase :",
+                        biaisDetectables: [],
+                        aRelire: true,
+                    },
+                ],
                 biaisDetectables: [],
                 aRelire: true,
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 3 ────────────────────────────────────────────────────────────
@@ -500,21 +568,6 @@ export const exercices = [
                 type: "text",
                 consigne:
                     "Peux-tu trouver 1/4 de 10 mètres ? Explique ta méthode.",
-                biaisDetectables: [
-                    {
-                        code: "FRACTION_OPERATEUR_NON_CONSTRUITE",
-                        declencheur: { type: "text_review" },
-                        ceQueRevele:
-                            "Bloquer car 10 n'est pas divisible par 4 en entier → résultat fractionnaire 2,5 m non accepté.",
-                    },
-                ],
-                aRelire: true,
-            },
-            {
-                id: "d",
-                type: "text",
-                consigne:
-                    "Peux-tu trouver 1/4 de 10 mètres ? Explique ta méthode.",
                 // Attendu : 2,5 m ou 2 + 1/2 m
                 biaisDetectables: [
                     {
@@ -538,7 +591,10 @@ export const exercices = [
             "Mobiliser la fraction avec des sens variés (partie d'un tout, mesure, opérateur) dans un problème",
         type: "compound",
         consigne:
-            "Un sentier mesure 1 unité de longueur. Trois randonneurs le parcourent en deux jours.\n\nLou : 3/4 le matin + 1/4 l'après-midi.\nMax : 3/4 le matin + 2/4 l'après-midi.\nÉva : 4 fois 1/4.",
+            "Un sentier mesure 1 unité de longueur. Trois randonneurs le parcourent en deux jours.\n\n" +
+            "Lou : 3/4 le premier jour, 1/4 le deuxième jour.\n" +
+            "Max : 3/4 le premier jour, 2/4 le deuxième jour.\n" +
+            "Éva : 1/4 chaque jour pendant 4 jours.",
         sousQuestions: [
             {
                 id: "a",
