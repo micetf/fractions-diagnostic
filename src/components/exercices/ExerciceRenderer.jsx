@@ -12,30 +12,18 @@ import { figuresCM2Ex4 } from "./figures/CM2Ex4";
 import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
 import { getInitialValue } from "@/utils/initialValues";
 
-/**
- * Registre des figures SVG pour les exercices de type 'selection'.
- * Clé : "NIVEAU-NUMERO".
- */
+/** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
 const FIGURE_REGISTRY = {
     "CE1-1": figuresCE1Ex1,
     "CE2-2": figuresCE2Ex2,
     "CM2-4": figuresCM2Ex4,
 };
 
-/**
- * Registre des figures illustrant chaque item d'un exercice fraction_input.
- * Clé : "NIVEAU-NUMERO". Valeur : objet { itemId → ReactNode }.
- */
+/** Registre figures pour les items fraction_input. Clé : "NIVEAU-NUMERO". */
 const ITEM_FIGURE_REGISTRY = {
     "CE1-2": figuresCE1Ex2,
 };
 
-/**
- * Génère des segments rectangulaires égaux pour une bande de N parts.
- *
- * @param {number} n
- * @returns {Array}
- */
 function makeSegmentsAuto(n) {
     const partW = 300 / n;
     return Array.from({ length: n }, (_, i) => ({
@@ -48,12 +36,6 @@ function makeSegmentsAuto(n) {
     }));
 }
 
-/**
- * Retourne les segments pour une figure de coloriage.
- *
- * @param {object} figure
- * @returns {Array}
- */
 function makeSegmentsForFigure(figure) {
     if (figure.description?.toLowerCase().includes("triangle")) {
         return segmentsCE1Ex3TriangleD;
@@ -61,20 +43,50 @@ function makeSegmentsForFigure(figure) {
     return makeSegmentsAuto(figure.nbParts ?? 2);
 }
 
+// ─── Composant interne : fraction SVG inline ──────────────────────────────────
+
+/**
+ * FractionSVG
+ *
+ * Affiche une fraction sous forme mathématique (numérateur / barre / dénominateur)
+ * dans un conteneur inline. Utilisé pour les exercices de classement et comparaison.
+ *
+ * @param {{ n: number, d: number }} props
+ */
+function FractionSVG({ n, d }) {
+    return (
+        <span
+            className="inline-flex flex-col items-center leading-none
+                     font-mono font-semibold text-slate-800 text-base select-none"
+        >
+            <span>{n}</span>
+            <span className="w-full border-t border-slate-800 my-0.5" />
+            <span>{d}</span>
+        </span>
+    );
+}
+
+FractionSVG.propTypes = {
+    n: PropTypes.number.isRequired,
+    d: PropTypes.number.isRequired,
+};
+
+// ─── Composant principal ──────────────────────────────────────────────────────
+
 /**
  * ExerciceRenderer
  *
- * Sélectionne et rend le composant de saisie approprié pour un exercice
- * ou une sous-question. Gère tous les types définis dans les données sources,
- * y compris les types composés (récursion sur sousQuestions).
+ * Rend le composant de saisie approprié pour un exercice ou une sous-question.
+ * Gère tous les types définis dans les données sources, y compris les
+ * types composés (récursion sur sousQuestions) et les types texte structurés.
  *
  * Aucun retour de justesse n'est donné à l'élève (SRS F-PAS-05).
  *
  * @param {object}   props
- * @param {object}   props.exercice  - Nœud exercice ou sous-question.
- * @param {string}   props.niveau    - 'CE1' | 'CE2' | 'CM1' | 'CM2'.
- * @param {any}      props.value     - Valeur courante.
- * @param {function} props.onChange  - Appelé avec la nouvelle valeur.
+ * @param {object}   props.exercice
+ * @param {string}   props.niveau
+ * @param {any}      props.value
+ * @param {function} props.onChange
  */
 function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
     const val = value ?? getInitialValue(exercice);
@@ -85,35 +97,28 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
             if (exercice.items?.length > 0) {
                 const itemFigures =
                     ITEM_FIGURE_REGISTRY[`${niveau}-${exercice.numero}`] ?? {};
-
                 return (
                     <div className="flex flex-col gap-6">
-                        {/* Items : figure + FractionInput */}
                         <div className="flex flex-wrap gap-8 items-end">
                             {exercice.items.map((item) => (
                                 <div
                                     key={item.id}
                                     className="flex flex-col items-center gap-3"
                                 >
-                                    {/* Figure illustrative si disponible */}
                                     {itemFigures[item.id] ? (
                                         <div className="flex items-center justify-center">
                                             {itemFigures[item.id]}
                                         </div>
                                     ) : item.description ? (
-                                        /* Description texte si pas de figure */
                                         <p className="text-sm text-slate-500 text-center max-w-36">
                                             {item.description}
                                         </p>
                                     ) : null}
-
-                                    {/* Label de l'item uniquement si plusieurs items */}
                                     {exercice.items.length > 1 && (
                                         <span className="text-xs font-mono text-slate-400">
                                             {item.id}
                                         </span>
                                     )}
-
                                     <FractionInput
                                         value={
                                             val[item.id] ?? {
@@ -129,9 +134,6 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                 </div>
                             ))}
                         </div>
-
-                        {/* Champ d'explication si l'exercice est marqué aRelire
-                (CE1 Ex.7, CE2 Ex.7, CM1 Ex.6, CM2 Ex.6) */}
                         {exercice.aRelire && (
                             <TextJustification
                                 value={
@@ -148,8 +150,6 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     </div>
                 );
             }
-
-            // Item unique
             return (
                 <FractionInput
                     value={val}
@@ -204,7 +204,6 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
         // ── Coloriage ─────────────────────────────────────────────────────────
         case "coloring": {
             if (exercice.figures) {
-                // Plusieurs figures indépendantes (CE1 Ex.3)
                 return (
                     <div className="flex flex-col gap-6">
                         {exercice.figures.map((fig) => {
@@ -238,12 +237,10 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     </div>
                 );
             }
-            // Figure unique
             const n = exercice.nbParts ?? exercice.partiesAColorier ?? 2;
-            const segments = makeSegmentsAuto(n);
             return (
                 <ColoringFigure
-                    segments={segments}
+                    segments={makeSegmentsAuto(n)}
                     value={Array.isArray(val) ? val : Array(n).fill(false)}
                     onChange={onChange}
                     viewBoxW={300}
@@ -266,12 +263,11 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     <div className="flex flex-col gap-3">
                         {exercice.fractionsAplacer.map((f, i) => {
                             const key = `${f.n}/${f.d}`;
-                            const ptVal = val?.[key] ?? null;
                             return (
                                 <NumberLine
                                     key={key}
                                     graduation={exercice.graduation}
-                                    value={ptVal}
+                                    value={val?.[key] ?? null}
                                     onChange={(v) =>
                                         onChange({ ...val, [key]: v })
                                     }
@@ -292,8 +288,158 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
             );
         }
 
-        // ── Texte libre ───────────────────────────────────────────────────────
+        // ── Texte (simple ou structuré) ───────────────────────────────────────
         case "text": {
+            // ── CE2 Ex.6 — Comparaisons de fractions (< / > / =) ───────────────
+            // Source : exercice 6 CE2, comparaisons[].{gauche, droite, attendu}
+            if (exercice.comparaisons?.length > 0) {
+                const objVal =
+                    typeof val === "object" &&
+                    val !== null &&
+                    !Array.isArray(val)
+                        ? val
+                        : {};
+                return (
+                    <div className="flex flex-col gap-6">
+                        {exercice.comparaisons.map((comp) => (
+                            <div
+                                key={comp.id}
+                                className="flex items-center gap-4 flex-wrap"
+                            >
+                                {/* Fraction gauche */}
+                                <div className="flex items-center justify-center w-12">
+                                    <FractionSVG
+                                        n={comp.gauche.n}
+                                        d={comp.gauche.d}
+                                    />
+                                </div>
+
+                                {/* Boutons <, >, = */}
+                                <div className="flex gap-2">
+                                    {["<", ">", "="].map((signe) => (
+                                        <button
+                                            key={signe}
+                                            type="button"
+                                            onClick={() =>
+                                                onChange({
+                                                    ...objVal,
+                                                    [comp.id]: signe,
+                                                })
+                                            }
+                                            className={`w-10 h-10 rounded-lg text-lg font-bold border-2
+                                  transition-colors cursor-pointer select-none
+                        ${
+                            objVal[comp.id] === signe
+                                ? "bg-brand-500 border-brand-600 text-white"
+                                : "bg-white border-slate-300 text-slate-700 hover:border-brand-400 hover:bg-brand-50"
+                        }`}
+                                        >
+                                            {signe}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Fraction droite */}
+                                <div className="flex items-center justify-center w-12">
+                                    <FractionSVG
+                                        n={comp.droite.n}
+                                        d={comp.droite.d}
+                                    />
+                                </div>
+
+                                {/* Label lettre */}
+                                <span className="text-xs text-slate-400 font-mono">
+                                    ({comp.id})
+                                </span>
+                            </div>
+                        ))}
+
+                        <TextJustification
+                            value={
+                                typeof objVal.__explication === "string"
+                                    ? objVal.__explication
+                                    : ""
+                            }
+                            onChange={(v) =>
+                                onChange({ ...objVal, __explication: v })
+                            }
+                            label="Explique ta réponse en une phrase pour chaque comparaison :"
+                        />
+                    </div>
+                );
+            }
+
+            // ── CM1 Ex.5 / CM2 Ex.5 — Fractions à ranger ───────────────────────
+            // Source : exercice 5 CM1/CM2, fractions[].{n, d}
+            if (exercice.fractions?.length > 0) {
+                return (
+                    <div className="flex flex-col gap-5">
+                        {/* Affichage des fractions à ranger */}
+                        <div
+                            className="flex flex-wrap gap-4 items-center
+                            bg-slate-50 border border-slate-200 rounded-xl p-4"
+                        >
+                            {exercice.fractions.map((f, i) => (
+                                <span
+                                    key={`${f.n}/${f.d}`}
+                                    className="flex items-center gap-3"
+                                >
+                                    <FractionSVG n={f.n} d={f.d} />
+                                    {i < exercice.fractions.length - 1 && (
+                                        <span className="text-slate-300 text-lg">
+                                            ·
+                                        </span>
+                                    )}
+                                </span>
+                            ))}
+                        </div>
+                        <TextJustification
+                            value={typeof val === "string" ? val : ""}
+                            onChange={onChange}
+                            label="Range ces fractions de la plus petite à la plus grande. Explique ta stratégie :"
+                            placeholder="Écris l'ordre ici et explique comment tu as trouvé…"
+                        />
+                    </div>
+                );
+            }
+
+            // ── CE2 Ex.5 — Fractions documentées (personnes + fractions) ────────
+            // Source : exercice 5 CE2, fractionsDocumentees[].{prenom, fraction{n,d}}
+            // Note : le document source ne spécifie que 3 amis sur 5.
+            if (exercice.fractionsDocumentees?.length > 0) {
+                return (
+                    <div className="flex flex-col gap-5">
+                        {/* Tableau prénom / fraction */}
+                        <div
+                            className="flex flex-wrap gap-5
+                            bg-slate-50 border border-slate-200 rounded-xl p-4"
+                        >
+                            {exercice.fractionsDocumentees.map((item) => (
+                                <div
+                                    key={item.prenom}
+                                    className="flex flex-col items-center gap-1.5"
+                                >
+                                    <span className="text-sm font-semibold text-slate-700">
+                                        {item.prenom}
+                                    </span>
+                                    <FractionSVG
+                                        n={item.fraction.n}
+                                        d={item.fraction.d}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <TextJustification
+                            value={typeof val === "string" ? val : ""}
+                            onChange={onChange}
+                            label="Range leurs parts de la plus petite à la plus grande. Explique comment tu as trouvé :"
+                            placeholder="Écris l'ordre ici…"
+                        />
+                    </div>
+                );
+            }
+
+            // ── Texte libre par défaut ───────────────────────────────────────────
             return (
                 <TextJustification
                     value={typeof val === "string" ? val : ""}

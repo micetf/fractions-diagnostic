@@ -68,6 +68,14 @@ export function getInitialValue(node) {
             );
 
         case "text":
+            if (node.comparaisons?.length > 0) {
+                const base = Object.fromEntries(
+                    node.comparaisons.map((c) => [c.id, null])
+                );
+                base.__explication = "";
+                return base;
+            }
+            return "";
         default:
             return "";
     }

@@ -119,7 +119,7 @@ export const AIDE = {
         sections: [
             {
                 q: "Lancer une passation",
-                r: "Cliquez sur « Lancer passation » pour basculer en mode élève. L'application bascule immédiatement — donnez le contrôle à vos élèves. Votre PIN sera demandé au retour.",
+                r: "Cliquez sur « Lancer passation » pour passer en mode élève. La session est mémorisée : si le navigateur est rechargé, l'application revient directement à l'écran de sélection des prénoms, sans intervention de votre part. Les élèves peuvent passer leur tour en autonomie.",
             },
             {
                 q: "Clôturer une session",
@@ -195,19 +195,23 @@ export const AIDE = {
     // ── Mode élève ──────────────────────────────────────────────────────────
     eleve: {
         titre: "Mode élève",
-        intro: "L'application est maintenant en mode élève.",
+        intro: "La session est prête. Les élèves peuvent passer leur tour en autonomie.",
         sections: [
             {
-                q: "Que doit faire l'élève ?",
-                r: "L'élève choisit son prénom dans la liste, puis répond aux exercices un par un. Il ne peut pas revenir en arrière. Aucune correction ne lui est affichée.",
+                q: "Comment l'élève démarre-t-il ?",
+                r: "L'élève arrive sur le PC, voit l'écran « Qui es-tu ? » et choisit son prénom. Vous n'avez pas besoin d'être présent entre chaque élève.",
+            },
+            {
+                q: "Que se passe-t-il après la passation ?",
+                r: "L'écran « C'est terminé ! » s'affiche. Le bouton « Élève suivant » replace l'application sur le sélecteur de prénoms pour l'élève suivant — sans code PIN.",
             },
             {
                 q: "Comment revenir en mode enseignant ?",
-                r: "Une fois la passation terminée, l'élève clique sur « Appelle ton enseignant(e) ». Votre code PIN sera demandé pour déverrouiller le mode enseignant.",
+                r: "Cliquez sur « Retour mode enseignant » (affiché discrètement en bas de l'écran de fin et du sélecteur de prénoms). Votre code PIN sera demandé.",
             },
             {
                 q: "L'élève a fermé la fenêtre par erreur",
-                r: "Ses réponses déjà soumises sont enregistrées. Il peut reprendre depuis le sélecteur de prénom — la passation continue à l'exercice suivant.",
+                r: "Aucun problème. En rouvrant le navigateur, l'application retrouve la session active et revient directement sur le sélecteur de prénoms. Les réponses déjà soumises sont enregistrées.",
             },
         ],
     },
