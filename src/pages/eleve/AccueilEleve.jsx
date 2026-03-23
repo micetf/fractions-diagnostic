@@ -11,27 +11,18 @@ import PassationRunner from "./PassationRunner";
  *
  * Orchestrateur du mode élève.
  *
- * Flux normal (plusieurs élèves sur le même poste) :
+ * Flux normal :
  *   1. Session active → ChoixEleve
  *   2. Élève sélectionné → PassationRunner
  *   3. Passation terminée → FinPassation
- *      ├─ "Élève suivant" → retour ChoixEleve (sans PIN)
- *      └─ "Retour mode enseignant" → PinGate → callback onCallTeacher
- *
- * Flux dégradé :
- *   - Pas de session active → écran d'attente
- *   - Tous les élèves ont passé → ChoixEleve affiche un message vide
+ *      ├─ "Élève suivant"          → retour ChoixEleve (sans PIN)
+ *      └─ "Retour mode enseignant" → PinGate → onSuccess → onCallTeacherSuccess
  *
  * @param {object}      props
  * @param {string|null} props.sessionActiveId
- * @param {function}    props.onCallTeacher
- * @param {function}    props.onCallTeacherSuccess  - Appelé après succès du PIN.
+ * @param {function}    props.onCallTeacherSuccess - Appelé après succès du PIN.
  */
-function AccueilEleve({
-    sessionActiveId = null,
-    onCallTeacher,
-    onCallTeacherSuccess,
-}) {
+function AccueilEleve({ sessionActiveId = null, onCallTeacherSuccess }) {
     const { state } = useAppContext();
 
     const [eleveId, setEleveId] = useState(null);
@@ -43,10 +34,6 @@ function AccueilEleve({
             (s) => s.id === sessionActiveId && s.statut === "en_cours"
         ) ?? null;
 
-    /**
-     * Remet le mode élève à zéro pour l'élève suivant.
-     * Ne quitte pas le mode élève, ne demande pas le PIN.
-     */
     function handleSuivant() {
         setEleveId(null);
         setTermine(false);
@@ -54,12 +41,7 @@ function AccueilEleve({
 
     // ── PinGate retour enseignant ───────────────────────────────────────────
     if (showPin) {
-        return (
-            <PinGate
-                mode="verify"
-                onSuccess={onCallTeacher ?? onCallTeacherSuccess}
-            />
-        );
+        return <PinGate mode="verify" onSuccess={onCallTeacherSuccess} />;
     }
 
     // ── Pas de session active ───────────────────────────────────────────────
@@ -146,8 +128,7 @@ function AccueilEleve({
 
 AccueilEleve.propTypes = {
     sessionActiveId: PropTypes.string,
-    onCallTeacher: PropTypes.func.isRequired,
-    onCallTeacherSuccess: PropTypes.func,
+    onCallTeacherSuccess: PropTypes.func.isRequired,
 };
 
 export default AccueilEleve;
