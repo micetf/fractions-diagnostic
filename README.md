@@ -143,6 +143,7 @@ src/
 │   ├── AppContext.jsx         # useReducer + persistence localStorage
 │   └── useAppContext.js       # Hook consommateur
 ├── data/
+│   ├── aide.js 
 │   ├── biais.js               # Dictionnaire des 14 codes biais
 │   ├── index.js               # Point d'entrée unifié
 │   └── exercices/
