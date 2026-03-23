@@ -43,7 +43,7 @@ function App() {
 
     if (mode === "student") {
         return (
-            <Layout mode="student" onSwitchMode={() => {}}>
+            <Layout mode="student" onSwitchMode={() => {}} pageActive="eleve">
                 <AccueilEleve
                     sessionActiveId={sessionActiveId}
                     onCallTeacher={handlePinSuccess}
@@ -90,7 +90,7 @@ function App() {
     };
 
     return (
-        <Layout mode="teacher" onSwitchMode={() => {}}>
+        <Layout mode="teacher" onSwitchMode={() => {}} pageActive={teacherPage}>
             {teacherPages[teacherPage] ?? teacherPages.accueil}
         </Layout>
     );
