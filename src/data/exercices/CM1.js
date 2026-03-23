@@ -468,12 +468,14 @@ export const exercices = [
                 id: "c",
                 type: "compound",
                 consigne:
-                    "Nina a parcouru 3/4 d'unité le matin et 3/4 d'unité l'après-midi. Quelle fraction d'unité a-t-elle parcourue en tout ? Est-ce plus ou moins que 1 unité ?",
+                    "Nina part de son école vers un parc situé à 1 unité. " +
+                    "Le matin, elle marche 3/4 d'unité. L'après-midi, elle marche encore 3/4 d'unité. " +
+                    "Quelle fraction d'unité a-t-elle marchée en tout ? A-t-elle dépassé le parc ?",
                 sousQuestions: [
                     {
                         id: "c_calcul",
                         type: "fraction_input",
-                        consigne: "Fraction parcourue en tout :",
+                        consigne: "Fraction marchée en tout :",
                         items: [
                             {
                                 id: "resultat",
@@ -497,16 +499,19 @@ export const exercices = [
                     },
                     {
                         id: "c_comparaison",
+                        // Reformulé : "dépassé le parc" plutôt que "plus ou moins que 1 unité"
+                        // — le parc est un repère concret, pas une borne abstraite
                         type: "binary_choice",
-                        consigne: "C'est :",
-                        options: ["plus que 1 unité", "moins que 1 unité"],
-                        attendu: "plus que 1 unité",
+                        consigne: "A-t-elle dépassé le parc ?",
+                        options: ["OUI", "NON"],
+                        attendu: "OUI",
                         biaisDetectables: [],
                         aRelire: false,
                     },
                 ],
                 aRelire: false,
             },
+            ,
         ],
         aRelire: false,
     },
