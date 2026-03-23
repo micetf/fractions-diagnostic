@@ -160,9 +160,11 @@ export const exercices = [
             {
                 id: "encadrement",
                 type: "fraction_input",
+                // Consigne épurée — les bornes ne sont plus dans la consigne
                 consigne:
-                    "Un point P est marqué sur la règle, entre 5/8 et 6/8. Complète : La mesure de P est comprise entre ______ et ______.",
-                // Deux fractions à saisir (encadrement)
+                    "Un point P est marqué sur la règle graduée. Complète : La mesure de P est comprise entre ______ et ______.",
+                // Figure support : règle en huitièmes avec point P affiché
+                figureSupportId: "regle_huitiemes_point_P",
                 items: [
                     {
                         id: "borne_inf",

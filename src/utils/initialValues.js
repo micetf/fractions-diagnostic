@@ -75,6 +75,20 @@ export function getInitialValue(node) {
                 base.__explication = "";
                 return base;
             }
+            // Fractions avec prénoms (CE2 Ex.5) → ordre initial = ordre de la source
+            if (node.fractionsDocumentees?.length > 0) {
+                return {
+                    ordre: node.fractionsDocumentees.map((it) => it.prenom),
+                    explication: "",
+                };
+            }
+            // Fractions seules (CM1 Ex.5, CM2 Ex.5) → ordre initial = ordre de la source
+            if (node.fractions?.length > 0) {
+                return {
+                    ordre: node.fractions.map((f) => `${f.n}/${f.d}`),
+                    explication: "",
+                };
+            }
             return "";
         default:
             return "";
