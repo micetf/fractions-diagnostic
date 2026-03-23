@@ -94,8 +94,9 @@ export const exercices = [
             {
                 id: "B",
                 description: "Segment B",
-                // Biais documenté source : lire « 2 » en comptant les traits de graduation
-                attendu: { numerateur: 2, denominateur: 4 },
+                // 2/4 = 1/2 : les deux réponses sont correctes → relecture enseignant
+                attendu: null,
+                aRelire: true,
             },
             {
                 id: "C",
@@ -104,7 +105,17 @@ export const exercices = [
                 attendu: { numerateur: 5, denominateur: 4 },
             },
         ],
-        biaisDetectables: [],
+        biaisDetectables: [
+            {
+                // Aucune détection automatique sur A et B (équivalence 1/2 = 2/4).
+                // Le biais FRACTION_PAS_MESURE s'observe sur C à la relecture :
+                // l'élève qui laisse C vide ou répond 1/4 refuse de mesurer au-delà de l'unité.
+                code: "FRACTION_PAS_MESURE",
+                declencheur: { type: "text_review" },
+                ceQueRevele:
+                    "Laisser C vide ou répondre 1/4 → l'élève refuse ou ne sait pas mesurer une longueur supérieure à l'unité.",
+            },
+        ],
         // aRelire : la mesure du segment C révèle un obstacle enseignant → relecture
         aRelire: true,
         // Pas de zone de texte : l'élève mesure et écrit, il n'explique pas
@@ -379,9 +390,12 @@ export const exercices = [
             },
             {
                 id: "c",
-                type: "text",
+                type: "binary_choice",
                 consigne:
-                    "Son ami Sam a marché 5/8 du même sentier. Qui a marché le plus loin, Léo ou Sam ? Explique.",
+                    "Son ami Sam a marché 5/8 du même sentier. Qui a marché le plus loin ?",
+                options: ["Léo", "Sam"],
+                attendu: "Léo",
+                avecJustification: true,
                 biaisDetectables: [],
                 aRelire: true,
             },

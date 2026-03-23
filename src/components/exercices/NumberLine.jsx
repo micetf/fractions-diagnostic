@@ -102,6 +102,7 @@ function NumberLine({
     onChange,
     couleur = "#2f5ee8",
     etiquette = undefined,
+    showLabel = false,
 }) {
     const { denominateur, min, max } = graduation;
     const svgRef = useRef(null);
@@ -271,8 +272,8 @@ function NumberLine({
                             stroke="white"
                             strokeWidth="2.5"
                         />
-                        {/* Étiquette au-dessus du point */}
-                        {etiquette && (
+                        {/* Étiquette au-dessus du point — masquée en passation */}
+                        {etiquette && showLabel && (
                             <text
                                 x={displayX}
                                 y={LINE_Y - PT_R - 6}
@@ -289,8 +290,8 @@ function NumberLine({
                 )}
             </svg>
 
-            {/* Valeur courante — affichée sous le SVG */}
-            {value && (
+            {/* Position numérique — masquée en passation */}
+            {value && showLabel && (
                 <p className="text-xs text-center text-slate-400 mt-1 font-mono">
                     Position : {value.numerateur}/{value.denominateur}
                     {value.numerateur % value.denominateur === 0
@@ -315,6 +316,7 @@ NumberLine.propTypes = {
     onChange: PropTypes.func.isRequired,
     couleur: PropTypes.string,
     etiquette: PropTypes.string,
+    showLabel: PropTypes.bool,
 };
 
 export default NumberLine;

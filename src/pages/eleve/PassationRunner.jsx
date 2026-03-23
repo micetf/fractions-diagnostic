@@ -234,8 +234,8 @@ function ExerciceStep({ exercice, niveau, isLast, onValider }) {
     }
 
     return (
-        <>
-            {/* Corps de l'exercice (SRS NF-UX-01 : consigne ≥ 18 px) */}
+        <div className="flex flex-col min-h-[calc(100vh-56px)]">
+            {/* Corps de l'exercice */}
             <div className="flex-1 w-full max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
                 {exercice.consigne && (
                     <p className="text-lg text-slate-800 leading-relaxed">
@@ -250,8 +250,8 @@ function ExerciceStep({ exercice, niveau, isLast, onValider }) {
                 />
             </div>
 
-            {/* Bouton de validation */}
-            <div className="w-full max-w-2xl mx-auto px-4 py-6">
+            {/* Bouton — suit le contenu, max 2xl, sans coller au bas viewport */}
+            <div className="w-full max-w-2xl mx-auto px-4 pb-8 pt-2">
                 <button
                     onClick={handleValider}
                     className="w-full py-4 rounded-2xl bg-brand-500 hover:bg-brand-600
@@ -260,7 +260,7 @@ function ExerciceStep({ exercice, niveau, isLast, onValider }) {
                     {isLast ? "Terminer" : "Valider →"}
                 </button>
             </div>
-        </>
+        </div>
     );
 }
 
