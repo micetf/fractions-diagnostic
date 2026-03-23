@@ -37,10 +37,36 @@ function makeSegmentsAuto(n) {
 }
 
 function makeSegmentsForFigure(figure) {
-    if (figure.description?.toLowerCase().includes("triangle")) {
-        return segmentsCE1Ex3TriangleD;
-    }
+    const desc = figure.description?.toLowerCase() ?? "";
+    if (desc.includes("triangle")) return segmentsCE1Ex3TriangleD;
+    if (desc.includes("disque")) return makeSegmentsDisque(figure.nbParts ?? 2);
     return makeSegmentsAuto(figure.nbParts ?? 2);
+}
+/**
+ * Génère N segments en secteurs de disque (paths SVG) pour ColoringFigure.
+ * Disque centré en (40, 40), rayon 34, viewBox 80×80.
+ *
+ * @param {number} n - Nombre de secteurs.
+ * @returns {Array}
+ */
+function makeSegmentsDisque(n) {
+    const cx = 40;
+    const cy = 40;
+    const r = 34;
+    return Array.from({ length: n }, (_, i) => {
+        const a1 = (i / n) * 2 * Math.PI - Math.PI / 2;
+        const a2 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+        const x1 = cx + r * Math.cos(a1);
+        const y1 = cy + r * Math.sin(a1);
+        const x2 = cx + r * Math.cos(a2);
+        const y2 = cy + r * Math.sin(a2);
+        const large = 1 / n > 0.5 ? 1 : 0;
+        return {
+            shape: "path",
+            label: `Secteur ${i + 1}`,
+            d: `M${cx},${cy} L${x1.toFixed(2)},${y1.toFixed(2)} A${r},${r} 0 ${large} 1 ${x2.toFixed(2)},${y2.toFixed(2)} Z`,
+        };
+    });
 }
 
 // ─── Composant interne : fraction SVG inline ──────────────────────────────────
@@ -211,9 +237,9 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                             const figVal =
                                 val?.[fig.id] ??
                                 Array(fig.nbParts ?? 2).fill(false);
-                            const isTriangle = fig.description
-                                ?.toLowerCase()
-                                .includes("triangle");
+                            const desc = fig.description?.toLowerCase() ?? "";
+                            const isTriangle = desc.includes("triangle");
+                            const isDisque = desc.includes("disque");
                             return (
                                 <div key={fig.id}>
                                     <p className="text-sm text-slate-500 mb-2">
@@ -228,7 +254,9 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                         onChange={(v) =>
                                             onChange({ ...val, [fig.id]: v })
                                         }
-                                        viewBoxW={isTriangle ? 80 : 300}
+                                        viewBoxW={
+                                            isTriangle || isDisque ? 80 : 300
+                                        }
                                         viewBoxH={80}
                                     />
                                 </div>
