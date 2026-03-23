@@ -4,6 +4,7 @@ import { useAppContext } from "@/context/useAppContext";
 import { getExercice } from "@/data/index";
 import { getInitialValue } from "@/utils/initialValues";
 import ExerciceRenderer from "@/components/exercices/ExerciceRenderer";
+import { useBiaisDetector } from "@/hooks/useBiaisDetector";
 
 /**
  * Calcule récursivement si un nœud requiert une relecture enseignant.
@@ -43,6 +44,7 @@ function computeARelire(node) {
  */
 function PassationRunner({ session, eleveId, onTermine }) {
     const { state, dispatch } = useAppContext();
+    const { detecter } = useBiaisDetector();
 
     // ID stable pour la passation à créer.
     // Initialisé une seule fois via un test sur la valeur courante (pas d'impure call).
@@ -128,7 +130,7 @@ function PassationRunner({ session, eleveId, onTermine }) {
                     exercice_numero: currentNumero,
                     type: exercice.type,
                     valeur_brute: valeurCourante,
-                    biais_auto: [],
+                    biais_auto: detecter(exercice, valeurCourante),
                     biais_manuel: null,
                     duree_ms: dureeMs,
                     a_relire: computeARelire(exercice),
