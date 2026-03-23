@@ -591,15 +591,16 @@ export const exercices = [
             "Mobiliser la fraction avec des sens variés (partie d'un tout, mesure, opérateur) dans un problème",
         type: "compound",
         consigne:
-            "Un sentier mesure 1 unité de longueur. Trois randonneurs le parcourent en deux jours.\n\n" +
-            "Lou : 3/4 le premier jour, 1/4 le deuxième jour.\n" +
-            "Max : 3/4 le premier jour, 2/4 le deuxième jour.\n" +
-            "Éva : 1/4 chaque jour pendant 4 jours.",
+            "Un sentier de randonnée passe devant un refuge situé à 1 unité du départ. " +
+            "Trois randonneurs partent du même point pour une journée de marche.\n\n" +
+            "Lou marche 3/4 d'unité le matin et 1/4 d'unité l'après-midi.\n" +
+            "Max marche 3/4 d'unité le matin et 2/4 d'unité l'après-midi.\n" +
+            "Éva marche 1/4 d'unité quatre fois de suite.",
         sousQuestions: [
             {
                 id: "a",
                 type: "binary_choice",
-                consigne: "Lou a-t-il parcouru tout le sentier ? Justifie.",
+                consigne: "Lou arrive-t-il exactement au refuge ? Justifie.",
                 options: ["OUI", "NON"],
                 attendu: "OUI",
                 avecJustification: true,
@@ -608,7 +609,7 @@ export const exercices = [
                         code: "ADDITION_DENOMINATEURS",
                         declencheur: { type: "choice_equals", valeur: "NON" },
                         ceQueRevele:
-                            "Répondre NON → additionner 3/4 + 1/4 = 4/8 et ne pas identifier 4/4 = 1.",
+                            "Répondre NON → additionner 3/4 + 1/4 = 4/8 sans identifier 4/4 = 1.",
                     },
                 ],
                 aRelire: true,
@@ -616,12 +617,12 @@ export const exercices = [
             {
                 id: "b",
                 type: "compound",
-                consigne: "Max a-t-il dépassé la longueur du sentier ?",
+                consigne: "Max dépasse-t-il le refuge ?",
                 sousQuestions: [
                     {
                         id: "b_choix",
                         type: "binary_choice",
-                        consigne: "A-t-il dépassé ?",
+                        consigne: "Max dépasse-t-il le refuge ?",
                         options: ["OUI", "NON"],
                         attendu: "OUI",
                         biaisDetectables: [],
@@ -630,7 +631,7 @@ export const exercices = [
                     {
                         id: "b_depassement",
                         type: "fraction_input",
-                        consigne: "De combien a-t-il dépassé ?",
+                        consigne: "De combien d'unité dépasse-t-il le refuge ?",
                         items: [
                             {
                                 id: "resultat",
@@ -647,7 +648,7 @@ export const exercices = [
                 id: "c",
                 type: "binary_choice",
                 consigne:
-                    "Éva dit qu'elle a marché autant que Lou. A-t-elle raison ? Montre-le.",
+                    "Éva arrive-t-elle au même endroit que Lou ? Montre-le.",
                 options: ["OUI", "NON"],
                 attendu: "OUI",
                 avecJustification: true,
