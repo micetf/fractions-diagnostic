@@ -8,7 +8,7 @@ import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AccueilEleve from "@/pages/eleve/AccueilEleve";
 
-import SpikeS8 from "@/pages/enseignant/SpikeS8";
+import SpikeS9 from "@/pages/enseignant/SpikeS9";
 
 /**
  * App — composant racine.
@@ -89,7 +89,7 @@ function App() {
                 onLancer={handleLancerSession}
             />
         ),
-        s8: <SpikeS8 onNavigate={setTeacherPage} />,
+        s9: <SpikeS9 onNavigate={setTeacherPage} />,
     };
 
     return (
