@@ -70,23 +70,25 @@ function makeSegmentsAuto(n) {
 }
 
 /**
- * Génère des segments pour un exercice de représentation de fraction.
- * Produit nbUnites bandes identiques, chacune subdivisée en partsParUnite parts.
- * Les bandes sont espacées de GAP pixels — chaque bande est visuellement
- * un "tout" identique. Le fractionnement seul varie selon la fraction.
+ * Génère les segments et la viewBoxW optimale pour un exercice
+ * de représentation de fraction (nbUnites bandes × partsParUnite parts).
  *
- * Utilisé pour CM2 Ex.1.
+ * La largeur est calculée pour garantir CELL_MIN_W pixels par case,
+ * quelle que soit la densité de fractionnement.
  *
- * @param {number} nbUnites      - Nombre de bandes (toutes identiques).
- * @param {number} partsParUnite - Nombre de parts dans chaque bande.
- * @returns {SegmentDef[]}
+ * @param {number} nbUnites       - Nombre de bandes identiques.
+ * @param {number} partsParUnite  - Parts par bande.
+ * @returns {{ segments: SegmentDef[], viewBoxW: number }}
  */
 function makeSegmentsMultiUnite(nbUnites, partsParUnite) {
-    const GAP = 8;
+    const CELL_MIN_W = 22; // px minimum par case — lisible au doigt
+    const GAP = 10; // px entre bandes-unités
     const Y = 10;
     const H = 60;
-    const uniteW = (300 - (nbUnites - 1) * GAP) / nbUnites;
-    const partW = uniteW / partsParUnite;
+
+    const uniteW = partsParUnite * CELL_MIN_W;
+    const totalW = nbUnites * uniteW + (nbUnites - 1) * GAP;
+    const partW = CELL_MIN_W;
 
     const segs = [];
     for (let u = 0; u < nbUnites; u++) {
@@ -102,7 +104,8 @@ function makeSegmentsMultiUnite(nbUnites, partsParUnite) {
             });
         }
     }
-    return segs;
+
+    return { segments: segs, viewBoxW: totalW };
 }
 
 function makeSegmentsForFigure(figure) {
@@ -341,19 +344,20 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
         }
 
         // ── Coloriage ─────────────────────────────────────────────────────────
+        // ── Coloriage ─────────────────────────────────────────────────────────
         case "coloring": {
+            // ── Multi-figures (CE1 Ex.3, CM1 Ex.2…) ─────────────────────────
             if (exercice.figures) {
                 return (
                     <div className="flex flex-col gap-6">
                         {exercice.figures.map((fig) => {
-                            const segments = makeSegmentsForFigure(fig);
+                            const segs = makeSegmentsForFigure(fig);
                             const figVal =
                                 val?.[fig.id] ??
                                 Array(fig.nbParts ?? 2).fill(false);
                             const desc = fig.description?.toLowerCase() ?? "";
                             const isTriangle = desc.includes("triangle");
                             const isDisque = desc.includes("disque");
-
                             return (
                                 <div key={fig.id}>
                                     <p className="text-sm text-slate-500 mb-2">
@@ -363,7 +367,7 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                             : ""}
                                     </p>
                                     <ColoringFigure
-                                        segments={segments}
+                                        segments={segs}
                                         value={figVal}
                                         onChange={(v) =>
                                             onChange({ ...val, [fig.id]: v })
@@ -372,7 +376,6 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                             isTriangle || isDisque ? 80 : 300
                                         }
                                         viewBoxH={80}
-                                        uniteSize={exercice.uniteSize}
                                     />
                                 </div>
                             );
@@ -380,24 +383,32 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                     </div>
                 );
             }
-            const hasMultiUnite = exercice.nbUnites && exercice.partsParUnite;
-            const n = hasMultiUnite
-                ? exercice.nbUnites * exercice.partsParUnite
-                : (exercice.nbParts ?? exercice.partiesAColorier ?? 2);
 
-            const segments = hasMultiUnite
+            // ── Figure unique ────────────────────────────────────────────────
+            const hasMultiUnite = exercice.nbUnites && exercice.partsParUnite;
+
+            // makeSegmentsMultiUnite retourne { segments, viewBoxW }
+            // makeSegmentsAuto       retourne un tableau directement
+            const { segments: segs, viewBoxW: vbW } = hasMultiUnite
                 ? makeSegmentsMultiUnite(
                       exercice.nbUnites,
                       exercice.partsParUnite
                   )
-                : makeSegmentsAuto(n);
+                : {
+                      segments: makeSegmentsAuto(
+                          exercice.nbParts ?? exercice.partiesAColorier ?? 2
+                      ),
+                      viewBoxW: 300,
+                  };
+
+            const n = segs.length;
 
             return (
                 <ColoringFigure
-                    segments={segments}
+                    segments={segs}
                     value={Array.isArray(val) ? val : Array(n).fill(false)}
                     onChange={onChange}
-                    viewBoxW={300}
+                    viewBoxW={vbW}
                     viewBoxH={80}
                 />
             );
