@@ -1,3 +1,20 @@
+/**
+ * @file AppContext.jsx — contexte global et persistence localStorage.
+ *
+ * @description
+ * État global de l'application via useReducer.
+ * Seul point d'écriture dans le localStorage (SRS §6.2).
+ *
+ * Migration Sprint 3 :
+ *   Le cas `HYDRATE` retire silencieusement `pin_hash` de la config si
+ *   présent (données issues d'une version antérieure à v2.0).
+ *   La migration est idempotente — un localStorage déjà migré n'est pas
+ *   affecté. Aucune donnée métier (classes, sessions, passations) n'est
+ *   touchée.
+ *
+ * @module context/AppContext
+ */
+
 import { createContext, useReducer, useEffect } from "react";
 import PropTypes from "prop-types";
 import { getItem, setItem, KEYS } from "@/hooks/useStorage";
@@ -7,13 +24,16 @@ import { getItem, setItem, KEYS } from "@/hooks/useStorage";
 /**
  * Forme de l'état global.
  *
- * Le champ `_hydrated` est un marqueur interne :
- * la persistence vers localStorage ne s'active qu'une fois l'hydratation
- * depuis localStorage terminée, pour ne pas écraser des données existantes
- * avec l'état vide initial.
+ * `_hydrated` est un marqueur interne : la persistence vers localStorage
+ * ne s'active qu'une fois l'hydratation terminée.
+ *
+ * `config` contient désormais uniquement `annee_scolaire` et
+ * `session_en_cours_id`. Le champ `pin_hash` a été retiré en v2.0.
  */
 const initialState = {
-    /** @type {{ pin_hash: string, annee_scolaire: string } | null} */
+    /**
+     * @type {{ annee_scolaire?: string, session_en_cours_id?: string } | null}
+     */
     config: null,
     /** @type {Array} Classe[] */
     classes: [],
@@ -25,45 +45,62 @@ const initialState = {
     _hydrated: false,
 };
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+/**
+ * Retire `pin_hash` de la config si présent (migration v1 → v2).
+ * Retourne `null` si la config nettoyée est vide ou absente.
+ *
+ * @param {object|null} configBrute - Config lue depuis localStorage.
+ * @returns {object|null}
+ */
+function migrerConfig(configBrute) {
+    if (!configBrute || typeof configBrute !== "object") return null;
+
+    // eslint-disable-next-line no-unused-vars
+    const { pin_hash, ...configSansPIN } = configBrute;
+
+    // Si la config ne contenait que pin_hash → on retourne null
+    // (l'application démarrera comme si c'était un premier lancement)
+    return Object.keys(configSansPIN).length > 0 ? configSansPIN : null;
+}
+
 // ─── Reducer ──────────────────────────────────────────────────────────────────
 
 /**
- * Reducer principal de l'application.
- *
  * @param {typeof initialState} state
  * @param {{ type: string, payload?: any }} action
  * @returns {typeof initialState}
  */
 function appReducer(state, action) {
     switch (action.type) {
-        // ── Hydratation initiale depuis localStorage ───────────────────────────
+        // ── Hydratation initiale depuis localStorage ───────────────────────
         case "HYDRATE":
             return {
                 ...state,
-                config: action.payload.config ?? null,
+                config: migrerConfig(action.payload.config),
                 classes: action.payload.classes ?? [],
                 sessions: action.payload.sessions ?? [],
                 passations: action.payload.passations ?? [],
                 _hydrated: true,
             };
 
-        // ── Configuration (PIN + année scolaire) ──────────────────────────────
+        // ── Configuration (année scolaire) ────────────────────────────────
         /**
-         * payload : { pin_hash: string, annee_scolaire: string }
+         * payload : { annee_scolaire: string }
+         * Note v2.0 : `pin_hash` n'est plus accepté dans ce payload.
          */
-        case "SET_CONFIG":
-            return { ...state, config: action.payload };
+        case "SET_CONFIG": {
+            // Garde défensive : ne jamais persister pin_hash
+            // eslint-disable-next-line no-unused-vars
+            const { pin_hash, ...configPropre } = action.payload ?? {};
+            return { ...state, config: configPropre };
+        }
 
-        // ── Classes ───────────────────────────────────────────────────────────
-        /**
-         * payload : { id, nom, niveau, annee_scolaire, archive: false, eleves: [] }
-         */
+        // ── Classes ───────────────────────────────────────────────────────
         case "CREATE_CLASSE":
             return { ...state, classes: [...state.classes, action.payload] };
 
-        /**
-         * payload : Classe (objet complet mis à jour)
-         */
         case "UPDATE_CLASSE":
             return {
                 ...state,
@@ -72,11 +109,6 @@ function appReducer(state, action) {
                 ),
             };
 
-        /**
-         * payload : { id: string }
-         * Suppression définitive — uniquement si aucune passation n'est liée
-         * à un élève de cette classe (contrôle à faire côté appelant).
-         */
         case "DELETE_CLASSE":
             return {
                 ...state,
@@ -85,61 +117,41 @@ function appReducer(state, action) {
                 ),
             };
 
-        // ── Sessions ──────────────────────────────────────────────────────────
-        /**
-         * payload : { id, classe_id, niveau, exercices_selectionnes, date_creation, statut: 'en_cours' }
-         */
+        // ── Sessions ──────────────────────────────────────────────────────
         case "CREATE_SESSION":
-            return { ...state, sessions: [...state.sessions, action.payload] };
+            return {
+                ...state,
+                sessions: [...state.sessions, action.payload],
+            };
 
-        /**
-         * payload : { id: string }
-         */
-        case "CLOSE_SESSION":
+        case "UPDATE_SESSION":
             return {
                 ...state,
                 sessions: state.sessions.map((s) =>
-                    s.id === action.payload.id
-                        ? { ...s, statut: "terminee" }
-                        : s
+                    s.id === action.payload.id ? action.payload : s
                 ),
             };
 
-        // ── Passations ────────────────────────────────────────────────────────
-        /**
-         * payload : { id, session_id, eleve_id, statut: 'en_cours', date_debut, date_fin: null, reponses: [] }
-         */
+        // ── Passations ────────────────────────────────────────────────────
         case "CREATE_PASSATION":
             return {
                 ...state,
                 passations: [...state.passations, action.payload],
             };
 
-        /**
-         * Enregistre ou remplace la réponse à un exercice dans une passation.
-         * payload : { passation_id: string, reponse: ReponseExercice }
-         */
-        case "SAVE_REPONSE":
+        case "ADD_REPONSE":
             return {
                 ...state,
-                passations: state.passations.map((p) => {
-                    if (p.id !== action.payload.passation_id) return p;
-                    const autresReponses = p.reponses.filter(
-                        (r) =>
-                            r.exercice_numero !==
-                            action.payload.reponse.exercice_numero
-                    );
-                    return {
-                        ...p,
-                        reponses: [...autresReponses, action.payload.reponse],
-                    };
-                }),
+                passations: state.passations.map((p) =>
+                    p.id === action.payload.passation_id
+                        ? {
+                              ...p,
+                              reponses: [...p.reponses, action.payload.reponse],
+                          }
+                        : p
+                ),
             };
 
-        /**
-         * Marque une passation comme terminée.
-         * payload : { id: string, date_fin: string }
-         */
         case "FINISH_PASSATION":
             return {
                 ...state,
@@ -154,10 +166,6 @@ function appReducer(state, action) {
                 ),
             };
 
-        /**
-         * Attribue manuellement des codes biais à un item « à relire ».
-         * payload : { passation_id: string, exercice_numero: number, biais_manuel: string[] }
-         */
         case "VALIDER_ITEM":
             return {
                 ...state,
@@ -178,10 +186,6 @@ function appReducer(state, action) {
                 }),
             };
 
-        /**
-         * Ajoute ou remplace la note libre de l'enseignant sur une passation.
-         * payload : { passation_id: string, note: string }
-         */
         case "UPDATE_NOTE_ELEVE":
             return {
                 ...state,
@@ -192,27 +196,16 @@ function appReducer(state, action) {
                 ),
             };
 
+        // ── Session active ────────────────────────────────────────────────
         /**
-         * Remet l'application à l'état initial (début d'année scolaire).
-         * Efface classes, sessions, passations et config.
-         * Le rechargement de la page est géré côté composant.
-         */
-        case "RESET_ALL":
-            return {
-                ...initialState,
-                _hydrated: true,
-            };
-
-        /**
-         * Définit la session active (lancée par l'enseignant).
-         * Persiste en localStorage via l'effet habituel.
+         * Lance la session : persiste l'id dans config.
          * payload : { session_id: string }
          */
         case "SET_SESSION_ACTIVE":
             return {
                 ...state,
                 config: {
-                    ...state.config,
+                    ...(state.config ?? {}),
                     session_en_cours_id: action.payload.session_id,
                 },
             };
@@ -224,10 +217,22 @@ function appReducer(state, action) {
             return {
                 ...state,
                 config: {
-                    ...state.config,
+                    ...(state.config ?? {}),
                     session_en_cours_id: null,
                 },
             };
+
+        // ── Reset ─────────────────────────────────────────────────────────
+        /**
+         * Remet l'application à l'état initial (début d'année scolaire).
+         * Efface classes, sessions, passations et config.
+         */
+        case "RESET_ALL":
+            return {
+                ...initialState,
+                _hydrated: true,
+            };
+
         default:
             return state;
     }
@@ -243,12 +248,6 @@ const AppContext = createContext(null);
  * AppContextProvider
  *
  * Fournit l'état global et le dispatch à toute l'arborescence.
- * Gère :
- *   - l'hydratation initiale depuis localStorage (effet au montage)
- *   - la persistence vers localStorage à chaque changement d'état
- *     (uniquement après hydratation, pour ne pas écraser les données existantes)
- *
- * Seul point d'écriture dans le localStorage (SRS §6.2).
  *
  * @param {object}          props
  * @param {React.ReactNode} props.children
@@ -256,7 +255,7 @@ const AppContext = createContext(null);
 export function AppContextProvider({ children }) {
     const [state, dispatch] = useReducer(appReducer, initialState);
 
-    // ── Hydratation au montage ───────────────────────────────────────────────
+    // ── Hydratation au montage ─────────────────────────────────────────────
     useEffect(() => {
         dispatch({
             type: "HYDRATE",
@@ -269,7 +268,7 @@ export function AppContextProvider({ children }) {
         });
     }, []);
 
-    // ── Persistence à chaque changement (sauf avant hydratation) ────────────
+    // ── Persistence à chaque changement (sauf avant hydratation) ──────────
     useEffect(() => {
         if (!state._hydrated) return;
         setItem(KEYS.config, state.config);

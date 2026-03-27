@@ -5,29 +5,35 @@
  *   - titre    : nom de la section
  *   - intro    : phrase d'accroche (1 ligne)
  *   - sections : blocs question/réponse
+ *
+ * Mise à jour v2.0 (Sprint 3) :
+ *   - `premier_lancement` : suppression de l'étape "Créez un code PIN"
+ *   - `eleve` : suppression des références au code PIN,
+ *     remplacement par la description du geste appui long
+ *   - `export_import` : "Remise à zéro" ne mentionne plus le PIN
  */
 
 export const AIDE = {
     // ── Premier lancement ───────────────────────────────────────────────────
     premier_lancement: {
         titre: "Premiers pas",
-        intro: "Bienvenue dans Fraction Diagnostic. Voici les 4 étapes pour commencer.",
+        intro: "Bienvenue dans Fraction Diagnostic. Voici les 3 étapes pour commencer.",
         sections: [
             {
-                q: "1. Créez un code PIN",
-                r: "Ce code à 4 chiffres protège l'accès au mode enseignant. Choisissez un code mémorisable — il sera demandé à chaque retour depuis le mode élève.",
-            },
-            {
-                q: "2. Créez une classe",
+                q: "1. Créez une classe",
                 r: "Allez dans « Mes classes » et créez une classe avec son niveau (CE1, CE2, CM1 ou CM2). Ajoutez les prénoms de vos élèves.",
             },
             {
-                q: "3. Lancez une session",
+                q: "2. Lancez une session",
                 r: "Cliquez sur « Nouvelle session », choisissez votre classe et sélectionnez les exercices. Le tableau de lecture rapide vous indique quels biais chaque exercice cible.",
             },
             {
-                q: "4. Faites passer les exercices",
+                q: "3. Faites passer les exercices",
                 r: "L'application bascule en mode élève. Chaque élève choisit son prénom et répond aux exercices. Aucune correction n'apparaît pendant la passation.",
+            },
+            {
+                q: "Comment revenir au tableau de bord enseignant ?",
+                r: "Maintenez appuyé pendant 2 secondes le badge « MODE ÉLÈVE » dans la barre de navigation. Un écran de confirmation s'affiche — cliquez sur « Oui, accéder » pour retrouver votre tableau de bord.",
             },
         ],
     },
@@ -62,76 +68,44 @@ export const AIDE = {
 
     // ── Gestion des classes ─────────────────────────────────────────────────
     classes: {
-        titre: "Gestion des classes",
-        intro: "Organisez vos classes et vos listes d'élèves.",
+        titre: "Mes classes",
+        intro: "Gérez vos classes et vos listes d'élèves.",
         sections: [
             {
                 q: "Créer une classe",
-                r: "Donnez un nom libre (ex. : « CM1 B ») et choisissez le niveau. Le niveau peut être différent de celui de la classe réelle — il détermine les exercices proposés.",
+                r: "Cliquez sur « Nouvelle classe », saisissez un nom et choisissez le niveau (CE1 à CM2). La classe apparaît immédiatement dans la liste.",
             },
             {
                 q: "Ajouter des élèves",
-                r: "Cliquez sur le nom de la classe pour accéder à la liste. Le prénom est obligatoire, le nom de famille est optionnel. Les élèves sont triés alphabétiquement.",
-            },
-            {
-                q: "Modifier ou supprimer un élève",
-                r: "Vous pouvez modifier le prénom à tout moment. La suppression est bloquée si l'élève a déjà passé une session — ses résultats seraient perdus.",
+                r: "Ouvrez la classe et utilisez le champ d'ajout. Le prénom est obligatoire, le nom de famille est optionnel. Les élèves sont triés par prénom.",
             },
             {
                 q: "Archiver une classe",
-                r: "L'archivage masque la classe de la liste principale sans effacer les données. Utile en fin d'année. Les classes archivées sont visibles dans un menu déroulant.",
-            },
-            {
-                q: "Pourquoi ne peut-on pas supprimer une classe ?",
-                r: "Supprimer une classe effacerait aussi toutes ses sessions et passations. L'archivage est préféré pour éviter les pertes accidentelles. Une remise à zéro complète est disponible dans Export / Import.",
+                r: "L'archivage masque la classe dans les listes de création de sessions, sans supprimer les données. Idéal en début d'année scolaire.",
             },
         ],
     },
 
-    // ── Créer une session ───────────────────────────────────────────────────
-    "creer-session": {
-        titre: "Créer une session",
-        intro: "Paramétrez votre diagnostic en deux étapes.",
-        sections: [
-            {
-                q: "Étape 1 — Classe et niveau",
-                r: "Choisissez la classe concernée. Le niveau est automatiquement rempli d'après le niveau de la classe, mais vous pouvez l'ajuster (ex. : pour un diagnostic de positionnement en début de cycle).",
-            },
-            {
-                q: "Étape 2 — Sélection des exercices",
-                r: "Cochez les exercices que vous souhaitez proposer. Le tableau de lecture rapide affiche la compétence ciblée et les biais détectables pour chaque exercice. La durée estimée se met à jour en temps réel.",
-            },
-            {
-                q: "Conseil de sélection",
-                r: "Le bandeau bleu affiche les recommandations issues des documents sources (ex. : « En début d'année de CM1, commencer par les exercices 1, 2 et 7 »). Ces recommandations sont verbatim depuis les conseilsde passation.",
-            },
-            {
-                q: "Qu'est-ce qu'un biais détectable automatiquement ?",
-                r: "Certaines erreurs produisent une réponse numérique précise (ex. : 3/10 pour 1/5 + 2/5 → biais « Addition des dénominateurs »). Ces biais sont codés automatiquement. Les réponses textuelles sont marquées « À relire » pour une lecture enseignant.",
-            },
-        ],
-    },
-
-    // ── Liste des sessions ──────────────────────────────────────────────────
+    // ── Sessions ────────────────────────────────────────────────────────────
     sessions: {
         titre: "Sessions diagnostiques",
-        intro: "Gérez et suivez vos sessions.",
+        intro: "Créez, gérez et analysez vos sessions.",
         sections: [
             {
-                q: "Lancer une passation",
-                r: "Cliquez sur « Lancer passation » pour passer en mode élève. La session est mémorisée : si le navigateur est rechargé, l'application revient directement à l'écran de sélection des prénoms, sans intervention de votre part. Les élèves peuvent passer leur tour en autonomie.",
+                q: "Créer une session",
+                r: "Choisissez une classe, sélectionnez les exercices et cliquez sur « Lancer ». L'application passe immédiatement en mode élève.",
+            },
+            {
+                q: "Tableau de lecture rapide des biais",
+                r: "Affiché lors de la sélection des exercices, il indique quels biais chaque exercice cible. Aidez-vous-en pour choisir les exercices les plus pertinents.",
+            },
+            {
+                q: "Relancer une session",
+                r: "Une session « en cours » peut être relancée depuis la liste des sessions. Les passations déjà effectuées sont conservées.",
             },
             {
                 q: "Clôturer une session",
-                r: "Une session clôturée n'accepte plus de nouvelles passations. Elle reste analysable. La clôture est irréversible mais ne supprime aucune donnée.",
-            },
-            {
-                q: "Analyser une session",
-                r: "Le bouton « Analyser » est disponible sur toutes les sessions, en cours ou clôturées. Il ouvre le tableau de bord avec la matrice de résultats, la vue biais et les items à relire.",
-            },
-            {
-                q: "Un élève a quitté en cours de passation",
-                r: "Sa passation reste « en cours ». Il peut reprendre depuis le sélecteur de prénom — l'application reprend à l'exercice suivant celui déjà soumis. Vous pouvez aussi la laisser en l'état et analyser les réponses partielles.",
+                r: "Depuis la liste des sessions ou via « Retour mode enseignant » en mode élève. La session passe au statut « terminée » et devient analysable.",
             },
         ],
     },
@@ -139,37 +113,29 @@ export const AIDE = {
     // ── Analyse ─────────────────────────────────────────────────────────────
     analyse: {
         titre: "Analyse des résultats",
-        intro: "Trois vues complémentaires pour interpréter les passations.",
+        intro: "Trois vues complémentaires pour exploiter les résultats.",
         sections: [
             {
-                q: "Matrice — lire les états",
-                r: "✓ Réussi (vert) : aucun biais détecté. ! Biais (rouge) : un ou plusieurs biais détectés automatiquement. ? À relire (orange) : réponse ouverte à lire manuellement. — Non fait : élève absent ou passation incomplète.",
+                q: "Matrice résultats",
+                r: "Un tableau élèves × exercices. Chaque cellule indique l'état : Réussi, Biais détecté, À relire, Non fait. Survolez une cellule pour voir le détail.",
             },
             {
-                q: "Matrice — voir le détail d'une cellule",
-                r: "Cliquez sur une cellule pour afficher la réponse exacte de l'élève, les biais détectés avec leur description source, et la durée passée sur l'exercice.",
-            },
-            {
-                q: "Matrice — taux de réussite",
-                r: "La ligne du bas affiche le taux de réussite par exercice. En rouge < 40 %, en orange < 70 %, en vert ≥ 70 %.",
-            },
-            {
-                q: "Vue Biais — alerte 30 %",
-                r: "Quand un biais touche 30 % ou plus des élèves ayant passé l'exercice, un bandeau rouge apparaît avec la recommandation pédagogique issue des documents sources.",
-            },
-            {
-                q: "Onglet À relire",
-                r: "Regroupe toutes les réponses ouvertes (justifications, textes libres). Pour chaque item, vous pouvez attribuer manuellement un ou plusieurs codes biais — ils seront pris en compte dans la vue Biais.",
+                q: "Vue biais",
+                r: "Distribution des 14 codes biais sur l'ensemble de la classe. Une alerte s'affiche si 30 % ou plus des élèves déclenchent le même biais.",
             },
             {
                 q: "Profil élève",
-                r: "Cliquez sur le prénom d'un élève dans la matrice pour accéder à son profil individuel : résultat par exercice, durée, biais, et une zone de notes libres pour consigner vos observations orales.",
+                r: "Détail exercice par exercice pour un élève : réponse produite, biais détectés, durée. Vous pouvez y ajouter une note libre.",
+            },
+            {
+                q: "Items à relire",
+                r: "Regroupe les exercices nécessitant une validation manuelle (réponses ouvertes). Attribuez un code biais ou validez comme réussi.",
             },
         ],
     },
 
     // ── Export / Import ─────────────────────────────────────────────────────
-    "export-import": {
+    export_import: {
         titre: "Export / Import",
         intro: "Sauvegardez et restaurez vos données.",
         sections: [
@@ -187,7 +153,7 @@ export const AIDE = {
             },
             {
                 q: "Remise à zéro — quand l'utiliser ?",
-                r: "En début d'année scolaire, après avoir exporté une sauvegarde JSON. Supprime toutes les classes, sessions, passations et le code PIN. L'application revient à l'état du premier lancement.",
+                r: "En début d'année scolaire, après avoir exporté une sauvegarde JSON. Supprime toutes les classes, sessions et passations. L'application revient à son état initial.",
             },
         ],
     },
@@ -203,11 +169,11 @@ export const AIDE = {
             },
             {
                 q: "Que se passe-t-il après la passation ?",
-                r: "L'écran « C'est terminé ! » s'affiche. Le bouton « Élève suivant » replace l'application sur le sélecteur de prénoms pour l'élève suivant — sans code PIN.",
+                r: "L'écran « C'est terminé ! » s'affiche. Le bouton « Élève suivant » replace l'application sur le sélecteur de prénoms pour le prochain élève.",
             },
             {
                 q: "Comment revenir en mode enseignant ?",
-                r: "Cliquez sur « Retour mode enseignant » (affiché discrètement en bas de l'écran de fin et du sélecteur de prénoms). Votre code PIN sera demandé.",
+                r: "Maintenez appuyé pendant 2 secondes le badge « MODE ÉLÈVE » dans la barre de navigation. Un écran de confirmation apparaît — cliquez sur « Oui, accéder ». Vous pouvez aussi utiliser le lien discret « Retour mode enseignant » affiché en bas des écrans élève.",
             },
             {
                 q: "L'élève a fermé la fenêtre par erreur",

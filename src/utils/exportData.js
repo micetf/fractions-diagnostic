@@ -6,8 +6,12 @@
  * F-EXP-03 : import (restauration) depuis un fichier JSON.
  *
  * Toutes les fonctions déclenchent un téléchargement navigateur via
- * Blob + URL.createObjectURL — aucune donnée ne transite par un serveur
- * (SRS NF-SEC-03).
+ * Blob + URL.createObjectURL — aucune donnée ne transite par un serveur.
+ *
+ * Mise à jour v2.0 (Sprint 3) :
+ *   - exporterJSON : `config` exportée sans `pin_hash` (champ retiré en v2.0).
+ *   - importerJSON : nettoyage de `pin_hash` dans la config importée
+ *     pour assurer la compatibilité avec les sauvegardes créées en v1.x.
  */
 
 import { KEYS, getItem, setItem } from "@/hooks/useStorage";
@@ -39,12 +43,26 @@ function dateLabel(iso) {
     return new Date(iso).toISOString().slice(0, 10);
 }
 
+/**
+ * Retire `pin_hash` d'une config pour assurer la compatibilité v1 → v2.
+ * Retourne `null` si la config nettoyée est vide ou absente.
+ *
+ * @param {object|null} config
+ * @returns {object|null}
+ */
+function nettoyerConfig(config) {
+    if (!config || typeof config !== "object") return null;
+    // eslint-disable-next-line no-unused-vars
+    const { pin_hash, ...configPropre } = config;
+    return Object.keys(configPropre).length > 0 ? configPropre : null;
+}
+
 // ─── Export CSV (F-EXP-01) ────────────────────────────────────────────────────
 
 /**
  * Génère et télécharge la matrice de résultats d'une session au format CSV.
  *
- * Colonnes : Élève, Prénom, Ex.1, Ex.2, …, Ex.N, Biais détectés, Durée totale (s)
+ * Colonnes : Nom, Prénom, Ex.1 … Ex.N, Biais détectés, Durée totale (s)
  * Valeurs des cellules : Réussi | Biais | À relire | Non fait
  *
  * @param {object}   session    - Session à exporter.
@@ -55,7 +73,6 @@ export function exporterCSV(session, eleves, passations) {
     const numeros = session.exercices_selectionnes;
     const sep = ";";
 
-    // En-tête
     const entete = [
         "Nom",
         "Prénom",
@@ -64,7 +81,6 @@ export function exporterCSV(session, eleves, passations) {
         "Durée totale (s)",
     ];
 
-    // Lignes élèves
     const lignes = eleves.map((eleve) => {
         const passation = passations.find(
             (p) =>
@@ -111,13 +127,11 @@ export function exporterCSV(session, eleves, passations) {
         ];
     });
 
-    // Assemblage CSV
     const contenu = [entete, ...lignes]
         .map((ligne) =>
             ligne
                 .map((cell) => {
                     const s = String(cell ?? "");
-                    // Encapsuler si contient le séparateur, des guillemets ou des sauts de ligne
                     return s.includes(sep) ||
                         s.includes('"') ||
                         s.includes("\n")
@@ -141,24 +155,28 @@ export function exporterCSV(session, eleves, passations) {
 /**
  * Génère et télécharge la sauvegarde complète du localStorage au format JSON.
  *
- * Structure exportée :
+ * Structure exportée (v2.0) :
+ * ```json
  * {
- *   version:    '1.0',
- *   exportedAt: ISO8601,
- *   config:     {...},
- *   classes:    [...],
- *   sessions:   [...],
- *   passations: [...],
+ *   "version":    "2.0",
+ *   "exportedAt": "ISO8601",
+ *   "config":     { "annee_scolaire": "...", "session_en_cours_id": null },
+ *   "classes":    [...],
+ *   "sessions":   [...],
+ *   "passations": [...]
  * }
+ * ```
  *
- * Le champ `version` permettra de gérer les migrations futures.
- * La clé `config` inclut le `pin_hash` — le PIN n'est jamais en clair.
+ * Note : `pin_hash` n'est plus inclus dans `config` depuis v2.0.
+ * La version "2.0" dans le champ `version` permettra des migrations futures.
  */
 export function exporterJSON() {
+    const configBrute = getItem(KEYS.config);
+
     const sauvegarde = {
-        version: "1.0",
+        version: "2.0",
         exportedAt: new Date().toISOString(),
-        config: getItem(KEYS.config),
+        config: nettoyerConfig(configBrute),
         classes: getItem(KEYS.classes) ?? [],
         sessions: getItem(KEYS.sessions) ?? [],
         passations: getItem(KEYS.passations) ?? [],
@@ -211,6 +229,10 @@ function validerSauvegarde(data) {
 /**
  * Importe une sauvegarde JSON et écrase le localStorage.
  *
+ * Compatible avec les sauvegardes v1.x (qui pourraient contenir `pin_hash`)
+ * et v2.0. Dans les deux cas, `pin_hash` est retiré de la config avant
+ * écriture en localStorage.
+ *
  * Appelé après confirmation explicite de l'utilisateur
  * (la confirmation est gérée dans le composant appelant).
  *
@@ -239,8 +261,11 @@ export async function importerJSON(fichier) {
                 return;
             }
 
+            // Migration v1 → v2 : nettoyage de pin_hash si présent
+            const configMigree = nettoyerConfig(data.config ?? null);
+
             // Écriture atomique dans le localStorage
-            setItem(KEYS.config, data.config ?? null);
+            setItem(KEYS.config, configMigree);
             setItem(KEYS.classes, data.classes ?? []);
             setItem(KEYS.sessions, data.sessions ?? []);
             setItem(KEYS.passations, data.passations ?? []);
@@ -255,6 +280,8 @@ export async function importerJSON(fichier) {
         reader.readAsText(fichier, "utf-8");
     });
 }
+
+// ─── Remise à zéro ────────────────────────────────────────────────────────────
 
 /**
  * Efface toutes les données de l'application dans le localStorage.
