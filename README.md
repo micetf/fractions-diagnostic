@@ -1,28 +1,16 @@
-# Fraction Diagnostic
+# fractions-diagnostic
 
-Application web de **diagnostic des représentations biaisées sur les fractions** pour les élèves de CE1 à CM2.
+Application web de **diagnostic des obstacles didactiques sur les fractions** pour les niveaux CE1 à CM2.
 
-Développée pour le réseau [MiCetF](https://micetf.fr) par un Conseiller Pédagogique de Circonscription pour les usages du Numérique (CPC Numérique).
+Conçue pour une passation individuelle sur un seul poste informatique de classe, sans réseau et sans compte utilisateur.
 
----
-
-## Contexte pédagogique
-
-Les exercices diagnostiques sont fondés sur :
-
-- Les **programmes de mathématiques cycle 2 et cycle 3** (BO n° 41 du 31 octobre 2024 et BO n° 16 du 17 avril 2025)
-- Les **points de vigilance du *Passeur*** de Monica Neagoy
-- Le mémo **Les 4 piliers de l'apprentissage** — Stanislas Dehaene (Collège de France, 2018)
-- Le diaporama **Charge cognitive et apprentissage** — André Tricot (Musial, Pradère & Tricot, 2012)
-- Le document **Les gestes professionnels pour des pratiques efficaces et équitables**
-
-L'application place l'élève dans des situations où les **biais didactiques apparaissent spontanément**, sans que l'élève ait conscience d'être évalué sur ces biais. Aucune correction n'est affichée pendant la passation.
+Aucune correction n'est affichée pendant la passation.
 
 ---
 
 ## Fonctionnalités
 
-### Mode enseignant (PIN requis)
+### Mode enseignant (appui long 2 s sur le badge de navigation)
 - Gestion des classes et des élèves (CE1, CE2, CM1, CM2)
 - Création de sessions diagnostiques avec sélection des exercices, durée estimée et tableau de lecture rapide des biais ciblés
 - Tableau de bord d'analyse :
@@ -40,6 +28,9 @@ L'application place l'élève dans des situations où les **biais didactiques ap
 - 6 types d'exercices interactifs : sélection de figures, saisie de fraction, droite graduée (drag & snap SVG), choix binaire, coloriage, texte libre
 - Aucun score, aucune correction affichée pendant la passation
 - Écran de fin neutre
+
+### Accès mode enseignant depuis le mode élève
+Maintenir appuyé pendant **2 secondes** le badge `MODE ÉLÈVE` dans la barre de navigation. Un écran de confirmation apparaît — cliquer sur « Oui, accéder ». Aucun code à mémoriser.
 
 ### Détection automatique de 14 biais didactiques
 
@@ -69,7 +60,7 @@ L'application place l'élève dans des situations où les **biais didactiques ap
 - Aucune connexion Internet requise après le chargement initial
 - Aucun serveur distant, aucune base de données externe, aucune API tierce
 - Toutes les données persistées dans le `localStorage` du navigateur
-- PIN enseignant haché SHA-256 via Web Crypto API — jamais stocké en clair
+- Séparation des modes enseignant/élève par état React — aucune route, aucune URL distincte
 
 ---
 
@@ -128,8 +119,8 @@ src/
 │   │   ├── ProfilEleve.jsx
 │   │   └── ItemsARevoir.jsx
 │   ├── common/               # Composants partagés
-│   │   ├── Layout.jsx        # Navbar MiCetF + contenu
-│   │   └── PinGate.jsx       # Garde PIN SHA-256
+│   │   ├── Layout.jsx        # Navbar MiCetF + zone long-press
+│   │   └── TeacherConfirmOverlay.jsx  # Modal de confirmation accès enseignant
 │   └── exercices/            # Composants de passation
 │       ├── BinaryChoice.jsx
 │       ├── ColoringFigure.jsx
@@ -143,7 +134,7 @@ src/
 │   ├── AppContext.jsx         # useReducer + persistence localStorage
 │   └── useAppContext.js       # Hook consommateur
 ├── data/
-│   ├── aide.js 
+│   ├── aide.js
 │   ├── biais.js               # Dictionnaire des 14 codes biais
 │   ├── index.js               # Point d'entrée unifié
 │   └── exercices/
@@ -153,6 +144,7 @@ src/
 │       └── CM2.js             # 8 exercices CM2 avec biais
 ├── hooks/
 │   ├── useBiaisDetector.js
+│   ├── useLongPress.js        # Geste d'appui long (2 s) — accès enseignant
 │   └── useStorage.js          # Abstraction localStorage
 ├── pages/
 │   ├── eleve/
@@ -172,9 +164,8 @@ src/
 │   ├── biaisDetector.js       # Moteur de détection automatique
 │   ├── exportData.js          # CSV, JSON export/import
 │   ├── initialValues.js       # Valeurs initiales des composants
-│   ├── pinHash.js             # SHA-256 Web Crypto
 │   └── sessionHelpers.js      # Durée estimée, biais par exercice
-├── App.jsx                    # Routage par état (pas de react-router)
+├── App.jsx                    # Machine à 2 états : session active | dashboard
 └── main.jsx                   # Point d'entrée React
 ```
 
@@ -185,7 +176,7 @@ src/
 Toutes les clés sont préfixées `fractions-diagnostic_`.
 
 ```
-fractions-diagnostic_config      { pin_hash, annee_scolaire }
+fractions-diagnostic_config      { annee_scolaire, session_en_cours_id }
 fractions-diagnostic_classes     Classe[]
 fractions-diagnostic_sessions    Session[]
 fractions-diagnostic_passations  PassationEleve[]
@@ -255,6 +246,8 @@ fractions-diagnostic_passations  PassationEleve[]
 **Remettre à zéro en début d'année** :
 > Export / Import → *Effacer toutes les données…* → confirmer en deux étapes → saisir `EFFACER`
 
+**Compatibilité ascendante** : les sauvegardes créées en v1.x (contenant un champ `pin_hash`) sont importées normalement — le champ est retiré automatiquement à l'import.
+
 ---
 
 ## Navigateurs supportés
@@ -266,19 +259,19 @@ fractions-diagnostic_passations  PassationEleve[]
 | Safari | ≥ 16 |
 | Edge | ≥ 108 |
 
-Résolution minimale recommandée (mode enseignant) : 1024 × 768 px.
+Résolution minimale recommandée (mode enseignant) : 1 024 × 768 px.
 
 ---
 
-## Sécurité et confidentialité
+## Confidentialité
 
-- Le PIN enseignant est haché SHA-256 côté client avant stockage — le code en clair ne transite et n'est jamais persisté
 - Le mode élève n'expose aucune donnée relative aux autres élèves
 - Aucune donnée n'est transmise à un serveur distant (pas d'analytics, pas de télémétrie)
+- Toutes les données restent sur le poste local dans le `localStorage` du navigateur
 
 ---
 
-## Hors périmètre (v1.0)
+## Hors périmètre (v2.0)
 
 - Diagnostic d'autres domaines mathématiques
 - Passation multi-appareils ou en réseau
