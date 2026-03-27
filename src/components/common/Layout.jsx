@@ -1,27 +1,93 @@
+/**
+ * @file Layout.jsx — squelette de page avec navbar MiCetF.
+ *
+ * @description
+ * Fournit la navbar fixe et le panneau d'aide contextuelle.
+ * En mode élève, la zone centrale du titre devient la cible
+ * du geste d'appui long (2 s) qui permet à l'enseignant·e de
+ * reprendre la main — pattern identique à fractions-ce1-u1s6.
+ *
+ * Props ajoutées au Sprint 2 :
+ *   - onLongPressStart / onLongPressEnd  (mode "student" uniquement)
+ *
+ * Ces callbacks sont fournis par App.jsx via useLongPress() et
+ * déclenchent TeacherConfirmOverlay dans App.jsx.
+ * Layout reste un composant de présentation pur — aucun état métier.
+ *
+ * @module components/common/Layout
+ */
+
 import { useState } from "react";
 import PropTypes from "prop-types";
 import HelpPanel from "./HelpPanel";
 
+// ─── Composant ─────────────────────────────────────────────────────────────────
+
 /**
- * Layout
- *
- * Navbar micetf.fr + panneau d'aide contextuelle.
+ * Squelette de page — navbar + aide contextuelle + slot children.
  *
  * @param {object}          props
- * @param {'teacher'|'student'} props.mode
- * @param {function}        props.onSwitchMode
- * @param {string}          props.pageActive   - Page courante pour l'aide.
- * @param {React.ReactNode} props.children
+ * @param {'teacher'|'student'} props.mode          - Mode courant.
+ * @param {function}        props.onSwitchMode      - (non utilisé, conservé pour compatibilité)
+ * @param {string}          props.pageActive        - Page courante pour l'aide.
+ * @param {React.ReactNode} props.children          - Contenu principal.
+ * @param {function|null}   [props.onLongPressStart] - Début appui long (mode student).
+ * @param {function|null}   [props.onLongPressEnd]   - Fin appui long   (mode student).
  */
-function Layout({ mode, pageActive, children }) {
+function Layout({
+    mode,
+    pageActive,
+    children,
+    onLongPressStart = null,
+    onLongPressEnd = null,
+}) {
     const [menuOuvert, setMenuOuvert] = useState(false);
     const [aideOuverte, setAideOuverte] = useState(false);
 
-    const modeLabel = mode === "teacher" ? "MODE ENSEIGNANT" : "MODE ÉLÈVE";
-    const modeCls =
-        mode === "teacher"
-            ? "bg-slate-600 text-white"
-            : "bg-brand-600 text-white";
+    const isStudent = mode === "student";
+
+    const modeLabel = isStudent ? "MODE ÉLÈVE" : "MODE ENSEIGNANT";
+    const modeCls = isStudent
+        ? "bg-brand-600 text-white"
+        : "bg-slate-600 text-white";
+
+    /**
+     * Badge central de la navbar.
+     *
+     * En mode élève : zone d'appui long de 2 s → accès enseignant.
+     * En mode enseignant : badge statique sans interaction.
+     *
+     * WebkitTapHighlightColor supprimé pour éviter le flash bleu sur iOS.
+     */
+    const modeBadge =
+        isStudent && onLongPressStart ? (
+            <div
+                onPointerDown={onLongPressStart}
+                onPointerUp={onLongPressEnd}
+                onPointerLeave={onLongPressEnd}
+                title="Appui long (2 s) : espace enseignant·e"
+                className="cursor-pointer select-none rounded-full px-3 py-1
+                           hover:brightness-110 active:scale-95 transition-all
+                           touch-manipulation"
+                style={{ WebkitTapHighlightColor: "transparent" }}
+                role="button"
+                aria-label="Appui long pour accéder à l'espace enseignant·e"
+            >
+                <span
+                    className={`${modeCls} text-xs font-bold px-3 py-1
+                                rounded-full uppercase tracking-wider`}
+                >
+                    {modeLabel}
+                </span>
+            </div>
+        ) : (
+            <span
+                className={`${modeCls} text-xs font-bold px-3 py-1
+                            rounded-full uppercase tracking-wider`}
+            >
+                {modeLabel}
+            </span>
+        );
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -32,20 +98,23 @@ function Layout({ mode, pageActive, children }) {
             >
                 <div className="max-w-full px-4">
                     <div className="flex items-center justify-between h-14">
+                        {/* ── Gauche : logo MiCetF ─────────────────────── */}
                         <a
                             href="https://micetf.fr"
-                            className="text-white font-semibold text-lg hover:text-gray-300
-                         transition shrink-0"
+                            className="text-white font-semibold text-lg
+                                       hover:text-gray-300 transition shrink-0"
                         >
                             MiCetF
                         </a>
 
+                        {/* ── Hamburger (mobile) ───────────────────────── */}
                         <button
                             type="button"
                             onClick={() => setMenuOuvert((v) => !v)}
-                            className="md:hidden inline-flex items-center justify-center p-2
-                         text-gray-400 hover:text-white hover:bg-gray-700
-                         rounded transition"
+                            className="md:hidden inline-flex items-center
+                                       justify-center p-2 text-gray-400
+                                       hover:text-white hover:bg-gray-700
+                                       rounded transition"
                             aria-controls="navbarMenu"
                             aria-expanded={menuOuvert}
                             aria-label="Ouvrir le menu"
@@ -65,121 +134,77 @@ function Layout({ mode, pageActive, children }) {
                             </svg>
                         </button>
 
+                        {/* ── Menu principal ───────────────────────────── */}
                         <div
                             id="navbarMenu"
                             className={`
-                ${menuOuvert ? "flex" : "hidden"} md:flex md:items-center md:flex-1
-                flex-col md:flex-row absolute md:static top-14 left-0 right-0
-                bg-gray-800 md:bg-transparent px-4 md:px-0 pb-3 md:pb-0
-              `}
+                                ${menuOuvert ? "block" : "hidden"}
+                                md:flex md:items-center md:gap-2
+                            `}
                         >
-                            <div className="flex items-center ml-0 md:ml-4 py-2 md:py-0">
-                                <div className="flex items-center gap-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 20 20"
-                                        className="h-4 w-4 shrink-0"
-                                        fill="#f8f9fa"
-                                    >
-                                        <path d="M12.95 10.707l.707-.707L8 4.343 6.586 5.757 10.828 10l-4.242 4.243L8 15.657l4.95-4.95z" />
-                                    </svg>
-                                    <span
-                                        className="text-white font-semibold text-lg"
-                                        style={{
-                                            fontFamily: "Fredoka, sans-serif",
-                                        }}
-                                    >
-                                        Fractions Diagnostic
-                                    </span>
-                                    <span
-                                        className={`text-xs font-bold px-2.5 py-0.5 rounded-full
-                                    tracking-wide ml-1 ${modeCls}`}
-                                    >
-                                        {modeLabel}
-                                    </span>
-                                </div>
-                            </div>
+                            {/* Badge mode — long-pressable en mode élève */}
+                            {modeBadge}
 
-                            <div className="flex-1" />
+                            {/* Bouton aide */}
+                            <button
+                                type="button"
+                                onClick={() => setAideOuverte(true)}
+                                className="px-3 py-2 bg-gray-600 text-white rounded
+                                           hover:bg-gray-500 transition my-1 mx-1
+                                           inline-flex items-center gap-1
+                                           text-sm font-medium"
+                                aria-label="Ouvrir l'aide"
+                            >
+                                <span aria-hidden="true">?</span>
+                                <span className="hidden sm:inline">Aide</span>
+                            </button>
 
-                            <ul className="flex items-center space-x-1 mt-2 md:mt-0">
-                                {/* Bouton aide — ouvre HelpPanel */}
-                                <li>
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setAideOuverte((v) => !v)
-                                        }
-                                        className={`w-10 h-10 rounded-full font-bold text-lg
-                                transition cursor-pointer
-                                ${
-                                    aideOuverte
-                                        ? "bg-blue-400 text-white"
-                                        : "bg-blue-600 hover:bg-blue-700 text-white"
-                                }`}
-                                        title="Aide"
-                                        aria-label="Ouvrir l'aide"
-                                        aria-expanded={aideOuverte}
-                                    >
-                                        ?
-                                    </button>
-                                </li>
-
-                                {/* Don PayPal */}
-                                <li>
+                            {/* Bouton PayPal — mode enseignant uniquement */}
+                            {!isStudent && (
+                                <li className="list-none">
                                     <form
-                                        action="https://www.paypal.com/cgi-bin/webscr"
+                                        action="https://www.paypal.com/donate"
                                         method="post"
-                                        target="_top"
-                                        className="inline-block"
+                                        target="_blank"
+                                        className="inline"
                                     >
-                                        <button
-                                            type="submit"
-                                            className="px-3 py-2 bg-yellow-500 text-white rounded
-                                 hover:bg-yellow-600 transition my-1 mx-1 cursor-pointer"
-                                            title="Si vous pensez que ces outils le méritent... Merci !"
-                                        >
-                                            <svg
-                                                xmlns="http://www.w3.org/2000/svg"
-                                                viewBox="0 0 20 20"
-                                                className="h-4 w-4 inline"
-                                                fill="#f8f9fa"
-                                            >
-                                                <path d="M10 3.22l-.61-.6a5.5 5.5 0 00-7.78 7.77L10 18.78l8.39-8.4a5.5 5.5 0 00-7.78-7.77l-.61.61z" />
-                                            </svg>
-                                        </button>
-                                        <input
-                                            type="hidden"
-                                            name="cmd"
-                                            value="_s-xclick"
-                                        />
                                         <input
                                             type="hidden"
                                             name="hosted_button_id"
-                                            value="Q2XYVFP4EEX2J"
+                                            value="XXXXXXXXXXXXXXX"
                                         />
+                                        <button
+                                            type="submit"
+                                            className="px-3 py-2 bg-gray-600 text-white
+                                                       rounded hover:bg-gray-500 transition
+                                                       my-1 mx-1 inline-block text-sm"
+                                            title="Faire un don via PayPal"
+                                        >
+                                            ♥
+                                        </button>
                                     </form>
                                 </li>
+                            )}
 
-                                {/* Contact */}
-                                <li>
-                                    <a
-                                        href="mailto:webmaster@micetf.fr?subject=À propos de /fractions-diagnostic"
-                                        className="px-3 py-2 bg-gray-600 text-white rounded
-                               hover:bg-gray-700 transition my-1 mx-1 inline-block"
-                                        title="Pour contacter le webmaster..."
+                            {/* Lien contact — mode enseignant uniquement */}
+                            {!isStudent && (
+                                <a
+                                    href="mailto:webmaster@micetf.fr?subject=À propos de /fractions-diagnostic"
+                                    className="px-3 py-2 bg-gray-600 text-white rounded
+                                               hover:bg-gray-700 transition my-1 mx-1
+                                               inline-block"
+                                    title="Pour contacter le webmaster..."
+                                >
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 20 20"
+                                        className="h-4 w-4 inline"
+                                        fill="#f8f9fa"
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            viewBox="0 0 20 20"
-                                            className="h-4 w-4 inline"
-                                            fill="#f8f9fa"
-                                        >
-                                            <path d="M18 2a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V4c0-1.1.9-2 2-2h16zm-4.37 9.1L20 16v-2l-5.12-3.9L20 6V4l-10 8L0 4v2l5.12 4.1L0 14v2l6.37-4.9L10 14l3.63-2.9z" />
-                                        </svg>
-                                    </a>
-                                </li>
-                            </ul>
+                                        <path d="M18 2a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V4c0-1.1.9-2 2-2h16zm-4.37 9.1L20 16v-2l-5.12-3.9L20 6V4l-10 8L0 4v2l5.12 4.1L0 14v2l6.37-4.9L10 14l3.63-2.9z" />
+                                    </svg>
+                                </a>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -204,10 +229,30 @@ function Layout({ mode, pageActive, children }) {
 }
 
 Layout.propTypes = {
+    /** Mode d'affichage courant. */
     mode: PropTypes.oneOf(["teacher", "student"]).isRequired,
-    onSwitchMode: PropTypes.func.isRequired,
+    /** Conservé pour compatibilité ascendante — non utilisé en v2. */
+    onSwitchMode: PropTypes.func,
+    /** Clé de la page active pour l'aide contextuelle. */
     pageActive: PropTypes.string.isRequired,
+    /** Contenu principal injecté via children. */
     children: PropTypes.node.isRequired,
+    /**
+     * Callback de début d'appui long — fourni par useLongPress() dans App.jsx.
+     * Requis pour activer la zone long-press en mode élève.
+     */
+    onLongPressStart: PropTypes.func,
+    /**
+     * Callback de fin d'appui long (pointerUp ou pointerLeave).
+     * Annule le timer si l'appui est relâché avant 2 s.
+     */
+    onLongPressEnd: PropTypes.func,
+};
+
+Layout.defaultProps = {
+    onSwitchMode: () => {},
+    onLongPressStart: null,
+    onLongPressEnd: null,
 };
 
 export default Layout;
