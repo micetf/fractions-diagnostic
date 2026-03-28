@@ -199,18 +199,17 @@ export function scoreReponse(reponse) {
     ];
     if (biais.length > 0) return SCORE.BIAIS;
 
+    // Validation manuelle posée par l'enseignant — prioritaire sur a_relire.
+    // DOIT être évalué avant le bloc a_relire : VALIDER_ITEM passe
+    // a_relire à false au moment même où il écrit validation_manuelle.
+    if (reponse.validation_manuelle === "echec") return SCORE.ECHEC;
+    if (reponse.validation_manuelle === "reussi") return SCORE.REUSSI;
+
     if (reponse.a_relire) {
-        // Validation manuelle posée par l'enseignant → toujours prioritaire.
-        if (reponse.validation_manuelle === "reussi") return SCORE.REUSSI;
-        if (reponse.validation_manuelle === "echec") return SCORE.ECHEC;
-
         // binary_choice : le choix est auto-évaluable, le texte est un enrichissement.
-        // Pas de biais détecté = le choix est correct → REUSSI sans attendre la relecture.
         if (reponse.type === "binary_choice") return SCORE.REUSSI;
-
         // selection : la sélection est auto-évaluable, la justification est un enrichissement.
         if (reponse.type === "selection") return SCORE.REUSSI;
-
         // coloring, text, compound avec sous-question text → validation enseignant requise.
         return SCORE.A_VALIDER;
     }
