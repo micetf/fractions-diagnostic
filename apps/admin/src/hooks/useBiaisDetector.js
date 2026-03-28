@@ -1,16 +1,13 @@
-import { detecterBiais } from "@/utils/biaisDetector";
+/**
+ * @fileoverview useBiaisDetector — hook de détection des biais.
+ *
+ * Délègue au moteur partagé @fractions-diagnostic/engine.
+ *
+ * @module hooks/useBiaisDetector
+ */
+import { detecterBiais } from "@fractions-diagnostic/engine/biaisDetector";
 
 /**
- * useBiaisDetector
- *
- * Hook exposant la fonction de détection des biais.
- * Encapsule l'import pour faciliter un futur remplacement
- * ou une extension (mémorisation, asynchronisme, etc.).
- *
- * Utilisation dans PassationRunner :
- *   const { detecter } = useBiaisDetector()
- *   const codes = detecter(exercice, valeurBrute)
- *
  * @returns {{ detecter: function }}
  */
 export function useBiaisDetector() {

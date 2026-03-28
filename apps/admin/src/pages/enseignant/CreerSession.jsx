@@ -15,7 +15,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { getExercices, getMetadonnees } from "@/data/index";
+import { getExercices, getMetadonnees } from "@fractions-diagnostic/data";
 import {
     calculerDureeEstimee,
     intitulerBiaisExercice,

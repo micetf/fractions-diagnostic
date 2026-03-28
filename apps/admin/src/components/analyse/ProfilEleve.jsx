@@ -1,10 +1,10 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { getBiais } from "@/data/biais";
-import { getExercice } from "@/data/index";
+import { getBiais } from "@fractions-diagnostic/data/biais";
+import { getExercice } from "@fractions-diagnostic/data";
 import { etatReponse, ETATS } from "@/utils/analyseSession";
-import { BIAIS } from "@/data/biais";
+import { BIAIS } from "@fractions-diagnostic/data/biais";
 
 /**
  * ProfilEleve

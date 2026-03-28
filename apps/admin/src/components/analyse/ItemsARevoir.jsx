@@ -1,8 +1,8 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { getExercice } from "@/data/index";
-import { BIAIS } from "@/data/biais";
+import { getExercice } from "@fractions-diagnostic/data";
+import { BIAIS } from "@fractions-diagnostic/data/biais";
 import { collecterItemsARelire } from "@/utils/analyseSession";
 
 /**
