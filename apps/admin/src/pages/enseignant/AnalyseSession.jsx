@@ -17,12 +17,7 @@ import MatriceResultats from "@/components/analyse/MatriceResultats";
 import VueBiais from "@/components/analyse/VueBiais";
 import ProfilEleve from "@/components/analyse/ProfilEleve";
 import ItemsARevoir from "@/components/analyse/ItemsARevoir";
-
-const ONGLETS = [
-    { id: "matrice", label: "Matrice" },
-    { id: "biais", label: "Biais" },
-    { id: "relire", label: "À relire" },
-];
+import { collecterItemsARelire } from "@/utils/analyseSession";
 
 /**
  * @param {object}   props
@@ -35,7 +30,8 @@ function AnalyseSession({ sessionId, onNavigate }) {
     const [eleveActif, setEleveActif] = useState(null);
 
     // v2.0 : cherche dans diagnostics (et non plus sessions)
-    const diagnostic = state.diagnostics?.find((d) => d.id === sessionId) ?? null;
+    const diagnostic =
+        state.diagnostics?.find((d) => d.id === sessionId) ?? null;
     const classe = diagnostic
         ? (state.classes.find((c) => c.id === diagnostic.classe_id) ?? null)
         : null;
@@ -49,7 +45,19 @@ function AnalyseSession({ sessionId, onNavigate }) {
             </div>
         );
     }
+    const nbAValider = collecterItemsARelire(
+        diagnostic,
+        state.passations
+    ).length;
 
+    const ONGLETS = [
+        { id: "matrice", label: "Matrice" },
+        { id: "biais", label: "Biais" },
+        {
+            id: "relire",
+            label: nbAValider > 0 ? `À valider (${nbAValider})` : "À valider",
+        },
+    ];
     return (
         <div className="max-w-4xl mx-auto px-4 py-10">
             {/* Fil d'Ariane */}
@@ -111,10 +119,15 @@ function AnalyseSession({ sessionId, onNavigate }) {
                             session={diagnostic}
                             eleves={eleves}
                             onVoirProfil={setEleveActif}
+                            onValider={() => setOnglet("relire")}
                         />
                     )}
                     {onglet === "biais" && (
-                        <VueBiais session={diagnostic} eleves={eleves} />
+                        <VueBiais
+                            session={diagnostic}
+                            eleves={eleves}
+                            onVoirProfil={(id) => setEleveActif(id)}
+                        />
                     )}
                     {onglet === "relire" && (
                         <ItemsARevoir session={diagnostic} eleves={eleves} />
