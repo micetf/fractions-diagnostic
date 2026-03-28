@@ -1,17 +1,17 @@
 /**
  * @fileoverview Export et import des données de l'application.
  *
- * F-EXP-01 : export CSV de la matrice de résultats d'une session.
+ * F-EXP-01 : export CSV de la matrice de résultats d'un diagnostic.
  * F-EXP-02 : export JSON de la sauvegarde complète.
  * F-EXP-03 : import (restauration) depuis un fichier JSON.
  *
- * Toutes les fonctions déclenchent un téléchargement navigateur via
- * Blob + URL.createObjectURL — aucune donnée ne transite par un serveur.
+ * v2.0 :
+ *   - session_id → diagnostic_id dans exporterCSV
+ *   - KEYS.sessions → KEYS.diagnostics
+ *   - importerJSON : compatibilité ascendante v1.x (sessions → diagnostics)
+ *   - pin_hash conservé dans la sauvegarde (géré au Sprint 2)
  *
- * Mise à jour v2.0 (Sprint 3) :
- *   - exporterJSON : `config` exportée sans `pin_hash` (champ retiré en v2.0).
- *   - importerJSON : nettoyage de `pin_hash` dans la config importée
- *     pour assurer la compatibilité avec les sauvegardes créées en v1.x.
+ * @module utils/exportData
  */
 
 import { KEYS, getItem, setItem } from "@/hooks/useStorage";
@@ -22,8 +22,8 @@ import { etatReponse, ETATS } from "@/utils/analyseSession";
 /**
  * Déclenche le téléchargement d'un Blob dans le navigateur.
  *
- * @param {Blob}   blob     - Contenu du fichier.
- * @param {string} filename - Nom suggéré pour l'enregistrement.
+ * @param {Blob}   blob
+ * @param {string} filename
  */
 function telecharger(blob, filename) {
     const url = URL.createObjectURL(blob);
@@ -35,7 +35,6 @@ function telecharger(blob, filename) {
 }
 
 /**
- * Formate une date ISO en chaîne lisible pour les noms de fichiers.
  * @param {string} iso
  * @returns {string} ex. : "2026-03-23"
  */
@@ -43,34 +42,17 @@ function dateLabel(iso) {
     return new Date(iso).toISOString().slice(0, 10);
 }
 
-/**
- * Retire `pin_hash` d'une config pour assurer la compatibilité v1 → v2.
- * Retourne `null` si la config nettoyée est vide ou absente.
- *
- * @param {object|null} config
- * @returns {object|null}
- */
-function nettoyerConfig(config) {
-    if (!config || typeof config !== "object") return null;
-    // eslint-disable-next-line no-unused-vars
-    const { pin_hash, ...configPropre } = config;
-    return Object.keys(configPropre).length > 0 ? configPropre : null;
-}
-
 // ─── Export CSV (F-EXP-01) ────────────────────────────────────────────────────
 
 /**
- * Génère et télécharge la matrice de résultats d'une session au format CSV.
+ * Génère et télécharge la matrice de résultats d'un diagnostic au format CSV.
  *
- * Colonnes : Nom, Prénom, Ex.1 … Ex.N, Biais détectés, Durée totale (s)
- * Valeurs des cellules : Réussi | Biais | À relire | Non fait
- *
- * @param {object}   session    - Session à exporter.
- * @param {object[]} eleves     - Élèves de la classe.
- * @param {object[]} passations - Toutes les passations.
+ * @param {import('@fractions-diagnostic/shared/types').Diagnostic} diagnostic
+ * @param {import('@fractions-diagnostic/shared/types').Eleve[]}    eleves
+ * @param {import('@fractions-diagnostic/shared/types').PassationEleve[]} passations
  */
-export function exporterCSV(session, eleves, passations) {
-    const numeros = session.exercices_selectionnes;
+export function exporterCSV(diagnostic, eleves, passations) {
+    const numeros = diagnostic.exercices_selectionnes;
     const sep = ";";
 
     const entete = [
@@ -82,9 +64,10 @@ export function exporterCSV(session, eleves, passations) {
     ];
 
     const lignes = eleves.map((eleve) => {
+        // v2.0 : diagnostic_id (remplace session_id)
         const passation = passations.find(
             (p) =>
-                p.session_id === session.id &&
+                p.diagnostic_id === diagnostic.id &&
                 p.eleve_id === eleve.id &&
                 p.statut === "terminee"
         );
@@ -95,9 +78,9 @@ export function exporterCSV(session, eleves, passations) {
             );
             const etat = etatReponse(rep);
             return {
-                [ETATS.REUSSI]: "Réussi",
-                [ETATS.BIAIS]: "Biais",
-                [ETATS.RELIRE]: "À relire",
+                [ETATS.REUSSI]:   "Réussi",
+                [ETATS.BIAIS]:    "Biais",
+                [ETATS.RELIRE]:   "À relire",
                 [ETATS.NON_FAIT]: "Non fait",
             }[etat];
         });
@@ -145,8 +128,8 @@ export function exporterCSV(session, eleves, passations) {
     const blob = new Blob(["\uFEFF" + contenu], {
         type: "text/csv;charset=utf-8;",
     });
-    const dateStr = dateLabel(session.date_creation);
-    const filename = `fractions-diagnostic_${session.niveau}_${dateStr}.csv`;
+    const libelle = diagnostic.libelle ? `_${diagnostic.libelle}` : "";
+    const filename = `fractions-diagnostic_${diagnostic.niveau}${libelle}_${dateLabel(diagnostic.date_creation)}.csv`;
     telecharger(blob, filename);
 }
 
@@ -156,30 +139,23 @@ export function exporterCSV(session, eleves, passations) {
  * Génère et télécharge la sauvegarde complète du localStorage au format JSON.
  *
  * Structure exportée (v2.0) :
- * ```json
  * {
- *   "version":    "2.0",
- *   "exportedAt": "ISO8601",
- *   "config":     { "annee_scolaire": "...", "session_en_cours_id": null },
- *   "classes":    [...],
- *   "sessions":   [...],
- *   "passations": [...]
+ *   version:     "2.0",
+ *   exportedAt:  ISO8601,
+ *   config:      { pin_hash, pin_hint?, annee_scolaire },
+ *   classes:     [...],
+ *   diagnostics: [...],
+ *   passations:  [...]
  * }
- * ```
- *
- * Note : `pin_hash` n'est plus inclus dans `config` depuis v2.0.
- * La version "2.0" dans le champ `version` permettra des migrations futures.
  */
 export function exporterJSON() {
-    const configBrute = getItem(KEYS.config);
-
     const sauvegarde = {
-        version: "2.0",
-        exportedAt: new Date().toISOString(),
-        config: nettoyerConfig(configBrute),
-        classes: getItem(KEYS.classes) ?? [],
-        sessions: getItem(KEYS.sessions) ?? [],
-        passations: getItem(KEYS.passations) ?? [],
+        version:     "2.0",
+        exportedAt:  new Date().toISOString(),
+        config:      getItem(KEYS.config),
+        classes:     getItem(KEYS.classes)     ?? [],
+        diagnostics: getItem(KEYS.diagnostics) ?? [],
+        passations:  getItem(KEYS.passations)  ?? [],
     };
 
     const blob = new Blob([JSON.stringify(sauvegarde, null, 2)], {
@@ -194,49 +170,42 @@ export function exporterJSON() {
 
 /**
  * Valide la structure minimale d'une sauvegarde JSON.
+ * Compatible v1.x (sessions) et v2.0 (diagnostics).
  *
- * @param {any} data - Données parsées.
+ * @param {any} data
  * @returns {{ ok: boolean, erreur?: string }}
  */
 function validerSauvegarde(data) {
     if (!data || typeof data !== "object") {
-        return {
-            ok: false,
-            erreur: "Le fichier n'est pas un objet JSON valide.",
-        };
+        return { ok: false, erreur: "Le fichier n'est pas un objet JSON valide." };
     }
     if (!data.version) {
-        return {
-            ok: false,
-            erreur: 'Champ "version" manquant — fichier non reconnu.',
-        };
+        return { ok: false, erreur: 'Champ "version" manquant — fichier non reconnu.' };
     }
     if (!Array.isArray(data.classes)) {
         return { ok: false, erreur: 'Champ "classes" manquant ou invalide.' };
     }
-    if (!Array.isArray(data.sessions)) {
-        return { ok: false, erreur: 'Champ "sessions" manquant ou invalide.' };
-    }
     if (!Array.isArray(data.passations)) {
-        return {
-            ok: false,
-            erreur: 'Champ "passations" manquant ou invalide.',
-        };
+        return { ok: false, erreur: 'Champ "passations" manquant ou invalide.' };
+    }
+    // Accepte "sessions" (v1.x) ou "diagnostics" (v2.0)
+    const hasDiagnostics = Array.isArray(data.diagnostics);
+    const hasSessions    = Array.isArray(data.sessions);
+    if (!hasDiagnostics && !hasSessions) {
+        return { ok: false, erreur: 'Champ "diagnostics" (ou "sessions") manquant.' };
     }
     return { ok: true };
 }
 
 /**
- * Importe une sauvegarde JSON et écrase le localStorage.
+ * Importe une sauvegarde JSON et écrase le localStorage admin.
  *
- * Compatible avec les sauvegardes v1.x (qui pourraient contenir `pin_hash`)
- * et v2.0. Dans les deux cas, `pin_hash` est retiré de la config avant
- * écriture en localStorage.
+ * Compatibilité ascendante v1.x → v2.0 :
+ *   - `data.sessions` est migré vers KEYS.diagnostics si `data.diagnostics` absent.
+ *   - Les passations v1.x ont `session_id` — conservé tel quel pour l'instant,
+ *     la migration session_id → diagnostic_id sera traitée au Sprint 2.
  *
- * Appelé après confirmation explicite de l'utilisateur
- * (la confirmation est gérée dans le composant appelant).
- *
- * @param {File} fichier - Fichier sélectionné par l'utilisateur.
+ * @param {File} fichier
  * @returns {Promise<{ ok: boolean, erreur?: string }>}
  */
 export async function importerJSON(fichier) {
@@ -248,10 +217,7 @@ export async function importerJSON(fichier) {
             try {
                 data = JSON.parse(e.target.result);
             } catch {
-                resolve({
-                    ok: false,
-                    erreur: "Le fichier n'est pas du JSON valide.",
-                });
+                resolve({ ok: false, erreur: "Le fichier n'est pas du JSON valide." });
                 return;
             }
 
@@ -261,14 +227,13 @@ export async function importerJSON(fichier) {
                 return;
             }
 
-            // Migration v1 → v2 : nettoyage de pin_hash si présent
-            const configMigree = nettoyerConfig(data.config ?? null);
+            // Migration v1 → v2 : sessions devient diagnostics
+            const diagnostics = data.diagnostics ?? data.sessions ?? [];
 
-            // Écriture atomique dans le localStorage
-            setItem(KEYS.config, configMigree);
-            setItem(KEYS.classes, data.classes ?? []);
-            setItem(KEYS.sessions, data.sessions ?? []);
-            setItem(KEYS.passations, data.passations ?? []);
+            setItem(KEYS.config,      data.config      ?? null);
+            setItem(KEYS.classes,     data.classes      ?? []);
+            setItem(KEYS.diagnostics, diagnostics);
+            setItem(KEYS.passations,  data.passations   ?? []);
 
             resolve({ ok: true });
         };
@@ -284,16 +249,11 @@ export async function importerJSON(fichier) {
 // ─── Remise à zéro ────────────────────────────────────────────────────────────
 
 /**
- * Efface toutes les données de l'application dans le localStorage.
- * À appeler après confirmation explicite de l'utilisateur.
+ * Efface toutes les données admin du localStorage.
  * Le composant appelant doit recharger la page après cet appel.
  */
 export function reinitialiser() {
     Object.values(KEYS).forEach((key) => {
-        try {
-            localStorage.removeItem(key);
-        } catch {
-            /* silencieux */
-        }
+        try { localStorage.removeItem(key); } catch { /* silencieux */ }
     });
 }

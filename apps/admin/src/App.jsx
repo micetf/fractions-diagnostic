@@ -1,164 +1,79 @@
 /**
- * @file App.jsx — composant racine.
+ * @fileoverview App — composant racine de l'interface admin.
  *
- * @description
- * Machine à états simplifiée — 2 cas exclusifs (au lieu de 4 avant le Sprint 2) :
+ * Routage par état (pas de react-router-dom).
  *
- *   ┌─────────────────────────────────────────────────────────────────┐
- *   │  sessionActive ?                                                │
- *   │  ┌─── oui ──► Mode élève (AccueilEleve)                        │
- *   │  │              Long press 2 s sur titre navbar                │
- *   │  │              ──► TeacherConfirmOverlay                      │
- *   │  │              ──► [Oui] ──► handleRetourEnseignant()         │
- *   │  │                                                             │
- *   │  └─── non ──► Mode enseignant (tableau de bord, direct)        │
- *   └─────────────────────────────────────────────────────────────────┘
- *
- * Supprimé au Sprint 2 :
- *   - PinGate (create + verify)
- *   - teacherUnlocked state
- *   - handlePinSuccess
- *
- * Ajouté au Sprint 2 :
- *   - useLongPress → showTeacherConfirm
- *   - TeacherConfirmOverlay rendu à la racine (hors Layout)
- *   - onRetourEnseignant propagé à AccueilEleve (remplace onCallTeacherSuccess)
+ * v2.0 — Changements par rapport à v1.0 :
+ *   - Suppression de la bascule mode élève ↔ mode enseignant
+ *   - Suppression du long press et de TeacherConfirmOverlay
+ *   - Suppression de SET_SESSION_ACTIVE / CLEAR_SESSION_ACTIVE
+ *   - Routes sessions/* renommées en diagnostics/*
+ *   - PinGate sera ajouté au Sprint 2
  *
  * @module App
  */
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useAppContext } from "@/context/useAppContext";
-import { useLongPress } from "@/hooks/useLongPress";
 import Layout from "@/components/common/Layout";
-import TeacherConfirmOverlay from "@/components/common/TeacherConfirmOverlay";
 import AccueilEnseignant from "@/pages/enseignant/AccueilEnseignant";
 import GestionClasses from "@/pages/enseignant/GestionClasses";
 import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AnalyseSession from "@/pages/enseignant/AnalyseSession";
 import ExportImport from "@/pages/enseignant/ExportImport";
-import AccueilEleve from "@/pages/eleve/AccueilEleve";
 
-// ─── Composant ─────────────────────────────────────────────────────────────────
+// ─── Composant ────────────────────────────────────────────────────────────────
 
 function App() {
-    const { state, dispatch } = useAppContext();
+    const { state } = useAppContext();
 
-    const [teacherPage, setTeacherPage] = useState("accueil");
-    const [sessionAnalyseId, setSessionAnalyseId] = useState(null);
-    const [showTeacherConfirm, setShowTeacherConfirm] = useState(false);
-
-    // ── Session active dérivée depuis le config persisté ──────────────────
-    const sessionActivePersistee = state.config?.session_en_cours_id ?? null;
-    const sessionActive = sessionActivePersistee
-        ? (state.sessions.find(
-              (s) => s.id === sessionActivePersistee && s.statut === "en_cours"
-          ) ?? null)
-        : null;
-
-    // ── Long press : déclenche l'overlay de confirmation ─────────────────
-    const longPressHandlers = useLongPress(
-        useCallback(() => setShowTeacherConfirm(true), [])
-    );
-
-    // ── Handlers ─────────────────────────────────────────────────────────
-
-    /**
-     * Lance la session : persiste l'id dans config, bascule en mode élève.
-     *
-     * @param {object} session - Session créée par CreerSession.
-     */
-    function handleLancerSession(session) {
-        dispatch({
-            type: "SET_SESSION_ACTIVE",
-            payload: { session_id: session.id },
-        });
-    }
-
-    /**
-     * Retour en mode enseignant — appelé après confirmation de l'overlay.
-     * Efface la session active persistée → App rebascule sur le cas "dashboard".
-     */
-    function handleRetourEnseignant() {
-        setShowTeacherConfirm(false);
-        dispatch({ type: "CLEAR_SESSION_ACTIVE" });
-    }
-
-    /**
-     * Ferme l'overlay sans action (clic sur fond ou bouton "Non").
-     */
-    const handleAnnulerConfirm = useCallback(() => {
-        setShowTeacherConfirm(false);
-    }, []);
+    const [page, setPage] = useState("accueil");
+    const [diagnosticAnalyseId, setDiagnosticAnalyseId] = useState(null);
 
     // ── Garde hydratation ─────────────────────────────────────────────────
     if (!state._hydrated) return null;
 
-    // ── Cas 1 : session active → mode élève ──────────────────────────────
-    if (sessionActive) {
-        return (
-            <>
-                <Layout
-                    mode="student"
-                    pageActive="eleve"
-                    onLongPressStart={longPressHandlers.onPointerDown}
-                    onLongPressEnd={longPressHandlers.onPointerUp}
-                >
-                    <AccueilEleve
-                        sessionActiveId={sessionActive.id}
-                        onRetourEnseignant={() => setShowTeacherConfirm(true)}
-                    />
-                </Layout>
-
-                {/* Overlay rendu à la racine — au-dessus de tout (z-50) */}
-                {showTeacherConfirm && (
-                    <TeacherConfirmOverlay
-                        onConfirm={handleRetourEnseignant}
-                        onCancel={handleAnnulerConfirm}
-                    />
-                )}
-            </>
-        );
-    }
-
-    // ── Cas 2 : pas de session active → tableau de bord enseignant ────────
-    const teacherPages = {
+    // ── Pages disponibles ─────────────────────────────────────────────────
+    const pages = {
         accueil: (
-            <AccueilEnseignant
-                onStartSession={() => {}}
-                onNavigate={setTeacherPage}
-            />
+            <AccueilEnseignant onNavigate={setPage} />
         ),
-        classes: <GestionClasses onNavigate={setTeacherPage} />,
-        sessions: (
+        classes: (
+            <GestionClasses onNavigate={setPage} />
+        ),
+        // "diagnostics" et "creer-diagnostic" seront renommés au Sprint 2.
+        // Pour l'instant on pointe vers les composants existants.
+        diagnostics: (
             <ListeSessions
-                onNavigate={setTeacherPage}
-                onRelancerSession={handleLancerSession}
+                onNavigate={setPage}
+                onRelancerSession={() => {}}
                 onAnalyserSession={(id) => {
-                    setSessionAnalyseId(id);
-                    setTeacherPage("analyse");
+                    setDiagnosticAnalyseId(id);
+                    setPage("analyse");
                 }}
             />
         ),
-        "creer-session": (
+        "creer-diagnostic": (
             <CreerSession
-                onNavigate={setTeacherPage}
-                onLancer={handleLancerSession}
+                onNavigate={setPage}
+                onLancer={() => setPage("diagnostics")}
             />
         ),
         analyse: (
             <AnalyseSession
-                sessionId={sessionAnalyseId}
-                onNavigate={setTeacherPage}
+                sessionId={diagnosticAnalyseId}
+                onNavigate={setPage}
             />
         ),
-        "export-import": <ExportImport onNavigate={setTeacherPage} />,
+        "export-import": (
+            <ExportImport onNavigate={setPage} />
+        ),
     };
 
     return (
-        <Layout mode="teacher" pageActive={teacherPage}>
-            {teacherPages[teacherPage] ?? teacherPages.accueil}
+        <Layout mode="teacher" pageActive={page}>
+            {pages[page] ?? pages.accueil}
         </Layout>
     );
 }

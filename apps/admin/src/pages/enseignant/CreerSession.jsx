@@ -1,3 +1,17 @@
+/**
+ * @fileoverview CreerSession — création d'un diagnostic.
+ *
+ * Renommage prévu en CreerDiagnostic.jsx au Sprint 2.
+ *
+ * v2.0 :
+ *   - CREATE_SESSION → CREATE_DIAGNOSTIC
+ *   - Suppression du champ statut (SRS F-DIA-06)
+ *   - Ajout du champ libelle (optionnel)
+ *   - Routes sessions → diagnostics
+ *   - Suppression de onLancer (plus de bascule mode élève depuis l'admin)
+ *
+ * @module pages/enseignant/CreerSession
+ */
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
@@ -10,16 +24,9 @@ import {
 const NIVEAUX = ["CE1", "CE2", "CM1", "CM2"];
 
 /**
- * CreerSession
- *
- * Formulaire de création d'une session diagnostique (SRS F-SES-01 à F-SES-04).
- *
- * Étape 1 : sélection de la classe et confirmation du niveau.
- * Étape 2 : sélection des exercices + tableau de lecture rapide + durée estimée.
- *
  * @param {object}   props
- * @param {function} props.onNavigate     - Navigation interne enseignant.
- * @param {function} props.onLancer       - Lance la session → bascule mode élève.
+ * @param {function} props.onNavigate - Navigation interne enseignant.
+ * @param {function} props.onLancer   - Appelé après création (reçoit le diagnostic).
  */
 function CreerSession({ onNavigate, onLancer }) {
     const { state, dispatch } = useAppContext();
@@ -27,13 +34,13 @@ function CreerSession({ onNavigate, onLancer }) {
     const [etape, setEtape] = useState(1);
     const [classeId, setClasseId] = useState("");
     const [niveau, setNiveau] = useState("CE1");
+    const [libelle, setLibelle] = useState("");
     const [selection, setSelection] = useState([]);
     const [erreur, setErreur] = useState("");
 
     const classesActives = state.classes.filter((c) => !c.archive);
     const classeChoisie = state.classes.find((c) => c.id === classeId) ?? null;
 
-    // Données didactiques du niveau courant
     const exercices = getExercices(niveau);
     const metadonnees = getMetadonnees(niveau);
     const dureeEstimee = calculerDureeEstimee(niveau, selection.length);
@@ -46,14 +53,12 @@ function CreerSession({ onNavigate, onLancer }) {
             setErreur("Veuillez sélectionner une classe.");
             return;
         }
-        // Pré-remplir le niveau depuis celui de la classe
-        // setNiveau(classeChoisie?.niveau ?? "CE1");
         setSelection([]);
         setErreur("");
         setEtape(2);
     }
 
-    // ── Étape 2 — sélection des exercices ────────────────────────────────────
+    // ── Étape 2 ───────────────────────────────────────────────────────────────
 
     function toggleExercice(numero) {
         setSelection((prev) =>
@@ -63,22 +68,22 @@ function CreerSession({ onNavigate, onLancer }) {
         );
     }
 
-    function handleLancer(e) {
+    function handleCreer(e) {
         e.preventDefault();
         if (selection.length === 0) {
             setErreur("Sélectionnez au moins un exercice.");
             return;
         }
-        const session = {
+        const diagnostic = {
             id: crypto.randomUUID(),
             classe_id: classeId,
             niveau,
             exercices_selectionnes: selection,
+            libelle: libelle.trim() || null,
             date_creation: new Date().toISOString(),
-            statut: "en_cours",
         };
-        dispatch({ type: "CREATE_SESSION", payload: session });
-        onLancer(session);
+        dispatch({ type: "CREATE_DIAGNOSTIC", payload: diagnostic });
+        onLancer(diagnostic);
     }
 
     // ── Rendu ─────────────────────────────────────────────────────────────────
@@ -95,22 +100,22 @@ function CreerSession({ onNavigate, onLancer }) {
                 </button>
                 <span>/</span>
                 <button
-                    onClick={() => onNavigate("sessions")}
+                    onClick={() => onNavigate("diagnostics")}
                     className="hover:text-brand-600 transition-colors cursor-pointer"
                 >
-                    Sessions
+                    Diagnostics
                 </button>
                 <span>/</span>
                 <span className="text-slate-800 font-medium">
-                    Nouvelle session
+                    Nouveau diagnostic
                 </span>
             </nav>
 
             <h1 className="text-2xl font-semibold text-slate-800 mb-6">
-                Nouvelle session diagnostique
+                Nouveau diagnostic
             </h1>
 
-            {/* ── Étape 1 : classe + niveau ───────────────────────────────────── */}
+            {/* ── Étape 1 ───────────────────────────────────────────────────── */}
             {etape === 1 && (
                 <form
                     onSubmit={handleEtape1}
@@ -153,12 +158,10 @@ function CreerSession({ onNavigate, onLancer }) {
                                         setErreur("");
                                     }}
                                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-400
-                             focus:border-transparent bg-white cursor-pointer"
+                                               focus:outline-none focus:ring-2 focus:ring-brand-400
+                                               focus:border-transparent bg-white cursor-pointer"
                                 >
-                                    <option value="">
-                                        — Choisir une classe —
-                                    </option>
+                                    <option value="">— Choisir une classe —</option>
                                     {classesActives.map((c) => (
                                         <option key={c.id} value={c.id}>
                                             {c.nom} ({c.niveau})
@@ -179,8 +182,8 @@ function CreerSession({ onNavigate, onLancer }) {
                                     value={niveau}
                                     onChange={(e) => setNiveau(e.target.value)}
                                     className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-brand-400
-                             focus:border-transparent bg-white cursor-pointer"
+                                               focus:outline-none focus:ring-2 focus:ring-brand-400
+                                               focus:border-transparent bg-white cursor-pointer"
                                 >
                                     {NIVEAUX.map((n) => (
                                         <option key={n} value={n}>
@@ -192,11 +195,32 @@ function CreerSession({ onNavigate, onLancer }) {
                         </div>
                     )}
 
-                    {erreur && (
-                        <p
-                            className="text-xs text-danger-600 mb-3"
-                            role="alert"
+                    {/* Libellé optionnel */}
+                    <div className="mb-4">
+                        <label
+                            className="block text-xs font-medium text-slate-600 mb-1"
+                            htmlFor="libelle-input"
                         >
+                            Libellé{" "}
+                            <span className="text-slate-400 font-normal">
+                                (optionnel — ex. : « Octobre »)
+                            </span>
+                        </label>
+                        <input
+                            id="libelle-input"
+                            type="text"
+                            value={libelle}
+                            onChange={(e) => setLibelle(e.target.value)}
+                            placeholder="Laisser vide si non nécessaire"
+                            maxLength={40}
+                            className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm
+                                       focus:outline-none focus:ring-2 focus:ring-brand-400
+                                       focus:border-transparent bg-white"
+                        />
+                    </div>
+
+                    {erreur && (
+                        <p className="text-xs text-danger-600 mb-3" role="alert">
                             {erreur}
                         </p>
                     )}
@@ -205,18 +229,18 @@ function CreerSession({ onNavigate, onLancer }) {
                         type="submit"
                         disabled={classesActives.length === 0}
                         className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
-                       text-white text-sm font-medium transition-colors cursor-pointer
-                       disabled:opacity-40 disabled:cursor-not-allowed"
+                                   text-white text-sm font-medium transition-colors cursor-pointer
+                                   disabled:opacity-40 disabled:cursor-not-allowed"
                     >
                         Suivant →
                     </button>
                 </form>
             )}
 
-            {/* ── Étape 2 : sélection des exercices ───────────────────────────── */}
+            {/* ── Étape 2 ───────────────────────────────────────────────────── */}
             {etape === 2 && (
-                <form onSubmit={handleLancer}>
-                    {/* Récap classe + niveau */}
+                <form onSubmit={handleCreer}>
+                    {/* Récap */}
                     <div className="flex items-center justify-between mb-4">
                         <p className="text-sm text-slate-500">
                             <span className="font-medium text-slate-700">
@@ -224,21 +248,22 @@ function CreerSession({ onNavigate, onLancer }) {
                             </span>
                             {" · "}
                             {niveau}
+                            {libelle && (
+                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-brand-100 text-brand-700">
+                                    {libelle}
+                                </span>
+                            )}
                         </p>
                         <button
                             type="button"
-                            onClick={() => {
-                                setEtape(1);
-                                setErreur("");
-                            }}
-                            className="text-xs text-slate-400 hover:text-brand-600
-                               transition-colors cursor-pointer"
+                            onClick={() => { setEtape(1); setErreur(""); }}
+                            className="text-xs text-slate-400 hover:text-brand-600 transition-colors cursor-pointer"
                         >
                             ← Modifier
                         </button>
                     </div>
 
-                    {/* Recommandation de sélection (verbatim source, F-SES-03) */}
+                    {/* Recommandation */}
                     {metadonnees?.passation?.recommandationSelection && (
                         <div className="mb-4 px-4 py-3 rounded-lg bg-accent-50 border border-accent-200">
                             <p className="text-xs font-semibold text-accent-800 mb-0.5">
@@ -250,7 +275,7 @@ function CreerSession({ onNavigate, onLancer }) {
                         </div>
                     )}
 
-                    {/* Durée estimée (F-SES-04) */}
+                    {/* Durée estimée */}
                     <div className="mb-4 flex items-center gap-3">
                         <span className="text-sm text-slate-500">
                             {selection.length === 0 ? (
@@ -266,93 +291,42 @@ function CreerSession({ onNavigate, onLancer }) {
                                 </>
                             )}
                         </span>
-                        {selection.length > 0 && (
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    setSelection(
-                                        exercices.map((ex) => ex.numero)
-                                    )
-                                }
-                                className="text-xs text-brand-500 hover:text-brand-700
-                                 cursor-pointer transition-colors"
-                            >
-                                Tout sélectionner
-                            </button>
-                        )}
-                        {selection.length === exercices.length && (
-                            <button
-                                type="button"
-                                onClick={() => setSelection([])}
-                                className="text-xs text-slate-400 hover:text-slate-600
-                                 cursor-pointer transition-colors"
-                            >
-                                Tout déselectionner
-                            </button>
-                        )}
                     </div>
 
-                    {/* Tableau de lecture rapide (F-SES-02) */}
+                    {/* Tableau de lecture rapide */}
                     <div className="rounded-xl border border-slate-200 overflow-hidden mb-6">
                         <table className="w-full text-sm">
                             <thead className="bg-slate-50 border-b border-slate-200">
                                 <tr>
-                                    <th
-                                        className="w-10 px-3 py-2.5 text-center text-xs font-semibold
-                                  text-slate-500 uppercase tracking-wide"
-                                    ></th>
-                                    <th
-                                        className="px-4 py-2.5 text-left text-xs font-semibold
-                                  text-slate-500 uppercase tracking-wide w-8"
-                                    >
+                                    <th className="w-10 px-3 py-2.5"></th>
+                                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide w-8">
                                         N°
                                     </th>
-                                    <th
-                                        className="px-4 py-2.5 text-left text-xs font-semibold
-                                  text-slate-500 uppercase tracking-wide"
-                                    >
+                                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">
                                         Compétence
                                     </th>
-                                    <th
-                                        className="px-4 py-2.5 text-left text-xs font-semibold
-                                  text-slate-500 uppercase tracking-wide hidden sm:table-cell"
-                                    >
+                                    <th className="px-4 py-2.5 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide hidden sm:table-cell">
                                         Biais ciblé(s)
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100">
                                 {exercices.map((ex) => {
-                                    const checked = selection.includes(
-                                        ex.numero
-                                    );
-                                    const intitules =
-                                        intitulerBiaisExercice(ex);
+                                    const checked = selection.includes(ex.numero);
+                                    const intitules = intitulerBiaisExercice(ex);
                                     return (
                                         <tr
                                             key={ex.numero}
-                                            onClick={() =>
-                                                toggleExercice(ex.numero)
-                                            }
+                                            onClick={() => toggleExercice(ex.numero)}
                                             className={`cursor-pointer transition-colors
-                        ${
-                            checked
-                                ? "bg-brand-50 hover:bg-brand-100"
-                                : "bg-white hover:bg-slate-50"
-                        }`}
+                                                ${checked ? "bg-brand-50 hover:bg-brand-100" : "bg-white hover:bg-slate-50"}`}
                                         >
                                             <td className="px-3 py-3 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={checked}
-                                                    onChange={() =>
-                                                        toggleExercice(
-                                                            ex.numero
-                                                        )
-                                                    }
-                                                    onClick={(e) =>
-                                                        e.stopPropagation()
-                                                    }
+                                                    onChange={() => toggleExercice(ex.numero)}
+                                                    onClick={(e) => e.stopPropagation()}
                                                     className="w-4 h-4 accent-brand-500 cursor-pointer"
                                                 />
                                             </td>
@@ -365,24 +339,18 @@ function CreerSession({ onNavigate, onLancer }) {
                                             <td className="px-4 py-3 hidden sm:table-cell">
                                                 {intitules.length > 0 ? (
                                                     <div className="flex flex-wrap gap-1">
-                                                        {intitules.map(
-                                                            (intitule) => (
-                                                                <span
-                                                                    key={
-                                                                        intitule
-                                                                    }
-                                                                    className="inline-block text-xs px-2 py-0.5 rounded-full
-                                           bg-danger-100 text-danger-700"
-                                                                >
-                                                                    {intitule}
-                                                                </span>
-                                                            )
-                                                        )}
+                                                        {intitules.map((intitule) => (
+                                                            <span
+                                                                key={intitule}
+                                                                className="inline-block text-xs px-2 py-0.5 rounded-full bg-danger-100 text-danger-700"
+                                                            >
+                                                                {intitule}
+                                                            </span>
+                                                        ))}
                                                     </div>
                                                 ) : (
                                                     <span className="text-xs text-review-600">
-                                                        Réponse ouverte
-                                                        (relecture)
+                                                        Réponse ouverte (relecture)
                                                     </span>
                                                 )}
                                             </td>
@@ -394,10 +362,7 @@ function CreerSession({ onNavigate, onLancer }) {
                     </div>
 
                     {erreur && (
-                        <p
-                            className="text-xs text-danger-600 mb-3"
-                            role="alert"
-                        >
+                        <p className="text-xs text-danger-600 mb-3" role="alert">
                             {erreur}
                         </p>
                     )}
@@ -406,15 +371,15 @@ function CreerSession({ onNavigate, onLancer }) {
                         <button
                             type="submit"
                             className="px-6 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600
-                         text-white font-semibold text-sm transition-colors cursor-pointer"
+                                       text-white font-semibold text-sm transition-colors cursor-pointer"
                         >
-                            Lancer la session →
+                            Créer le diagnostic →
                         </button>
                         <button
                             type="button"
-                            onClick={() => onNavigate("sessions")}
+                            onClick={() => onNavigate("diagnostics")}
                             className="px-5 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50
-                         text-slate-600 text-sm transition-colors cursor-pointer"
+                                       text-slate-600 text-sm transition-colors cursor-pointer"
                         >
                             Annuler
                         </button>

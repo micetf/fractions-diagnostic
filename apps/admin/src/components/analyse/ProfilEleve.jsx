@@ -22,7 +22,7 @@ function ProfilEleve({ session, eleve, onRetour }) {
     const passation =
         state.passations.find(
             (p) =>
-                p.session_id === session.id &&
+                p.diagnostic_id === session.id &&
                 p.eleve_id === eleve.id &&
                 p.statut === "terminee"
         ) ?? null;

@@ -43,7 +43,7 @@ function MatriceResultats({ session, eleves, onVoirProfil }) {
     );
 
     const passTerminees = state.passations.filter(
-        (p) => p.session_id === session.id && p.statut === "terminee"
+        (p) => p.diagnostic_id === session.id && p.statut === "terminee"
     ).length;
 
     function toggleCellule(eleveId, numero) {
