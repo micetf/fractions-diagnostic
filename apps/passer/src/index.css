@@ -1,21 +1,49 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap");
 @import "tailwindcss";
 
-/*
- * Styles globaux — Interface passation.
- *
- * Tailwind v4 avec plugin @tailwindcss/vite.
- */
+@theme {
+    --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Nunito", "DM Sans", ui-sans-serif, sans-serif;
 
-/* Empêche le rebond du scroll sur iOS */
-html,
-body {
-    overscroll-behavior: none;
+    --color-brand-50:  #eef4ff;
+    --color-brand-100: #d9e6ff;
+    --color-brand-200: #bbd1ff;
+    --color-brand-300: #8eb2ff;
+    --color-brand-500: #2f5ee8;
+    --color-brand-600: #1f45cc;
+    --color-brand-700: #1a36a6;
+    --color-brand-800: #1b2f87;
+    --color-brand-900: #1c2c6b;
+
+    --color-success-100: #dcfce7;
+    --color-success-500: #22c55e;
+    --color-success-700: #15803d;
+
+    --color-danger-100: #fee2e2;
+    --color-danger-200: #fecaca;
+    --color-danger-300: #fca5a5;
+    --color-danger-500: #ef4444;
+    --color-danger-600: #dc2626;
+    --color-danger-700: #b91c1c;
 }
 
-/* Cibles tactiles minimum 44px (SRS NF-UX-04) */
-button,
-[role="button"] {
-    min-height: 44px;
-    min-width: 44px;
-    touch-action: manipulation;
+@layer base {
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: var(--font-sans);
+        background-color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
+    }
+    /* Empêche le rebond du scroll sur iOS */
+    html, body { overscroll-behavior: none; }
+}
+
+@layer utilities {
+    /* Cibles tactiles minimum 44px (SRS NF-UX-04) */
+    button, [role="button"] {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+    }
 }

@@ -1,16 +1,14 @@
 /**
  * @fileoverview ListeDiagnostics — historique des diagnostics.
  *
- * Renommage prévu en ListeDiagnostics.jsx au Sprint 2.
- * Pour l'instant le fichier garde son nom pour ne pas casser les imports.
- *
  * v2.0 : pas de statut, pas de boutons Lancer/Clôturer.
- * Un diagnostic est toujours disponible (SRS F-DIA-06).
+ * Ajout du bouton "Exporter config" (Phase 1, SRS F-CFG-01).
  *
  * @module pages/enseignant/ListeSessions
  */
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
+import { exporterConfig } from "@/utils/exportData";
 
 /**
  * @param {object}   props
@@ -28,6 +26,11 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
         return (state.passations ?? []).filter(
             (p) => p.diagnostic_id === diagnosticId && p.statut === "terminee"
         ).length;
+    }
+
+    function getEleves(diagnostic) {
+        const classe = state.classes.find((c) => c.id === diagnostic.classe_id);
+        return classe?.eleves ?? [];
     }
 
     function nomClasse(classeId) {
@@ -79,10 +82,8 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
                 <ul className="space-y-3">
                     {diagnostics.map((diagnostic) => {
                         const nbTerminees = nbPassationsTerminees(diagnostic.id);
-                        const classe = state.classes.find(
-                            (c) => c.id === diagnostic.classe_id
-                        );
-                        const nbEleves = classe?.eleves?.length ?? 0;
+                        const eleves = getEleves(diagnostic);
+                        const nbEleves = eleves.length;
 
                         return (
                             <li
@@ -90,7 +91,7 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
                                 className="rounded-xl border border-slate-200 bg-white p-5"
                             >
                                 <div className="flex items-start justify-between gap-4">
-                                    {/* Infos diagnostic */}
+                                    {/* Infos */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2 flex-wrap mb-1">
                                             <span className="font-semibold text-slate-800">
@@ -108,8 +109,7 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
                                         <p className="text-xs text-slate-400">
                                             Créé le {formatDate(diagnostic.date_creation)}
                                             {" · "}
-                                            Exercices :{" "}
-                                            {diagnostic.exercices_selectionnes.join(", ")}
+                                            Exercices : {diagnostic.exercices_selectionnes.join(", ")}
                                         </p>
                                         <p className="text-xs text-slate-500 mt-1">
                                             {nbTerminees} / {nbEleves} passation
@@ -121,9 +121,16 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
                                     {/* Actions */}
                                     <div className="flex flex-col gap-2 shrink-0">
                                         <button
-                                            onClick={() =>
-                                                onAnalyserSession(diagnostic.id)
-                                            }
+                                            onClick={() => exporterConfig(diagnostic, eleves)}
+                                            className="px-4 py-1.5 rounded-lg bg-brand-500
+                                                       hover:bg-brand-600 text-white text-xs
+                                                       font-medium transition-colors cursor-pointer
+                                                       whitespace-nowrap"
+                                        >
+                                            Exporter config
+                                        </button>
+                                        <button
+                                            onClick={() => onAnalyserSession(diagnostic.id)}
                                             className="px-4 py-1.5 rounded-lg border border-brand-200
                                                        hover:bg-brand-50 text-brand-600 text-xs font-medium
                                                        transition-colors cursor-pointer whitespace-nowrap"
@@ -142,7 +149,7 @@ function ListeSessions({ onNavigate, onAnalyserSession }) {
 }
 
 ListeSessions.propTypes = {
-    onNavigate: PropTypes.func.isRequired,
+    onNavigate:        PropTypes.func.isRequired,
     onRelancerSession: PropTypes.func,
     onAnalyserSession: PropTypes.func.isRequired,
 };
