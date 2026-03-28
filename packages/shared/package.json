@@ -3,12 +3,14 @@
     "version": "2.0.0",
     "private": true,
     "type": "module",
-    "description": "Utilitaires partagés — PIN, stockage localStorage, types JSDoc",
+    "description": "Utilitaires partagés — PIN, stockage localStorage, types JSDoc, fusion",
     "main": "./index.js",
     "exports": {
         ".": "./index.js",
         "./pinHash": "./pinHash.js",
         "./storage": "./storage.js",
-        "./types": "./types.js"
+        "./types": "./types.js",
+        "./fusionResultats": "./fusionResultats.js",
+        "./*": "./*.js"
     }
 }

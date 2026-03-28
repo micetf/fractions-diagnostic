@@ -5,8 +5,6 @@
  *   attente → [import-config] → choix-eleve → passation → fin
  *                                                        ↘ export-resultats
  *
- * Pas de PIN, pas d'authentification, pas d'accès aux résultats (SRS F-PAS-01).
- *
  * @module App
  */
 
@@ -19,21 +17,17 @@ import PassationRunner from "@/pages/PassationRunner";
 import FinPassation from "@/pages/FinPassation";
 import ExportResultats from "@/pages/ExportResultats";
 
-// ─── Contenu principal (accès au contexte) ────────────────────────────────────
-
 function AppContent() {
     const { state } = usePasserContext();
 
     const [ecran, setEcran] = useState("auto");
     const [eleveId, setEleveId] = useState(null);
-    const [passationId, setPassationId] = useState(null);
 
-    // ── Garde hydratation ─────────────────────────────────────────────────
     if (!state._hydrated) return null;
 
     const { diagnostic, passations } = state;
 
-    // ── Écran import config (déclenché manuellement) ──────────────────────
+    // ── Import config ─────────────────────────────────────────────────────
     if (ecran === "import-config") {
         return (
             <ImportConfig
@@ -43,26 +37,25 @@ function AppContent() {
         );
     }
 
-    // ── Écran export résultats (accessible depuis FinPassation) ───────────
+    // ── Export résultats ──────────────────────────────────────────────────
     if (ecran === "export-resultats") {
         return (
-            <ExportResultats
-                onRetour={() => setEcran("auto")}
-            />
+            <ExportResultats onRetour={() => setEcran("auto")} />
         );
     }
 
-    // ── Pas de config → attente ───────────────────────────────────────────
+    // ── Pas de config ─────────────────────────────────────────────────────
     if (!diagnostic) {
         return (
             <EcranAttente
                 tousTermines={false}
                 onImporter={() => setEcran("import-config")}
+                onExporter={() => setEcran("export-resultats")}
             />
         );
     }
 
-    // ── Tous les élèves ont terminé → attente ─────────────────────────────
+    // ── Tous les élèves ont terminé ───────────────────────────────────────
     const idsTermines = new Set(
         passations
             .filter(
@@ -82,6 +75,7 @@ function AppContent() {
             <EcranAttente
                 tousTermines={true}
                 onImporter={() => setEcran("import-config")}
+                onExporter={() => setEcran("export-resultats")}
             />
         );
     }
@@ -91,10 +85,7 @@ function AppContent() {
         return (
             <PassationRunner
                 eleveId={eleveId}
-                onTermine={(pid) => {
-                    setPassationId(pid);
-                    setEcran("fin");
-                }}
+                onTermine={() => setEcran("fin")}
             />
         );
     }
@@ -107,18 +98,14 @@ function AppContent() {
                 prenom={eleve?.prenom ?? ""}
                 onSuivant={() => {
                     setEleveId(null);
-                    setPassationId(null);
                     setEcran("auto");
                 }}
-                onAdmin={() => {
-                    // Ouvre l'interface admin dans un nouvel onglet (SRS F-PAS-18)
-                    window.open("/fractions-diagnostic/", "_blank");
-                }}
+                onAdmin={() => setEcran("export-resultats")}
             />
         );
     }
 
-    // ── Choix de l'élève (écran par défaut quand config présente) ─────────
+    // ── Choix de l'élève ──────────────────────────────────────────────────
     return (
         <ChoixEleve
             onChoisir={(id) => {
@@ -128,8 +115,6 @@ function AppContent() {
         />
     );
 }
-
-// ─── App (fournit le contexte) ────────────────────────────────────────────────
 
 export default function App() {
     return (
