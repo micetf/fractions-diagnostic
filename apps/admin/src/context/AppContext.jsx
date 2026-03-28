@@ -48,15 +48,14 @@ const initialState = {
  */
 function appReducer(state, action) {
     switch (action.type) {
-
         // ── Hydratation initiale depuis localStorage ───────────────────────
         case "HYDRATE":
             return {
                 ...state,
-                config:      action.payload.config      ?? null,
-                classes:     action.payload.classes     ?? [],
+                config: action.payload.config ?? null,
+                classes: action.payload.classes ?? [],
                 diagnostics: action.payload.diagnostics ?? [],
-                passations:  action.payload.passations  ?? [],
+                passations: action.payload.passations ?? [],
                 _hydrated: true,
             };
 
@@ -75,7 +74,10 @@ function appReducer(state, action) {
         case "SET_PIN_HINT":
             return {
                 ...state,
-                config: { ...(state.config ?? {}), pin_hint: action.payload.pin_hint },
+                config: {
+                    ...(state.config ?? {}),
+                    pin_hint: action.payload.pin_hint,
+                },
             };
 
         // ── Classes ───────────────────────────────────────────────────────
@@ -103,7 +105,9 @@ function appReducer(state, action) {
         case "DELETE_CLASSE":
             return {
                 ...state,
-                classes: state.classes.filter((c) => c.id !== action.payload.id),
+                classes: state.classes.filter(
+                    (c) => c.id !== action.payload.id
+                ),
             };
 
         // ── Diagnostics ───────────────────────────────────────────────────
@@ -159,7 +163,9 @@ function appReducer(state, action) {
                 passations: state.passations.map((p) => {
                     if (p.id !== action.payload.passation_id) return p;
                     const autresReponses = p.reponses.filter(
-                        (r) => r.exercice_numero !== action.payload.reponse.exercice_numero
+                        (r) =>
+                            r.exercice_numero !==
+                            action.payload.reponse.exercice_numero
                     );
                     return {
                         ...p,
@@ -177,14 +183,28 @@ function appReducer(state, action) {
                 ...state,
                 passations: state.passations.map((p) =>
                     p.id === action.payload.id
-                        ? { ...p, statut: "terminee", date_fin: action.payload.date_fin }
+                        ? {
+                              ...p,
+                              statut: "terminee",
+                              date_fin: action.payload.date_fin,
+                          }
                         : p
                 ),
             };
 
         /**
-         * Attribue manuellement des codes biais à un item « à relire ».
-         * payload : { passation_id: string, exercice_numero: number, biais_manuel: string[] }
+         * Attribue manuellement des codes biais à un item « à valider ».
+         *
+         * v2.1 : persiste validation_manuelle ('reussi'|'echec'|null) pour
+         * les items sans biais assigné (coloring réussi, texte trop court…).
+         * La valeur null (défaut) signifie "réussi sans qualification explicite".
+         *
+         * payload : {
+         *   passation_id:        string,
+         *   exercice_numero:     number,
+         *   biais_manuel:        string[],
+         *   validation_manuelle: 'reussi'|'echec'|null,
+         * }
          */
         case "VALIDER_ITEM":
             return {
@@ -195,7 +215,14 @@ function appReducer(state, action) {
                         ...p,
                         reponses: p.reponses.map((r) =>
                             r.exercice_numero === action.payload.exercice_numero
-                                ? { ...r, biais_manuel: action.payload.biais_manuel, a_relire: false }
+                                ? {
+                                      ...r,
+                                      biais_manuel: action.payload.biais_manuel,
+                                      validation_manuelle:
+                                          action.payload.validation_manuelle ??
+                                          null,
+                                      a_relire: false,
+                                  }
                                 : r
                         ),
                     };
@@ -235,7 +262,8 @@ function appReducer(state, action) {
                     const existante = existantes[idx];
                     const garderImportee =
                         importee.reponses.length > existante.reponses.length ||
-                        (importee.reponses.length === existante.reponses.length &&
+                        (importee.reponses.length ===
+                            existante.reponses.length &&
                             importee.date_fin > existante.date_fin);
                     if (garderImportee) existantes[idx] = importee;
                 }
@@ -276,10 +304,10 @@ export function AppContextProvider({ children }) {
         dispatch({
             type: "HYDRATE",
             payload: {
-                config:      getItem(KEYS.config),
-                classes:     getItem(KEYS.classes),
+                config: getItem(KEYS.config),
+                classes: getItem(KEYS.classes),
                 diagnostics: getItem(KEYS.diagnostics),
-                passations:  getItem(KEYS.passations),
+                passations: getItem(KEYS.passations),
             },
         });
     }, []);
@@ -287,10 +315,10 @@ export function AppContextProvider({ children }) {
     // ── Persistence à chaque changement (sauf avant hydratation) ──────────
     useEffect(() => {
         if (!state._hydrated) return;
-        setItem(KEYS.config,      state.config);
-        setItem(KEYS.classes,     state.classes);
+        setItem(KEYS.config, state.config);
+        setItem(KEYS.classes, state.classes);
         setItem(KEYS.diagnostics, state.diagnostics);
-        setItem(KEYS.passations,  state.passations);
+        setItem(KEYS.passations, state.passations);
     }, [state]);
 
     return (
