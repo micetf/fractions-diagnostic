@@ -1,20 +1,17 @@
 /**
  * @fileoverview App — composant racine de l'interface admin.
  *
- * Routage par état (pas de react-router-dom).
- *
- * v2.0 — Changements par rapport à v1.0 :
- *   - Suppression de la bascule mode élève ↔ mode enseignant
- *   - Suppression du long press et de TeacherConfirmOverlay
- *   - Suppression de SET_SESSION_ACTIVE / CLEAR_SESSION_ACTIVE
- *   - Routes sessions/* renommées en diagnostics/*
- *   - PinGate sera ajouté au Sprint 2
+ * Logique de démarrage :
+ *   1. Pas de config ou pas de pin_hash → PinGate mode create
+ *   2. Config présente + non déverrouillé → PinGate mode verify
+ *   3. Déverrouillé → tableau de bord
  *
  * @module App
  */
 
 import { useState } from "react";
 import { useAppContext } from "@/context/useAppContext";
+import PinGate from "@/components/common/PinGate";
 import Layout from "@/components/common/Layout";
 import AccueilEnseignant from "@/pages/enseignant/AccueilEnseignant";
 import GestionClasses from "@/pages/enseignant/GestionClasses";
@@ -22,19 +19,39 @@ import CreerSession from "@/pages/enseignant/CreerSession";
 import ListeSessions from "@/pages/enseignant/ListeSessions";
 import AnalyseSession from "@/pages/enseignant/AnalyseSession";
 import ExportImport from "@/pages/enseignant/ExportImport";
-
-// ─── Composant ────────────────────────────────────────────────────────────────
+import Parametres from "@/pages/enseignant/Parametres";
 
 function App() {
     const { state } = useAppContext();
 
+    const [debloque, setDebloque] = useState(false);
     const [page, setPage] = useState("accueil");
     const [diagnosticAnalyseId, setDiagnosticAnalyseId] = useState(null);
 
-    // ── Garde hydratation ─────────────────────────────────────────────────
     if (!state._hydrated) return null;
 
-    // ── Pages disponibles ─────────────────────────────────────────────────
+    // ── Cas 1 : premier lancement ─────────────────────────────────────────
+    if (state.config === null || !state.config?.pin_hash) {
+        return (
+            <PinGate
+                mode="create"
+                onSuccess={() => setDebloque(true)}
+            />
+        );
+    }
+
+    // ── Cas 2 : PIN existant, non déverrouillé ────────────────────────────
+    if (!debloque) {
+        return (
+            <PinGate
+                mode="verify"
+                onSuccess={() => setDebloque(true)}
+                context="Saisissez votre code pour accéder au tableau de bord."
+            />
+        );
+    }
+
+    // ── Cas 3 : déverrouillé ──────────────────────────────────────────────
     const pages = {
         accueil: (
             <AccueilEnseignant onNavigate={setPage} />
@@ -42,12 +59,9 @@ function App() {
         classes: (
             <GestionClasses onNavigate={setPage} />
         ),
-        // "diagnostics" et "creer-diagnostic" seront renommés au Sprint 2.
-        // Pour l'instant on pointe vers les composants existants.
         diagnostics: (
             <ListeSessions
                 onNavigate={setPage}
-                onRelancerSession={() => {}}
                 onAnalyserSession={(id) => {
                     setDiagnosticAnalyseId(id);
                     setPage("analyse");
@@ -68,6 +82,9 @@ function App() {
         ),
         "export-import": (
             <ExportImport onNavigate={setPage} />
+        ),
+        parametres: (
+            <Parametres onNavigate={setPage} />
         ),
     };
 

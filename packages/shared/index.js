@@ -7,5 +7,5 @@
  * @module @fractions-diagnostic/shared
  */
 export * from "./storage.js";
-// pinHash.js sera ajouté au Sprint 2
+export * from "./pinHash.js";
 // types.js n'exporte aucune valeur (JSDoc uniquement)

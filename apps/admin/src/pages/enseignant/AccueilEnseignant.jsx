@@ -1,19 +1,21 @@
+/**
+ * @fileoverview AccueilEnseignant — tableau de bord principal.
+ *
+ * v2.0 : Session → Diagnostic, ajout de la carte Paramètres.
+ *
+ * @module pages/enseignant/AccueilEnseignant
+ */
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
 
 /**
- * AccueilEnseignant
- *
- * Tableau de bord principal de l'interface admin.
- * Adapté au modèle v2.0 : Diagnostic sans cycle de vie (SRS F-DIA-06).
- *
  * @param {object}   props
- * @param {function} props.onNavigate - Navigation interne enseignant.
+ * @param {function} props.onNavigate
  */
 function AccueilEnseignant({ onNavigate }) {
     const { state } = useAppContext();
 
-    const nbDiagnostics = state.diagnostics.length;
+    const nbDiagnostics = state.diagnostics?.length ?? 0;
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
@@ -21,8 +23,7 @@ function AccueilEnseignant({ onNavigate }) {
                 Tableau de bord
             </h1>
             <p className="text-sm text-slate-500 mb-8">
-                Gérez vos classes, créez des diagnostics et analysez les
-                résultats.
+                Gérez vos classes, créez des diagnostics et analysez les résultats.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <NavCard
@@ -31,7 +32,6 @@ function AccueilEnseignant({ onNavigate }) {
                     onClick={() => onNavigate("classes")}
                     actif
                 />
-
                 <NavCard
                     titre="Diagnostics"
                     description="Historique et gestion des diagnostics."
@@ -43,7 +43,6 @@ function AccueilEnseignant({ onNavigate }) {
                             : null
                     }
                 />
-
                 <NavCard
                     titre="Nouveau diagnostic"
                     description="Sélectionner les exercices et préparer la passation."
@@ -51,18 +50,22 @@ function AccueilEnseignant({ onNavigate }) {
                     actif
                     accent
                 />
-
                 <NavCard
                     titre="Analyse des résultats"
                     description="Matrice de résultats, profils élèves, biais détectés."
                     onClick={() => onNavigate("diagnostics")}
                     actif
                 />
-
                 <NavCard
                     titre="Export / Import"
                     description="Sauvegarder, partager et restaurer les données."
                     onClick={() => onNavigate("export-import")}
+                    actif
+                />
+                <NavCard
+                    titre="Paramètres"
+                    description="Changer le code d'accès."
+                    onClick={() => onNavigate("parametres")}
                     actif
                 />
             </div>
@@ -74,11 +77,9 @@ AccueilEnseignant.propTypes = {
     onNavigate: PropTypes.func.isRequired,
 };
 
-/* ── Sous-composant ─────────────────────────────────────────────────── */
+/* ── NavCard ─────────────────────────────────────────────────────────── */
 
 /**
- * NavCard
- *
  * @param {object}      props
  * @param {string}      props.titre
  * @param {string}      props.description
@@ -116,11 +117,7 @@ function NavCard({
                     {badge && (
                         <span
                             className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0
-                            ${
-                                accent
-                                    ? "bg-white/20 text-white"
-                                    : "bg-brand-100 text-brand-700"
-                            }`}
+                            ${accent ? "bg-white/20 text-white" : "bg-brand-100 text-brand-700"}`}
                         >
                             {badge}
                         </span>
@@ -136,9 +133,7 @@ function NavCard({
     }
 
     return (
-        <div
-            className={`${base} bg-white border-slate-200 opacity-50 cursor-not-allowed select-none`}
-        >
+        <div className={`${base} bg-white border-slate-200 opacity-50 cursor-not-allowed select-none`}>
             <span className="font-semibold text-slate-700">{titre}</span>
             <span className="text-sm text-slate-500">{description}</span>
         </div>
@@ -146,12 +141,12 @@ function NavCard({
 }
 
 NavCard.propTypes = {
-    titre: PropTypes.string.isRequired,
+    titre:       PropTypes.string.isRequired,
     description: PropTypes.string.isRequired,
-    actif: PropTypes.bool,
-    accent: PropTypes.bool,
-    onClick: PropTypes.func,
-    badge: PropTypes.string,
+    actif:       PropTypes.bool,
+    accent:      PropTypes.bool,
+    onClick:     PropTypes.func,
+    badge:       PropTypes.string,
 };
 
 export default AccueilEnseignant;
