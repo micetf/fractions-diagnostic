@@ -15,7 +15,12 @@
  */
 
 import { KEYS, getItem, setItem } from "@/hooks/useStorage";
-import { etatReponse, ETATS } from "@/utils/analyseSession";
+import {
+    etatReponse,
+    ETATS,
+    scoreReponse,
+    SCORE,
+} from "@/utils/analyseSession";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -42,10 +47,14 @@ function dateLabel(iso) {
     return new Date(iso).toISOString().slice(0, 10);
 }
 
-// ─── Export CSV (F-EXP-01) ────────────────────────────────────────────────────
+// ─── Export CSV (F-EXP-01) — v2.2 ────────────────────────────────────────────
 
 /**
  * Génère et télécharge la matrice de résultats d'un diagnostic au format CSV.
+ *
+ * v2.2 : utilise scoreReponse() (5 états) au lieu de etatReponse() (4 états).
+ * Les valeurs exportées reflètent désormais la même logique que la matrice
+ * affichée dans l'interface.
  *
  * @param {import('@fractions-diagnostic/shared/types').Diagnostic} diagnostic
  * @param {import('@fractions-diagnostic/shared/types').Eleve[]}    eleves
@@ -59,12 +68,12 @@ export function exporterCSV(diagnostic, eleves, passations) {
         "Nom",
         "Prénom",
         ...numeros.map((n) => `Ex.${n}`),
+        "Score",
         "Biais détectés",
         "Durée totale (s)",
     ];
 
     const lignes = eleves.map((eleve) => {
-        // v2.0 : diagnostic_id (remplace session_id)
         const passation = passations.find(
             (p) =>
                 p.diagnostic_id === diagnostic.id &&
@@ -76,14 +85,25 @@ export function exporterCSV(diagnostic, eleves, passations) {
             const rep = passation?.reponses.find(
                 (r) => r.exercice_numero === n
             );
-            const etat = etatReponse(rep);
-            return {
-                [ETATS.REUSSI]:   "Réussi",
-                [ETATS.BIAIS]:    "Biais",
-                [ETATS.RELIRE]:   "À relire",
-                [ETATS.NON_FAIT]: "Non fait",
-            }[etat];
+            const etat = scoreReponse(rep);
+            return (
+                {
+                    [SCORE.REUSSI]: "Réussi",
+                    [SCORE.BIAIS]: "Biais",
+                    [SCORE.ECHEC]: "Échec",
+                    [SCORE.A_VALIDER]: "À valider",
+                    [SCORE.NON_FAIT]: "Non fait",
+                }[etat] ?? "Non fait"
+            );
         });
+
+        // Score global (taux de réussite sur items évalués)
+        const reussies = cellules.filter((c) => c === "Réussi").length;
+        const evalues = cellules.filter(
+            (c) => c !== "Non fait" && c !== "À valider"
+        ).length;
+        const scoreTxt =
+            evalues > 0 ? `${Math.round((reussies / evalues) * 100)} %` : "—";
 
         const tousLesBiais =
             passation?.reponses.flatMap((r) => [
@@ -105,6 +125,7 @@ export function exporterCSV(diagnostic, eleves, passations) {
             eleve.nom ?? "",
             eleve.prenom ?? "",
             ...cellules,
+            scoreTxt,
             biaisUniques,
             dureeTotaleS,
         ];
@@ -150,12 +171,12 @@ export function exporterCSV(diagnostic, eleves, passations) {
  */
 export function exporterJSON() {
     const sauvegarde = {
-        version:     "2.0",
-        exportedAt:  new Date().toISOString(),
-        config:      getItem(KEYS.config),
-        classes:     getItem(KEYS.classes)     ?? [],
+        version: "2.0",
+        exportedAt: new Date().toISOString(),
+        config: getItem(KEYS.config),
+        classes: getItem(KEYS.classes) ?? [],
         diagnostics: getItem(KEYS.diagnostics) ?? [],
-        passations:  getItem(KEYS.passations)  ?? [],
+        passations: getItem(KEYS.passations) ?? [],
     };
 
     const blob = new Blob([JSON.stringify(sauvegarde, null, 2)], {
@@ -177,22 +198,34 @@ export function exporterJSON() {
  */
 function validerSauvegarde(data) {
     if (!data || typeof data !== "object") {
-        return { ok: false, erreur: "Le fichier n'est pas un objet JSON valide." };
+        return {
+            ok: false,
+            erreur: "Le fichier n'est pas un objet JSON valide.",
+        };
     }
     if (!data.version) {
-        return { ok: false, erreur: 'Champ "version" manquant — fichier non reconnu.' };
+        return {
+            ok: false,
+            erreur: 'Champ "version" manquant — fichier non reconnu.',
+        };
     }
     if (!Array.isArray(data.classes)) {
         return { ok: false, erreur: 'Champ "classes" manquant ou invalide.' };
     }
     if (!Array.isArray(data.passations)) {
-        return { ok: false, erreur: 'Champ "passations" manquant ou invalide.' };
+        return {
+            ok: false,
+            erreur: 'Champ "passations" manquant ou invalide.',
+        };
     }
     // Accepte "sessions" (v1.x) ou "diagnostics" (v2.0)
     const hasDiagnostics = Array.isArray(data.diagnostics);
-    const hasSessions    = Array.isArray(data.sessions);
+    const hasSessions = Array.isArray(data.sessions);
     if (!hasDiagnostics && !hasSessions) {
-        return { ok: false, erreur: 'Champ "diagnostics" (ou "sessions") manquant.' };
+        return {
+            ok: false,
+            erreur: 'Champ "diagnostics" (ou "sessions") manquant.',
+        };
     }
     return { ok: true };
 }
@@ -217,7 +250,10 @@ export async function importerJSON(fichier) {
             try {
                 data = JSON.parse(e.target.result);
             } catch {
-                resolve({ ok: false, erreur: "Le fichier n'est pas du JSON valide." });
+                resolve({
+                    ok: false,
+                    erreur: "Le fichier n'est pas du JSON valide.",
+                });
                 return;
             }
 
@@ -230,10 +266,10 @@ export async function importerJSON(fichier) {
             // Migration v1 → v2 : sessions devient diagnostics
             const diagnostics = data.diagnostics ?? data.sessions ?? [];
 
-            setItem(KEYS.config,      data.config      ?? null);
-            setItem(KEYS.classes,     data.classes      ?? []);
+            setItem(KEYS.config, data.config ?? null);
+            setItem(KEYS.classes, data.classes ?? []);
             setItem(KEYS.diagnostics, diagnostics);
-            setItem(KEYS.passations,  data.passations   ?? []);
+            setItem(KEYS.passations, data.passations ?? []);
 
             resolve({ ok: true });
         };
@@ -254,7 +290,11 @@ export async function importerJSON(fichier) {
  */
 export function reinitialiser() {
     Object.values(KEYS).forEach((key) => {
-        try { localStorage.removeItem(key); } catch { /* silencieux */ }
+        try {
+            localStorage.removeItem(key);
+        } catch {
+            /* silencieux */
+        }
     });
 }
 

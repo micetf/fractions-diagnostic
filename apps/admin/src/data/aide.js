@@ -110,42 +110,46 @@ export const AIDE = {
         ],
     },
 
-    // ── Analyse ─────────────────────────────────────────────────────────────
+    // ── Analyse ──────────────────────────────────────────────────────────────────
     analyse: {
         titre: "Analyse des résultats",
-        intro: "Trois vues complémentaires pour exploiter les résultats.",
+        intro: "Quatre vues complémentaires pour exploiter les résultats.",
         sections: [
             {
                 q: "Matrice résultats",
-                r: "Un tableau élèves × exercices. Chaque cellule indique l'état : Réussi, Biais détecté, À relire, Non fait. Survolez une cellule pour voir le détail.",
+                r: "Un tableau élèves × exercices. Chaque cellule indique l'état : Réussi (✓), Biais détecté (!), Échec (✗), À valider (◎) ou Non fait (—). Une colonne Score affiche le taux de réussite par élève. La ligne Taux classe résume la difficulté de chaque exercice. Cliquez sur une cellule pour voir le détail de la réponse.",
             },
             {
                 q: "Vue biais",
-                r: "Distribution des 14 codes biais sur l'ensemble de la classe. Une alerte s'affiche si 30 % ou plus des élèves déclenchent le même biais.",
+                r: "Distribution des biais détectés, triée par fréquence. Les biais touchant 30 % ou plus de la classe déclenchent une alerte et apparaissent en tête de liste. Cliquez sur un prénom pour accéder au profil de l'élève.",
+            },
+            {
+                q: "À valider",
+                r: "File de validation rapide pour les réponses qui nécessitent un regard enseignant (coloriages, textes libres). Pour chaque item : affichez la production de l'élève, puis cliquez sur Réussi, Biais ou Échec. Chaque validation met à jour la matrice et les biais en temps réel. Tant que des items sont en attente, les taux affichés sont provisoires.",
             },
             {
                 q: "Profil élève",
-                r: "Détail exercice par exercice pour un élève : réponse produite, biais détectés, durée. Vous pouvez y ajouter une note libre.",
+                r: "Détail exercice par exercice pour un élève : réponse produite, biais détectés, durée. Vous pouvez y ajouter une note libre. Accessible depuis la matrice (clic sur le prénom) ou depuis la vue biais.",
             },
             {
-                q: "Items à relire",
-                r: "Regroupe les exercices nécessitant une validation manuelle (réponses ouvertes). Attribuez un code biais ou validez comme réussi.",
+                q: "Imprimer le rapport",
+                r: "Le bouton Imprimer, disponible dans la barre des onglets, ouvre un rapport A4 dans un nouvel onglet. Ce rapport contient : le tableau élèves × exercices avec scores, la distribution des biais, les groupes de besoin suggérés pour les biais en alerte, et un avertissement si des items sont encore en attente de validation.",
             },
         ],
     },
 
-    // ── Export / Import ─────────────────────────────────────────────────────
+    // ── Export / Import ──────────────────────────────────────────────────────────
     export_import: {
         titre: "Export / Import",
         intro: "Sauvegardez et restaurez vos données.",
         sections: [
             {
                 q: "Export CSV — à quoi ça sert ?",
-                r: "Produit un tableau des résultats d'une session exploitable dans un tableur (LibreOffice Calc, Excel). Une colonne par exercice, une ligne par élève, avec les états Réussi / Biais / À relire / Non fait.",
+                r: "Produit un tableau des résultats d'un diagnostic exploitable dans un tableur (LibreOffice Calc, Excel). Une colonne par exercice, une colonne Score, une colonne Biais détectés. Les états exportés sont : Réussi / Biais / Échec / À valider / Non fait.",
             },
             {
                 q: "Export JSON — à quoi ça sert ?",
-                r: "Sauvegarde complète de toutes vos données : classes, élèves, sessions, passations, notes. À télécharger avant une remise à zéro ou pour transférer les données sur un autre ordinateur.",
+                r: "Sauvegarde complète de toutes vos données : classes, élèves, diagnostics, passations, notes. À télécharger avant une remise à zéro ou pour transférer les données sur un autre ordinateur.",
             },
             {
                 q: "Import JSON — comment restaurer ?",
@@ -153,7 +157,7 @@ export const AIDE = {
             },
             {
                 q: "Remise à zéro — quand l'utiliser ?",
-                r: "En début d'année scolaire, après avoir exporté une sauvegarde JSON. Supprime toutes les classes, sessions et passations. L'application revient à son état initial.",
+                r: "En début d'année scolaire, après avoir exporté une sauvegarde JSON. Supprime toutes les classes, diagnostics et passations. Action irréversible.",
             },
         ],
     },
