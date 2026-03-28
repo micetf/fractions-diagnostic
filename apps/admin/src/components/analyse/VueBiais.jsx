@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { getBiais } from "@/data/biais";
-import { getMetadonnees } from "@/data/index";
+import { getBiais } from "@fractions-diagnostic/data/biais";
+import { getMetadonnees } from "@fractions-diagnostic/data";
 import { construireDistribBiais, depasseSeuil } from "@/utils/analyseSession";
 
 /**

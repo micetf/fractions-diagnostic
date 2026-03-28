@@ -2,7 +2,7 @@
  * @fileoverview Utilitaires pour la création et l'affichage des sessions.
  */
 
-import { getBiais } from "@/data/biais";
+import { getBiais } from "@fractions-diagnostic/data/biais";
 
 /**
  * Durées de référence issues des conseils de passation des documents sources.

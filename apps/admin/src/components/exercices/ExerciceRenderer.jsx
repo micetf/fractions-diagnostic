@@ -17,7 +17,7 @@ import DemiDroiteCM2Ex3B from "./figures/DemiDroiteCM2Ex3B";
 import DemiDisque from "./figures/DemiDisque";
 import RegletteSegments from "./figures/RegletteSegments";
 import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
-import { getInitialValue } from "@/utils/initialValues";
+import { getInitialValue } from "@fractions-diagnostic/engine/initialValues";
 
 /** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
 const FIGURE_REGISTRY = {

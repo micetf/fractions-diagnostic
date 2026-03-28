@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
-import { getBiais } from "@/data/biais";
+import { getBiais } from "@fractions-diagnostic/data/biais";
 import { construireMatrice, etatReponse, ETATS } from "@/utils/analyseSession";
 
 /**
