@@ -18,6 +18,7 @@ import VueBiais from "@/components/analyse/VueBiais";
 import ProfilEleve from "@/components/analyse/ProfilEleve";
 import ItemsARevoir from "@/components/analyse/ItemsARevoir";
 import { collecterItemsARelire } from "@/utils/analyseSession";
+import { exporterRapportPrint } from "@/utils/rapportPrint";
 
 /**
  * @param {object}   props
@@ -94,23 +95,45 @@ function AnalyseSession({ sessionId, onNavigate }) {
                 />
             ) : (
                 <>
-                    {/* Onglets */}
-                    <div className="flex gap-1 mb-6 border-b border-slate-200">
-                        {ONGLETS.map((o) => (
-                            <button
-                                key={o.id}
-                                onClick={() => setOnglet(o.id)}
-                                className={`px-4 py-2.5 text-sm font-medium transition-colors
-                                            cursor-pointer rounded-t-lg -mb-px border-b-2
-                                            ${
-                                                onglet === o.id
-                                                    ? "border-brand-500 text-brand-600"
-                                                    : "border-transparent text-slate-500 hover:text-slate-700"
-                                            }`}
-                            >
-                                {o.label}
-                            </button>
-                        ))}
+                    {/* Barre onglets + bouton Imprimer */}
+                    <div className="flex items-center justify-between border-b border-slate-200 mb-6">
+                        <div className="flex gap-1">
+                            {ONGLETS.map((o) => (
+                                <button
+                                    key={o.id}
+                                    onClick={() => setOnglet(o.id)}
+                                    className={`px-4 py-2.5 text-sm font-medium transition-colors
+                            cursor-pointer border-b-2 -mb-px
+                            ${
+                                onglet === o.id
+                                    ? "border-brand-500 text-brand-600"
+                                    : "border-transparent text-slate-500 hover:text-slate-700"
+                            }`}
+                                >
+                                    {o.label}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Bouton impression */}
+                        <button
+                            onClick={() => {
+                                exporterRapportPrint(
+                                    diagnostic,
+                                    classe,
+                                    eleves,
+                                    state.passations
+                                );
+                            }}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                   border border-slate-200 hover:bg-slate-50
+                   text-xs font-medium text-slate-500 hover:text-slate-700
+                   transition-colors cursor-pointer"
+                            title="Ouvrir le rapport imprimable dans un nouvel onglet"
+                        >
+                            <span>🖨</span>
+                            <span>Imprimer</span>
+                        </button>
                     </div>
 
                     {/* Contenu */}
