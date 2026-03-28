@@ -1,0 +1,26 @@
+# =============================================================================
+# fractions-diagnostic v2.0 — Règles SPA locales
+#
+# Ce fichier est déployé dans /fractions-diagnostic/ sur micetf.fr.
+# Il gère uniquement la réécriture SPA des deux apps React.
+# Les règles globales (sécurité, cache, compression) sont dans le .htaccess racine.
+# =============================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ── App passation (/fractions-diagnostic/passer/) ─────────────────────
+    # Plus spécifique → traiter en premier
+    RewriteCond %{REQUEST_URI} ^/fractions-diagnostic/passer/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ /fractions-diagnostic/passer/index.html [L]
+
+    # ── App admin (/fractions-diagnostic/) ───────────────────────────────
+    RewriteCond %{REQUEST_URI} ^/fractions-diagnostic/
+    RewriteCond %{REQUEST_URI} !^/fractions-diagnostic/passer/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ /fractions-diagnostic/index.html [L]
+
+</IfModule>
