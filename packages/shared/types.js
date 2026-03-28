@@ -57,6 +57,9 @@
  * @property {string[]|null} biais_manuel
  * @property {number}        duree_ms
  * @property {boolean}       a_relire
+ * @property {'reussi'|'echec'|null} [validation_manuelle]
+ *   Validation posée par l'enseignant via l'interface de validation rapide (Module 3).
+ *   Absent des passations v1.x — traité comme null par scoreReponse().
  */
 
 /**
