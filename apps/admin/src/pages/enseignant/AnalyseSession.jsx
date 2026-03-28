@@ -1,3 +1,15 @@
+/**
+ * @fileoverview AnalyseSession — analyse complète d'un diagnostic.
+ *
+ * Renommage prévu en AnalyseDiagnostic.jsx au Sprint 2.
+ *
+ * v2.0 : state.sessions → state.diagnostics, session_id → diagnostic_id.
+ * Les composants enfants (MatriceResultats, VueBiais, etc.) reçoivent
+ * toujours une prop nommée `session` pour compatibilité — sera renommé
+ * en `diagnostic` au Sprint 2 lors de leur adaptation.
+ *
+ * @module pages/enseignant/AnalyseSession
+ */
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
@@ -13,13 +25,8 @@ const ONGLETS = [
 ];
 
 /**
- * AnalyseSession
- *
- * Page d'analyse complète d'une session (SRS F-ANA-01 à F-ANA-10).
- * Navigation par onglets : Matrice / Biais / À relire / Profil élève.
- *
  * @param {object}   props
- * @param {string}   props.sessionId  - Id de la session à analyser.
+ * @param {string}   props.sessionId  - Id du diagnostic à analyser.
  * @param {function} props.onNavigate
  */
 function AnalyseSession({ sessionId, onNavigate }) {
@@ -27,28 +34,20 @@ function AnalyseSession({ sessionId, onNavigate }) {
     const [onglet, setOnglet] = useState("matrice");
     const [eleveActif, setEleveActif] = useState(null);
 
-    const session = state.sessions.find((s) => s.id === sessionId) ?? null;
-    const classe = session
-        ? (state.classes.find((c) => c.id === session.classe_id) ?? null)
+    // v2.0 : cherche dans diagnostics (et non plus sessions)
+    const diagnostic = state.diagnostics?.find((d) => d.id === sessionId) ?? null;
+    const classe = diagnostic
+        ? (state.classes.find((c) => c.id === diagnostic.classe_id) ?? null)
         : null;
     const eleves = classe?.eleves ?? [];
     const eleve = eleves.find((e) => e.id === eleveActif) ?? null;
 
-    if (!session) {
+    if (!diagnostic) {
         return (
             <div className="max-w-3xl mx-auto px-4 py-10">
-                <p className="text-slate-400">Session introuvable.</p>
+                <p className="text-slate-400">Diagnostic introuvable.</p>
             </div>
         );
-    }
-
-    function handleVoirProfil(eleveId) {
-        setEleveActif(eleveId);
-    }
-
-    function handleRetourMatrice() {
-        setEleveActif(null);
-        setOnglet("matrice");
     }
 
     return (
@@ -63,23 +62,27 @@ function AnalyseSession({ sessionId, onNavigate }) {
                 </button>
                 <span>/</span>
                 <button
-                    onClick={() => onNavigate("sessions")}
+                    onClick={() => onNavigate("diagnostics")}
                     className="hover:text-brand-600 transition-colors cursor-pointer"
                 >
-                    Sessions
+                    Diagnostics
                 </button>
                 <span>/</span>
                 <span className="text-slate-800 font-medium">
-                    {classe?.nom ?? "—"} · {session.niveau}
+                    {classe?.nom ?? "—"} · {diagnostic.niveau}
+                    {diagnostic.libelle ? ` · ${diagnostic.libelle}` : ""}
                 </span>
             </nav>
 
-            {/* Profil élève — overlay par-dessus les onglets */}
+            {/* Profil élève */}
             {eleve ? (
                 <ProfilEleve
-                    session={session}
+                    session={diagnostic}
                     eleve={eleve}
-                    onRetour={handleRetourMatrice}
+                    onRetour={() => {
+                        setEleveActif(null);
+                        setOnglet("matrice");
+                    }}
                 />
             ) : (
                 <>
@@ -90,12 +93,12 @@ function AnalyseSession({ sessionId, onNavigate }) {
                                 key={o.id}
                                 onClick={() => setOnglet(o.id)}
                                 className={`px-4 py-2.5 text-sm font-medium transition-colors
-                            cursor-pointer rounded-t-lg -mb-px border-b-2
-                  ${
-                      onglet === o.id
-                          ? "border-brand-500 text-brand-600"
-                          : "border-transparent text-slate-500 hover:text-slate-700"
-                  }`}
+                                            cursor-pointer rounded-t-lg -mb-px border-b-2
+                                            ${
+                                                onglet === o.id
+                                                    ? "border-brand-500 text-brand-600"
+                                                    : "border-transparent text-slate-500 hover:text-slate-700"
+                                            }`}
                             >
                                 {o.label}
                             </button>
@@ -105,16 +108,16 @@ function AnalyseSession({ sessionId, onNavigate }) {
                     {/* Contenu */}
                     {onglet === "matrice" && (
                         <MatriceResultats
-                            session={session}
+                            session={diagnostic}
                             eleves={eleves}
-                            onVoirProfil={handleVoirProfil}
+                            onVoirProfil={setEleveActif}
                         />
                     )}
                     {onglet === "biais" && (
-                        <VueBiais session={session} eleves={eleves} />
+                        <VueBiais session={diagnostic} eleves={eleves} />
                     )}
                     {onglet === "relire" && (
-                        <ItemsARevoir session={session} eleves={eleves} />
+                        <ItemsARevoir session={diagnostic} eleves={eleves} />
                     )}
                 </>
             )}

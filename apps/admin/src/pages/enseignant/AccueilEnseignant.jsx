@@ -4,18 +4,16 @@ import { useAppContext } from "@/context/useAppContext";
 /**
  * AccueilEnseignant
  *
- * Sprint 5 : cartes "Sessions" et "Créer une session" actives.
+ * Tableau de bord principal de l'interface admin.
+ * Adapté au modèle v2.0 : Diagnostic sans cycle de vie (SRS F-DIA-06).
  *
  * @param {object}   props
- * @param {function} props.onStartSession - Bascule en mode élève (actif en S5).
- * @param {function} props.onNavigate     - Navigation interne enseignant.
+ * @param {function} props.onNavigate - Navigation interne enseignant.
  */
 function AccueilEnseignant({ onNavigate }) {
     const { state } = useAppContext();
 
-    const nbSessionsEnCours = state.sessions.filter(
-        (s) => s.statut === "en_cours"
-    ).length;
+    const nbDiagnostics = state.diagnostics.length;
 
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
@@ -23,8 +21,8 @@ function AccueilEnseignant({ onNavigate }) {
                 Tableau de bord
             </h1>
             <p className="text-sm text-slate-500 mb-8">
-                Gérez vos classes, lancez des sessions diagnostiques et analysez
-                les résultats.
+                Gérez vos classes, créez des diagnostics et analysez les
+                résultats.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <NavCard
@@ -35,21 +33,21 @@ function AccueilEnseignant({ onNavigate }) {
                 />
 
                 <NavCard
-                    titre="Sessions"
-                    description="Historique et gestion des sessions diagnostiques."
-                    onClick={() => onNavigate("sessions")}
+                    titre="Diagnostics"
+                    description="Historique et gestion des diagnostics."
+                    onClick={() => onNavigate("diagnostics")}
                     actif
                     badge={
-                        nbSessionsEnCours > 0
-                            ? `${nbSessionsEnCours} en cours`
+                        nbDiagnostics > 0
+                            ? `${nbDiagnostics} diagnostic${nbDiagnostics > 1 ? "s" : ""}`
                             : null
                     }
                 />
 
                 <NavCard
-                    titre="Nouvelle session"
-                    description="Sélectionner les exercices et lancer la passation."
-                    onClick={() => onNavigate("creer-session")}
+                    titre="Nouveau diagnostic"
+                    description="Sélectionner les exercices et préparer la passation."
+                    onClick={() => onNavigate("creer-diagnostic")}
                     actif
                     accent
                 />
@@ -57,12 +55,13 @@ function AccueilEnseignant({ onNavigate }) {
                 <NavCard
                     titre="Analyse des résultats"
                     description="Matrice de résultats, profils élèves, biais détectés."
-                    onClick={() => onNavigate("sessions")}
+                    onClick={() => onNavigate("diagnostics")}
                     actif
                 />
+
                 <NavCard
                     titre="Export / Import"
-                    description="Sauvegarder et restaurer les données."
+                    description="Sauvegarder, partager et restaurer les données."
                     onClick={() => onNavigate("export-import")}
                     actif
                 />
@@ -72,7 +71,6 @@ function AccueilEnseignant({ onNavigate }) {
 }
 
 AccueilEnseignant.propTypes = {
-    onStartSession: PropTypes.func.isRequired,
     onNavigate: PropTypes.func.isRequired,
 };
 
@@ -81,14 +79,13 @@ AccueilEnseignant.propTypes = {
 /**
  * NavCard
  *
- * @param {object}   props
- * @param {string}   props.titre
- * @param {string}   props.description
- * @param {boolean}  [props.actif=false]
- * @param {boolean}  [props.accent=false]  - Style mise en avant.
- * @param {function} [props.onClick]
- * @param {string}   [props.sprint]
- * @param {string}   [props.badge]         - Badge compteur.
+ * @param {object}      props
+ * @param {string}      props.titre
+ * @param {string}      props.description
+ * @param {boolean}     [props.actif=false]
+ * @param {boolean}     [props.accent=false]
+ * @param {function}    [props.onClick]
+ * @param {string|null} [props.badge]
  */
 function NavCard({
     titre,
@@ -96,7 +93,6 @@ function NavCard({
     actif = false,
     accent = false,
     onClick = undefined,
-    sprint = undefined,
     badge = undefined,
 }) {
     const base =
@@ -120,11 +116,11 @@ function NavCard({
                     {badge && (
                         <span
                             className={`text-xs font-medium px-2 py-0.5 rounded-full shrink-0
-              ${
-                  accent
-                      ? "bg-white/20 text-white"
-                      : "bg-success-100 text-success-700"
-              }`}
+                            ${
+                                accent
+                                    ? "bg-white/20 text-white"
+                                    : "bg-brand-100 text-brand-700"
+                            }`}
                         >
                             {badge}
                         </span>
@@ -143,17 +139,7 @@ function NavCard({
         <div
             className={`${base} bg-white border-slate-200 opacity-50 cursor-not-allowed select-none`}
         >
-            <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-700">{titre}</span>
-                {sprint && (
-                    <span
-                        className="text-xs font-mono text-slate-400 bg-slate-100
-                           px-2 py-0.5 rounded-full shrink-0"
-                    >
-                        {sprint}
-                    </span>
-                )}
-            </div>
+            <span className="font-semibold text-slate-700">{titre}</span>
             <span className="text-sm text-slate-500">{description}</span>
         </div>
     );
@@ -165,7 +151,6 @@ NavCard.propTypes = {
     actif: PropTypes.bool,
     accent: PropTypes.bool,
     onClick: PropTypes.func,
-    sprint: PropTypes.string,
     badge: PropTypes.string,
 };
 

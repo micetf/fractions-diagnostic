@@ -50,7 +50,7 @@ export function etatReponse(reponse) {
 export function construireMatrice(session, passations, eleves) {
     const numeros = session.exercices_selectionnes;
     const passTerminees = passations.filter(
-        (p) => p.session_id === session.id && p.statut === "terminee"
+        (p) => p.diagnostic_id === session.id && p.statut === "terminee"
     );
 
     const cellules = {};
@@ -93,7 +93,7 @@ export function construireMatrice(session, passations, eleves) {
  */
 export function construireDistribBiais(session, passations) {
     const passTerminees = passations.filter(
-        (p) => p.session_id === session.id && p.statut === "terminee"
+        (p) => p.diagnostic_id === session.id && p.statut === "terminee"
     );
     const map = new Map();
 
@@ -133,7 +133,7 @@ export function construireDistribBiais(session, passations) {
  */
 export function collecterItemsARelire(session, passations) {
     return passations
-        .filter((p) => p.session_id === session.id && p.statut === "terminee")
+        .filter((p) => p.diagnostic_id === session.id && p.statut === "terminee")
         .flatMap((p) =>
             p.reponses
                 .filter((r) => r.a_relire)
@@ -157,7 +157,7 @@ export function collecterItemsARelire(session, passations) {
  */
 export function depasseSeuil(code, exerciceNum, session, passations) {
     const passTerminees = passations.filter(
-        (p) => p.session_id === session.id && p.statut === "terminee"
+        (p) => p.diagnostic_id === session.id && p.statut === "terminee"
     );
     const ayantPasseExo = passTerminees.filter((p) =>
         p.reponses.some((r) => r.exercice_numero === exerciceNum)

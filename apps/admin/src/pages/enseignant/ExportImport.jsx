@@ -1,18 +1,16 @@
 /**
- * @file ExportImport.jsx — interface de sauvegarde et restauration des données.
+ * @fileoverview ExportImport — sauvegarde et restauration des données.
  *
- * @description
- * Trois actions disponibles (SRS F-EXP-01/02/03) :
- *   1. Export CSV  — matrice de résultats d'une session sélectionnée
- *   2. Export JSON — sauvegarde complète du localStorage
- *   3. Import JSON — restauration depuis un fichier, avec confirmation
+ * Quatre actions (SRS F-EXP-01 à F-EXP-04) :
+ *   1. Export CSV     — matrice de résultats d'un diagnostic sélectionné
+ *   2. Export JSON    — sauvegarde complète du localStorage
+ *   3. Import JSON    — restauration depuis un fichier, avec confirmation
+ *   4. Remise à zéro  — efface tout après export préalable obligatoire
  *
- * Mise à jour v2.0 (Sprint 3) :
- *   - Description section "Remise à zéro" : retrait de la mention "code PIN".
+ * v2.0 : sessions → diagnostics, suppression du filtre statut.
  *
  * @module pages/enseignant/ExportImport
  */
-
 import { useRef, useState } from "react";
 import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
@@ -32,7 +30,7 @@ import {
 function ExportImport({ onNavigate }) {
     const { state } = useAppContext();
 
-    const [sessionCSV, setSessionCSV] = useState("");
+    const [diagnosticCSV, setDiagnosticCSV] = useState("");
     const [importStatut, setImportStatut] = useState(null);
     const [importErreur, setImportErreur] = useState("");
     const [fichierImport, setFichierImport] = useState(null);
@@ -40,17 +38,16 @@ function ExportImport({ onNavigate }) {
     const [resetSaisie, setResetSaisie] = useState("");
     const fileInputRef = useRef(null);
 
-    const sessionsTerminees = state.sessions.filter(
-        (s) => s.statut === "terminee"
-    );
+    // Tous les diagnostics sont disponibles pour l'export (pas de statut en v2.0)
+    const diagnostics = state.diagnostics ?? [];
 
     // ── Export CSV ────────────────────────────────────────────────────────────
     function handleExportCSV() {
-        const session = state.sessions.find((s) => s.id === sessionCSV);
-        if (!session) return;
-        const classe = state.classes.find((c) => c.id === session.classe_id);
+        const diagnostic = diagnostics.find((d) => d.id === diagnosticCSV);
+        if (!diagnostic) return;
+        const classe = state.classes.find((c) => c.id === diagnostic.classe_id);
         const eleves = classe?.eleves ?? [];
-        exporterCSV(session, eleves, state.passations);
+        exporterCSV(diagnostic, eleves, state.passations);
     }
 
     // ── Export JSON ───────────────────────────────────────────────────────────
@@ -58,7 +55,7 @@ function ExportImport({ onNavigate }) {
         exporterJSON();
     }
 
-    // ── Import JSON — sélection du fichier ────────────────────────────────────
+    // ── Import JSON ───────────────────────────────────────────────────────────
     function handleFichierChange(e) {
         const f = e.target.files?.[0];
         if (!f) return;
@@ -85,7 +82,6 @@ function ExportImport({ onNavigate }) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-
     return (
         <div className="max-w-3xl mx-auto px-4 py-10">
             {/* Fil d'Ariane */}
@@ -97,9 +93,7 @@ function ExportImport({ onNavigate }) {
                     Tableau de bord
                 </button>
                 <span>/</span>
-                <span className="text-slate-800 font-medium">
-                    Export / Import
-                </span>
+                <span className="text-slate-800 font-medium">Export / Import</span>
             </nav>
 
             <h1 className="text-2xl font-semibold text-slate-800 mb-8">
@@ -107,42 +101,45 @@ function ExportImport({ onNavigate }) {
             </h1>
 
             <div className="flex flex-col gap-6">
-                {/* ── Export CSV ──────────────────────────────────────────────── */}
+
+                {/* ── Export CSV ──────────────────────────────────────────── */}
                 <Section
-                    titre="Export CSV — résultats d'une session"
+                    titre="Export CSV — résultats d'un diagnostic"
                     description="Produit un tableau exploitable dans LibreOffice Calc ou Excel : une colonne par exercice, une ligne par élève."
                 >
                     <div className="flex flex-wrap items-end gap-3">
                         <div className="flex flex-col gap-1">
                             <label
-                                htmlFor="session-csv"
+                                htmlFor="diagnostic-csv"
                                 className="text-xs font-semibold text-slate-500"
                             >
-                                Session à exporter
+                                Diagnostic à exporter
                             </label>
                             <select
-                                id="session-csv"
-                                value={sessionCSV}
-                                onChange={(e) => setSessionCSV(e.target.value)}
+                                id="diagnostic-csv"
+                                value={diagnosticCSV}
+                                onChange={(e) => setDiagnosticCSV(e.target.value)}
                                 className="px-3 py-2 rounded-lg border border-slate-200
                                            text-sm text-slate-700 bg-white
                                            focus:outline-none focus:ring-2
                                            focus:ring-brand-400"
                             >
-                                <option value="">
-                                    — choisir une session —
-                                </option>
-                                {sessionsTerminees.map((s) => {
+                                <option value="">— choisir un diagnostic —</option>
+                                {diagnostics.map((d) => {
                                     const cl = state.classes.find(
-                                        (c) => c.id === s.classe_id
+                                        (c) => c.id === d.classe_id
                                     );
+                                    const label = [
+                                        cl?.nom ?? "Classe inconnue",
+                                        d.niveau,
+                                        d.libelle,
+                                        new Date(d.date_creation).toLocaleDateString("fr-FR"),
+                                    ]
+                                        .filter(Boolean)
+                                        .join(" — ");
                                     return (
-                                        <option key={s.id} value={s.id}>
-                                            {cl?.nom ?? "Classe inconnue"} —{" "}
-                                            {s.niveau} —{" "}
-                                            {new Date(
-                                                s.date_creation
-                                            ).toLocaleDateString("fr-FR")}
+                                        <option key={d.id} value={d.id}>
+                                            {label}
                                         </option>
                                     );
                                 })}
@@ -150,7 +147,7 @@ function ExportImport({ onNavigate }) {
                         </div>
                         <button
                             onClick={handleExportCSV}
-                            disabled={!sessionCSV}
+                            disabled={!diagnosticCSV}
                             className="px-5 py-2 rounded-lg bg-brand-500 hover:bg-brand-600
                                        text-white text-sm font-medium transition-colors
                                        cursor-pointer disabled:opacity-40
@@ -159,18 +156,17 @@ function ExportImport({ onNavigate }) {
                             Télécharger le CSV
                         </button>
                     </div>
-                    {sessionsTerminees.length === 0 && (
+                    {diagnostics.length === 0 && (
                         <p className="text-sm text-slate-400 mt-2">
-                            Aucune session terminée — clôturez une session pour
-                            l'exporter.
+                            Aucun diagnostic créé.
                         </p>
                     )}
                 </Section>
 
-                {/* ── Export JSON ─────────────────────────────────────────────── */}
+                {/* ── Export JSON ─────────────────────────────────────────── */}
                 <Section
                     titre="Export JSON — sauvegarde complète"
-                    description="À conserver en lieu sûr. Permet de restaurer toutes vos classes, sessions et résultats sur un autre ordinateur ou après effacement du navigateur."
+                    description="À conserver en lieu sûr. Permet de restaurer toutes vos classes, diagnostics et résultats sur un autre appareil ou après effacement du navigateur."
                 >
                     <button
                         onClick={handleExportJSON}
@@ -182,10 +178,10 @@ function ExportImport({ onNavigate }) {
                     </button>
                 </Section>
 
-                {/* ── Import JSON ─────────────────────────────────────────────── */}
+                {/* ── Import JSON ─────────────────────────────────────────── */}
                 <Section
                     titre="Import JSON — restaurer une sauvegarde"
-                    description="Restaure les données depuis un fichier exporté. Attention : toutes les données actuelles seront remplacées."
+                    description="Restaure les données depuis un fichier exporté. Toutes les données actuelles seront remplacées."
                     accent="danger"
                 >
                     {importStatut !== "confirm" ? (
@@ -220,9 +216,7 @@ function ExportImport({ onNavigate }) {
                             </p>
                             <p className="text-xs text-danger-600 mb-3">
                                 Fichier :{" "}
-                                <span className="font-mono">
-                                    {fichierImport?.name}
-                                </span>
+                                <span className="font-mono">{fichierImport?.name}</span>
                                 <br />
                                 Toutes les données actuelles seront remplacées.
                                 Cette action est irréversible.
@@ -249,10 +243,10 @@ function ExportImport({ onNavigate }) {
                     )}
                 </Section>
 
-                {/* ── Remise à zéro ───────────────────────────────────────────── */}
+                {/* ── Remise à zéro ───────────────────────────────────────── */}
                 <Section
                     titre="Remise à zéro"
-                    description="Efface toutes les données : classes, élèves, sessions et passations. L'application revient à son état initial. Effectuez un export JSON avant de continuer."
+                    description="Efface toutes les données : classes, élèves, diagnostics et passations. Effectuez un export JSON avant de continuer."
                     accent="danger"
                 >
                     {resetStatut === null && (
@@ -265,7 +259,6 @@ function ExportImport({ onNavigate }) {
                             Effacer toutes les données…
                         </button>
                     )}
-
                     {resetStatut === "confirm" && (
                         <div className="rounded-lg border border-danger-200 bg-danger-50 p-4">
                             <p className="text-sm font-semibold text-danger-700 mb-1">
@@ -294,15 +287,13 @@ function ExportImport({ onNavigate }) {
                             </div>
                         </div>
                     )}
-
                     {resetStatut === "saisie" && (
                         <div className="rounded-lg border border-danger-200 bg-danger-50 p-4">
                             <p className="text-sm font-semibold text-danger-700 mb-1">
                                 Tapez EFFACER pour confirmer
                             </p>
                             <p className="text-xs text-danger-600 mb-3">
-                                Cette action supprime définitivement toutes les
-                                données.
+                                Cette action supprime définitivement toutes les données.
                             </p>
                             <input
                                 type="text"
@@ -358,16 +349,15 @@ ExportImport.propTypes = {
 // ─── Sous-composant Section ───────────────────────────────────────────────────
 
 /**
- * @param {object}   props
- * @param {string}   props.titre
- * @param {string}   props.description
+ * @param {object}          props
+ * @param {string}          props.titre
+ * @param {string}          props.description
  * @param {'default'|'danger'} [props.accent='default']
  * @param {React.ReactNode} props.children
  */
 function Section({ titre, description, accent = "default", children }) {
     const border =
         accent === "danger" ? "border-danger-200" : "border-slate-200";
-
     return (
         <div className={`bg-white rounded-xl border ${border} p-6`}>
             <h2 className="text-base font-semibold text-slate-800 mb-1">
