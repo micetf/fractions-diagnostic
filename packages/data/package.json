@@ -1,0 +1,13 @@
+{
+    "name": "@fractions-diagnostic/data",
+    "version": "2.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Données didactiques — 32 exercices CE1-CM2 avec biais détectables",
+    "main": "./index.js",
+    "exports": {
+        ".": "./index.js",
+        "./exercices/*": "./exercices/*.js",
+        "./biais": "./biais.js"
+    }
+}
