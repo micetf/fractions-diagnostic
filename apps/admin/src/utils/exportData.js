@@ -257,3 +257,35 @@ export function reinitialiser() {
         try { localStorage.removeItem(key); } catch { /* silencieux */ }
     });
 }
+
+// ─── Export Config (F-CFG-01) ─────────────────────────────────────────────────
+
+/**
+ * Génère et télécharge le fichier de configuration pour l'interface passation.
+ *
+ * Le fichier contient : diagnostic_id, niveau, exercices, prénoms des élèves.
+ * Ne contient aucune donnée de résultat (SRS F-CFG-02).
+ *
+ * @param {import('@fractions-diagnostic/shared/types').Diagnostic} diagnostic
+ * @param {import('@fractions-diagnostic/shared/types').Eleve[]}    eleves
+ */
+export function exporterConfig(diagnostic, eleves) {
+    const config = {
+        type: "fractions-config",
+        version: "2.0",
+        exported_at: new Date().toISOString(),
+        diagnostic_id: diagnostic.id,
+        niveau: diagnostic.niveau,
+        exercices_selectionnes: diagnostic.exercices_selectionnes,
+        eleves: eleves.map((e) => ({ id: e.id, prenom: e.prenom })),
+    };
+
+    const blob = new Blob([JSON.stringify(config, null, 2)], {
+        type: "application/json",
+    });
+
+    const dateStr = dateLabel(diagnostic.date_creation);
+    const libelle = diagnostic.libelle ? `_${diagnostic.libelle}` : "";
+    const filename = `fractions-config-${diagnostic.niveau}${libelle}-${dateStr}.json`;
+    telecharger(blob, filename);
+}
