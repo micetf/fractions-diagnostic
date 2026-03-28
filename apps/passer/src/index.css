@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/*
+ * Styles globaux — Interface passation.
+ *
+ * Tailwind v4 avec plugin @tailwindcss/vite.
+ */
+
+/* Empêche le rebond du scroll sur iOS */
+html,
+body {
+    overscroll-behavior: none;
+}
+
+/* Cibles tactiles minimum 44px (SRS NF-UX-04) */
+button,
+[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    touch-action: manipulation;
+}

@@ -1,0 +1,14 @@
+{
+    "name": "@fractions-diagnostic/shared",
+    "version": "2.0.0",
+    "private": true,
+    "type": "module",
+    "description": "Utilitaires partagés — PIN, stockage localStorage, types JSDoc",
+    "main": "./index.js",
+    "exports": {
+        ".": "./index.js",
+        "./pinHash": "./pinHash.js",
+        "./storage": "./storage.js",
+        "./types": "./types.js"
+    }
+}
