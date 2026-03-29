@@ -36,33 +36,34 @@ export const exercices = [
     {
         numero: 1,
         titre: "Laquelle montre bien 1/4 ?",
-        competence: "Identifier les figures représentant la fraction 1/4",
+        competence:
+            "Identifier les figures représentant la fraction un quart d'un tout",
         type: "selection",
         consigne:
-            "Observe les rectangles. Entoure ceux où une partie coloriée représente un quart du rectangle.",
+            "Observe les bandes. Entoure celles où une partie coloriée représente un quart de la bande.",
         figures: [
             {
                 id: "A",
                 description:
-                    "Rectangle partagé en 4 parts égales, 1 part coloriée",
+                    "Bande partagée en quatre parts égales, une part coloriée",
                 correct: true,
             },
             {
                 id: "B",
                 description:
-                    "Rectangle partagé en 4 parts inégales, 1 part coloriée",
+                    "Bande partagée en quatre parts inégales, une part coloriée",
                 correct: false,
             },
             {
                 id: "C",
                 description:
-                    "Rectangle partagé en 4 parts égales, 3 parts coloriées",
+                    "Bande partagée en quatre parts égales, trois parts coloriées",
                 correct: false,
             },
             {
                 id: "D",
                 description:
-                    "Rectangle partagé en 4 parts égales, 1 part coloriée, figure orientée à l'envers",
+                    "Bande partagée en quatre parts égales, une part coloriée, figure orientée à l'envers",
                 correct: true,
             },
         ],
@@ -72,7 +73,13 @@ export const exercices = [
                 code: "EQUIPARTITION",
                 declencheur: { type: "selection_includes", valeur: "B" },
                 ceQueRevele:
-                    "Entourer B indique que l'élève n'a pas intégré la condition d'équipartition, fondamentale avant toute écriture fractionnaire. Ne pas entourer D indique une représentation rigide liée à l'orientation de la figure.",
+                    "Entourer B alors que les parts sont inégales indique que la condition d'équipartition (parts égales) n'est pas stabilisée, pourtant centrale dans l'introduction des fractions au cycle 2.",
+            },
+            {
+                code: "PROTO_TYPICITE",
+                declencheur: { type: "selection_excludes", valeur: "D" },
+                ceQueRevele:
+                    "Ne pas entourer D, identique à A mais orienté autrement, révèle une représentation rigide et prototypique de 1/4, dépendante de la configuration visuelle et non du rapport partie/tout.",
             },
         ],
         aRelire: false,
@@ -81,7 +88,7 @@ export const exercices = [
     // ── Exercice 2 ────────────────────────────────────────────────────────────
     {
         numero: 2,
-        titre: "Quelle fraction est coloriée ?",
+        titre: "Quelle fraction de cette figure est coloriée ?",
         competence: "Lire et écrire une fraction à partir d'une représentation",
         type: "fraction_input",
         consigne:
@@ -90,19 +97,19 @@ export const exercices = [
             {
                 id: "A",
                 description:
-                    "Bande partagée en 5 parts égales, 2 parts coloriées",
+                    "Bande partagée en cinq parts égales, deux parts coloriées",
                 attendu: { numerateur: 2, denominateur: 5 },
             },
             {
                 id: "B",
                 description:
-                    "Disque partagé en 6 parts égales, 1 part coloriée",
+                    "Disque partagé en six parts égales, une part coloriée",
                 attendu: { numerateur: 1, denominateur: 6 },
             },
             {
                 id: "C",
                 description:
-                    "Tangram partagé en 8 parts égales, 3 parts coloriées",
+                    "Tangram partagé en huit parts égales, 3 parts coloriées",
                 attendu: { numerateur: 3, denominateur: 8 },
             },
         ],
@@ -117,7 +124,16 @@ export const exercices = [
                     denominateur: 2,
                 },
                 ceQueRevele:
-                    "Inverser numérateur et dénominateur (ex. : 5/2 pour A) → le sens des termes n'est pas stabilisé.",
+                    "Écrire 5/2 (au lieu de 2/5) manifeste une confusion persistante sur le rôle des deux nombres de la fraction : l'élève ne distingue pas clairement « nombre de parts prises » (numérateur) et « nombre total de parts égales » (dénominateur).",
+            },
+            {
+                code: "PROTO_TYPICITE_FIGURALE",
+                declencheur: {
+                    type: "item_incorrect_on",
+                    itemIds: ["B", "C"],
+                },
+                ceQueRevele:
+                    "Réussir uniquement sur une bande rectangulaire mais se tromper sur d'autres configurations (disque, figure composée) suggère que la fraction est associée à une représentation prototypique (bande ou barre) plutôt qu'à une relation partie/tout indépendante de la forme.",
             },
         ],
         aRelire: false,
