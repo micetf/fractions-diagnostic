@@ -9,7 +9,10 @@
  */
 
 import { useState } from "react";
-import { PasserContextProvider, usePasserContext } from "@/context/PasserContext";
+import {
+    PasserContextProvider,
+    usePasserContext,
+} from "@/context/PasserContext";
 import EcranAttente from "@/pages/EcranAttente";
 import ImportConfig from "@/pages/ImportConfig";
 import ChoixEleve from "@/pages/ChoixEleve";
@@ -39,9 +42,7 @@ function AppContent() {
 
     // ── Export résultats ──────────────────────────────────────────────────
     if (ecran === "export-resultats") {
-        return (
-            <ExportResultats onRetour={() => setEcran("auto")} />
-        );
+        return <ExportResultats onRetour={() => setEcran("auto")} />;
     }
 
     // ── Pas de config ─────────────────────────────────────────────────────
@@ -112,6 +113,7 @@ function AppContent() {
                 setEleveId(id);
                 setEcran("passation");
             }}
+            onExporter={() => setEcran("export-resultats")}
         />
     );
 }

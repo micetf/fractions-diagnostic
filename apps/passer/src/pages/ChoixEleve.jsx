@@ -16,7 +16,7 @@ import { usePasserContext } from "@/context/PasserContext";
  * @param {object}   props
  * @param {function} props.onChoisir - Appelé avec l'id de l'élève choisi.
  */
-function ChoixEleve({ onChoisir }) {
+function ChoixEleve({ onChoisir, onExporter }) {
     const { state } = usePasserContext();
     const { diagnostic, passations } = state;
 
@@ -52,7 +52,9 @@ function ChoixEleve({ onChoisir }) {
                     <p className="mt-2 text-sm text-slate-500">
                         {diagnostic.niveau} —{" "}
                         {diagnostic.exercices_selectionnes.length} exercice
-                        {diagnostic.exercices_selectionnes.length > 1 ? "s" : ""}
+                        {diagnostic.exercices_selectionnes.length > 1
+                            ? "s"
+                            : ""}
                     </p>
                 </div>
 
@@ -67,7 +69,7 @@ function ChoixEleve({ onChoisir }) {
                                 disabled={termine}
                                 onClick={() => !termine && onChoisir(eleve.id)}
                                 className={[
-                                    "relative rounded-2xl p-4 min-h-[72px] flex items-center",
+                                    "relative rounded-2xl p-4 min-h-18 flex items-center",
                                     "justify-center text-center font-semibold text-lg",
                                     "transition-all touch-manipulation border-2",
                                     termine
@@ -104,6 +106,18 @@ function ChoixEleve({ onChoisir }) {
                     {diagnostic.eleves.length > 1 ? "s" : ""} terminé
                     {idsTermines.size > 1 ? "s" : ""}
                 </p>
+
+                {/* Lien discret enseignant — SRS F-PAS-18 */}
+                <div className="text-center pb-6">
+                    <button
+                        type="button"
+                        onClick={onExporter}
+                        className="text-xs text-slate-400 hover:text-slate-600
+                               transition-colors py-2"
+                    >
+                        Exporter les résultats →
+                    </button>
+                </div>
             </div>
         </div>
     );
