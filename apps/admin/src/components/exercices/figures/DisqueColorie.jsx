@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 
 /**
- * DisqueCoupes
+ * DisqueColorie
  *
  * Disque partagé en N secteurs égaux, les K premiers coloriés.
  *
@@ -10,7 +10,7 @@ import PropTypes from "prop-types";
  * @param {number} props.k
  * @param {number} [props.size=80]
  */
-function DisqueCoupes({ n, k, size = 80 }) {
+function DisqueColorie({ n, k, size = 80 }) {
     const cx = size / 2;
     const cy = size / 2;
     const r = size / 2 - 6;
@@ -47,10 +47,10 @@ function DisqueCoupes({ n, k, size = 80 }) {
     );
 }
 
-DisqueCoupes.propTypes = {
+DisqueColorie.propTypes = {
     n: PropTypes.number.isRequired,
     k: PropTypes.number.isRequired,
     size: PropTypes.number,
 };
 
-export default DisqueCoupes;
+export default DisqueColorie;
