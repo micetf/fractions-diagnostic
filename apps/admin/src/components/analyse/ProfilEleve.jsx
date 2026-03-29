@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { useAppContext } from "@/context/useAppContext";
 import { getBiais } from "@fractions-diagnostic/data/biais";
 import { getExercice } from "@fractions-diagnostic/data";
-import { etatReponse, ETATS } from "@/utils/analyseSession";
+import { scoreReponse, SCORE } from "@/utils/analyseSession";
 import { BIAIS } from "@fractions-diagnostic/data/biais";
 
 /**
@@ -86,17 +86,19 @@ function ProfilEleve({ session, eleve, onRetour }) {
                             (r) => r.exercice_numero === numero
                         );
                         const exercice = getExercice(session.niveau, numero);
-                        const etat = etatReponse(reponse);
+                        const etat = scoreReponse(reponse);
                         const biais = [
                             ...(reponse?.biais_auto ?? []),
                             ...(reponse?.biais_manuel ?? []),
                         ];
 
                         const STYLE = {
-                            [ETATS.REUSSI]: "border-success-200 bg-success-50",
-                            [ETATS.BIAIS]: "border-danger-200  bg-danger-50",
-                            [ETATS.RELIRE]: "border-review-200  bg-review-50",
-                            [ETATS.NON_FAIT]: "border-slate-200   bg-white",
+                            [SCORE.REUSSI]: "border-success-200 bg-success-50",
+                            [SCORE.BIAIS]: "border-danger-200  bg-danger-50",
+                            [SCORE.ECHEC]: "border-orange-200  bg-orange-50",
+                            [SCORE.A_VALIDER]:
+                                "border-review-200  bg-review-50",
+                            [SCORE.NON_FAIT]: "border-slate-200   bg-white",
                         };
 
                         return (
@@ -200,28 +202,17 @@ ProfilEleve.propTypes = {
 /* ── EtatBadge ───────────────────────────────────────────────────────────────── */
 
 function EtatBadge({ etat }) {
-    const config = {
-        [ETATS.REUSSI]: {
-            label: "Réussi",
-            cls: "bg-success-100 text-success-700",
-        },
-        [ETATS.BIAIS]: {
-            label: "Biais",
-            cls: "bg-danger-100  text-danger-700",
-        },
-        [ETATS.RELIRE]: {
-            label: "À relire",
-            cls: "bg-review-100  text-review-700",
-        },
-        [ETATS.NON_FAIT]: {
-            label: "Non fait",
-            cls: "bg-slate-100   text-slate-500",
-        },
+    const LABEL = {
+        [SCORE.REUSSI]: { text: "Réussi", cls: "text-success-700" },
+        [SCORE.BIAIS]: { text: "Biais", cls: "text-danger-700" },
+        [SCORE.ECHEC]: { text: "Échec", cls: "text-orange-700" },
+        [SCORE.A_VALIDER]: { text: "À valider", cls: "text-review-700" },
+        [SCORE.NON_FAIT]: { text: "Non fait", cls: "text-slate-400" },
     };
-    const { label, cls } = config[etat] ?? config[ETATS.NON_FAIT];
+    const { text, cls } = LABEL[etat] ?? LABEL[ETATS.NON_FAIT];
     return (
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${cls}`}>
-            {label}
+            {text}
         </span>
     );
 }
