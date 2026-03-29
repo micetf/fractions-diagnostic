@@ -146,120 +146,52 @@ export const exercices = [
         aRelire: false,
     },
 
-    // ── Exercice 2 ────────────────────────────────────────────────────────────
+    // ── Exercice 2 — sous-question c ─────────────────────────────────────────
+    // Avant : sousQuestions contenait c_entier, c_fraction, c_phrase
+    // Après : c_phrase supprimée — reformulation libre irréductible à une
+    // saisie structurée ; signal pour entretien oral uniquement.
     {
-        numero: 2,
-        titre: "Décompose cette fraction",
-        competence:
-            "Écrire une fraction supérieure à 1 comme somme d'un entier et d'une fraction inférieure à 1",
+        id: "c",
         type: "compound",
-        consigne: "Complète les phrases et les égalités.",
+        consigne: "11/4 = ______ + ______",
         sousQuestions: [
-            // ── a : 7/4 de pizza ─────────────────────────────────────────────
             {
-                id: "a",
-                type: "compound",
-                consigne:
-                    "7/4 de pizza, c'est ______ pizza(s) entière(s) et ______ quart(s) de pizza.\nOn écrit : 7/4 = ______ + ______",
-                sousQuestions: [
+                id: "c_entier",
+                type: "number_input",
+                consigne: "Partie entière :",
+                attendu: 2,
+                biaisDetectables: [],
+                aRelire: false,
+            },
+            {
+                id: "c_fraction",
+                type: "fraction_input",
+                consigne: "Fraction restante :",
+                items: [
                     {
-                        id: "a_entier",
-                        type: "number_input",
-                        consigne: "Nombre de pizzas entières :",
-                        unite: "pizza(s) entière(s)",
-                        attendu: 1,
-                        biaisDetectables: [],
-                        aRelire: false,
-                    },
-                    {
-                        id: "a_fraction",
-                        type: "fraction_input",
-                        consigne: "Fraction restante :",
-                        items: [
-                            {
-                                id: "resultat",
-                                attendu: { numerateur: 3, denominateur: 4 },
-                            },
-                        ],
-                        biaisDetectables: [],
-                        aRelire: false,
+                        id: "resultat",
+                        attendu: { numerateur: 3, denominateur: 4 },
                     },
                 ],
-                biaisDetectables: [],
-                aRelire: true,
-            },
-
-            // ── b : 9/3 = entier ──────────────────────────────────────────────
-            {
-                id: "b",
-                type: "number_input",
-                consigne: "9/3 =",
-                // Attendu : 3. Un entier, pas une fraction.
-                // L'élève qui bloque révèle que n/n = 1 n'est pas généralisé.
-                attendu: 3,
                 biaisDetectables: [
                     {
                         code: "N_SUR_N_NON_ACQUIS",
-                        declencheur: { type: "text_review" },
+                        declencheur: {
+                            type: "item_fraction_equals",
+                            itemId: "resultat",
+                            numerateur: 4,
+                            denominateur: 4,
+                        },
                         ceQueRevele:
-                            "Bloquer ou donner une valeur ≠ 3 → 9/3 = 3 non reconnu ; n/n = 1 non généralisé.",
+                            "Répondre 11/4 = 2 + 4/4 → 4/4 = 1 non connecté à l'entier.",
                     },
                 ],
-                aRelire: true,
+                aRelire: false,
             },
-
-            // ── c : 11/4 = entier + fraction ──────────────────────────────────
-            {
-                id: "c",
-                type: "compound",
-                consigne:
-                    "11/4 = ______ + ______\nÉcris maintenant 11/4 autrement en une seule phrase.",
-                sousQuestions: [
-                    {
-                        id: "c_entier",
-                        type: "number_input",
-                        consigne: "Partie entière :",
-                        attendu: 2,
-                        biaisDetectables: [],
-                        aRelire: false,
-                    },
-                    {
-                        id: "c_fraction",
-                        type: "fraction_input",
-                        consigne: "Fraction restante :",
-                        items: [
-                            {
-                                id: "resultat",
-                                attendu: { numerateur: 3, denominateur: 4 },
-                            },
-                        ],
-                        biaisDetectables: [
-                            {
-                                code: "N_SUR_N_NON_ACQUIS",
-                                declencheur: {
-                                    type: "item_fraction_equals",
-                                    itemId: "resultat",
-                                    numerateur: 4,
-                                    denominateur: 4,
-                                },
-                                ceQueRevele:
-                                    "Répondre 11/4 = 2 + 4/4 → 4/4 = 1 non connecté à l'entier ; conservation du dénominateur non stabilisée.",
-                            },
-                        ],
-                        aRelire: false,
-                    },
-                    {
-                        id: "c_phrase",
-                        type: "text",
-                        consigne: "Écris 11/4 autrement en une seule phrase :",
-                        biaisDetectables: [],
-                        aRelire: true,
-                    },
-                ],
-                biaisDetectables: [],
-                aRelire: true,
-            },
+            // c_phrase supprimée : "Écris 11/4 autrement en une seule phrase."
+            // La reformulation libre n'est pas quantifiable — signal oral uniquement.
         ],
+        biaisDetectables: [],
         aRelire: false,
     },
 
@@ -382,10 +314,10 @@ export const exercices = [
         numero: 5,
         titre: "Range ces fractions",
         competence:
-            "Comparer des fractions (de même numérateur, de même dénominateur, dont l'un est multiple de l'autre, y compris > 1)",
-        type: "text",
-        consigne:
-            "Range ces fractions de la plus petite à la plus grande. Explique ta stratégie.",
+            "Comparer des fractions (de même numérateur, de même dénominateur, " +
+            "dont l'un est multiple de l'autre, y compris > 1)",
+        type: "sortable",
+        consigne: "Range ces fractions de la plus petite à la plus grande.",
         fractions: [
             { n: 3, d: 4 },
             { n: 5, d: 4 },
@@ -393,16 +325,24 @@ export const exercices = [
             { n: 7, d: 4 },
             { n: 3, d: 2 },
         ],
+        // 3/8 = 0.375 < 3/4 = 0.75 < 5/4 = 1.25 < 3/2 = 1.5 < 7/4 = 1.75
         ordreAttendu: ["3/8", "3/4", "5/4", "3/2", "7/4"],
         biaisDetectables: [
             {
                 code: "BIAIS_ENTIER_DENOMINATEUR",
-                declencheur: { type: "text_review" },
+                // L'élève place 3/2 APRÈS 7/4 car dénominateur 2 < 4.
+                // Dans son ordre : [..., 7/4, ..., 3/2] → 3/2 en position > 7/4.
+                declencheur: {
+                    type: "ordre_position_apres",
+                    id: "3/2",
+                    apres: "7/4",
+                },
                 ceQueRevele:
-                    "Placer 3/2 après 7/4 « car 2 < 4 » → biais entier sur le dénominateur.",
+                    "Placer 3/2 après 7/4 → biais entier sur le dénominateur : " +
+                    "d=2 < d=4 donc l'élève croit 3/2 < 7/4.",
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 6 ────────────────────────────────────────────────────────────

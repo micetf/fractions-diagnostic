@@ -501,164 +501,103 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                 );
             }
 
+            // ── Fractions à ranger (drag-and-drop) ───────────────────────────────────────
+            case "sortable": {
+                const items = exercice.fractions
+                    ? exercice.fractions.map((f) => ({
+                          id: `${f.n}/${f.d}`,
+                          fraction: { n: f.n, d: f.d },
+                      }))
+                    : (exercice.fractionsDocumentees ?? []).map((it) => ({
+                          id: it.prenom,
+                          prenom: it.prenom,
+                          fraction: it.fraction,
+                      }));
+
+                const ordre =
+                    val && typeof val === "object" && Array.isArray(val.ordre)
+                        ? val.ordre
+                        : items.map((it) => it.id);
+
+                return (
+                    <SortableFractions
+                        items={items}
+                        value={ordre}
+                        onChange={(newOrdre) => onChange({ ordre: newOrdre })}
+                    />
+                );
+            }
+
+            // ── Comparaisons < / > / = ────────────────────────────────────────────────────
+            case "comparaison": {
+                const SIGNES = ["<", "=", ">"];
+                return (
+                    <div className="flex flex-col gap-4">
+                        {(exercice.comparaisons ?? []).map((comp) => (
+                            <div
+                                key={comp.id}
+                                className="flex items-center gap-4 flex-wrap"
+                            >
+                                {/* Fraction gauche */}
+                                <div className="flex items-center justify-center w-10">
+                                    <FractionSVG
+                                        n={comp.gauche.n}
+                                        d={comp.gauche.d}
+                                    />
+                                </div>
+
+                                {/* Boutons signe */}
+                                <div className="flex gap-2">
+                                    {SIGNES.map((signe) => (
+                                        <button
+                                            key={signe}
+                                            type="button"
+                                            onClick={() =>
+                                                onChange({
+                                                    ...val,
+                                                    [comp.id]: signe,
+                                                })
+                                            }
+                                            className={`w-10 h-10 rounded-xl border-2 font-mono
+                                    font-bold text-lg transition-colors cursor-pointer
+                                    ${
+                                        val?.[comp.id] === signe
+                                            ? "bg-brand-500 border-brand-600 text-white"
+                                            : "bg-white border-slate-300 text-slate-700 hover:border-brand-400"
+                                    }`}
+                                        >
+                                            {signe}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Fraction droite */}
+                                <div className="flex items-center justify-center w-10">
+                                    <FractionSVG
+                                        n={comp.droite.n}
+                                        d={comp.droite.d}
+                                    />
+                                </div>
+
+                                {/* Label lettre */}
+                                <span className="text-xs text-slate-400 font-mono">
+                                    ({comp.id})
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+
             // ── Texte (simple ou structuré) ───────────────────────────────────────
             case "text": {
-                // ── CE2 Ex.6 — Comparaisons de fractions (< / > / =) ───────────────
-                // Source : exercice 6 CE2, comparaisons[].{gauche, droite, attendu}
-                if (exercice.comparaisons?.length > 0) {
-                    const objVal =
-                        typeof val === "object" &&
-                        val !== null &&
-                        !Array.isArray(val)
-                            ? val
-                            : {};
-                    return (
-                        <div className="flex flex-col gap-6">
-                            {exercice.comparaisons.map((comp) => (
-                                <div
-                                    key={comp.id}
-                                    className="flex items-center gap-4 flex-wrap"
-                                >
-                                    {/* Fraction gauche */}
-                                    <div className="flex items-center justify-center w-12">
-                                        <FractionSVG
-                                            n={comp.gauche.n}
-                                            d={comp.gauche.d}
-                                        />
-                                    </div>
-
-                                    {/* Boutons <, >, = */}
-                                    <div className="flex gap-2">
-                                        {["<", ">", "="].map((signe) => (
-                                            <button
-                                                key={signe}
-                                                type="button"
-                                                onClick={() =>
-                                                    onChange({
-                                                        ...objVal,
-                                                        [comp.id]: signe,
-                                                    })
-                                                }
-                                                className={`w-10 h-10 rounded-lg text-lg font-bold border-2
-                                  transition-colors cursor-pointer select-none
-                        ${
-                            objVal[comp.id] === signe
-                                ? "bg-brand-500 border-brand-600 text-white"
-                                : "bg-white border-slate-300 text-slate-700 hover:border-brand-400 hover:bg-brand-50"
-                        }`}
-                                            >
-                                                {signe}
-                                            </button>
-                                        ))}
-                                    </div>
-
-                                    {/* Fraction droite */}
-                                    <div className="flex items-center justify-center w-12">
-                                        <FractionSVG
-                                            n={comp.droite.n}
-                                            d={comp.droite.d}
-                                        />
-                                    </div>
-
-                                    {/* Label lettre */}
-                                    <span className="text-xs text-slate-400 font-mono">
-                                        ({comp.id})
-                                    </span>
-                                </div>
-                            ))}
-
-                            <TextJustification
-                                value={
-                                    typeof objVal.__explication === "string"
-                                        ? objVal.__explication
-                                        : ""
-                                }
-                                onChange={(v) =>
-                                    onChange({ ...objVal, __explication: v })
-                                }
-                                label="Explique ta réponse en une phrase pour chaque comparaison :"
-                            />
-                        </div>
-                    );
-                }
-
-                // ── CM1 Ex.5 / CM2 Ex.5 — Fractions à ranger ───────────────────────
-                // Source : exercice 5 CM1/CM2, fractions[].{n, d}
-                if (exercice.fractions?.length > 0) {
-                    const items = exercice.fractions.map((f) => ({
-                        id: `${f.n}/${f.d}`,
-                        fraction: f,
-                    }));
-                    const objVal =
-                        val && typeof val === "object" && "ordre" in val
-                            ? val
-                            : {
-                                  ordre: items.map((it) => it.id),
-                                  explication: "",
-                              };
-                    return (
-                        <div className="flex flex-col gap-5">
-                            <SortableFractions
-                                items={items}
-                                value={objVal.ordre}
-                                onChange={(ordre) =>
-                                    onChange({ ...objVal, ordre })
-                                }
-                            />
-                            <TextJustification
-                                value={objVal.explication ?? ""}
-                                onChange={(explication) =>
-                                    onChange({ ...objVal, explication })
-                                }
-                                label="Explique ta stratégie :"
-                            />
-                        </div>
-                    );
-                }
-
-                // ── CE2 Ex.5 — Fractions documentées (personnes + fractions) ────────
-                // Source : exercice 5 CE2, fractionsDocumentees[].{prenom, fraction{n,d}}
-                // Note : le document source ne spécifie que 3 amis sur 5.
-                if (exercice.fractionsDocumentees?.length > 0) {
-                    const items = exercice.fractionsDocumentees.map((it) => ({
-                        id: it.prenom,
-                        prenom: it.prenom,
-                        fraction: it.fraction,
-                    }));
-                    const objVal =
-                        val && typeof val === "object" && "ordre" in val
-                            ? val
-                            : {
-                                  ordre: items.map((it) => it.id),
-                                  explication: "",
-                              };
-                    return (
-                        <div className="flex flex-col gap-5">
-                            <SortableFractions
-                                items={items}
-                                value={objVal.ordre}
-                                onChange={(ordre) =>
-                                    onChange({ ...objVal, ordre })
-                                }
-                            />
-                            <TextJustification
-                                value={objVal.explication ?? ""}
-                                onChange={(explication) =>
-                                    onChange({ ...objVal, explication })
-                                }
-                                label="Explique comment tu as trouvé :"
-                            />
-                        </div>
-                    );
-                }
-
-                // ── Texte libre par défaut ───────────────────────────────────────────
+                // Fallback pur — ne devrait plus être atteint par aucun exercice après conversion.
+                // Conservé comme filet de sécurité.
                 return (
                     <TextJustification
                         value={typeof val === "string" ? val : ""}
                         onChange={onChange}
-                        label={"Ta réponse :"}
-                        placeholder="Écris ta réponse ici…"
+                        label="Ta réponse :"
                     />
                 );
             }

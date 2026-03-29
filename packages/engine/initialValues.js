@@ -104,6 +104,29 @@ export function getInitialValue(node) {
                 };
             }
             return "";
+
+        case "sortable": {
+            // Ordre initial = ordre de présentation des fractions dans les données.
+            // Pas de clé __explication — la justification est orale.
+            if (node.fractions?.length > 0) {
+                return { ordre: node.fractions.map((f) => `${f.n}/${f.d}`) };
+            }
+            // CE2 Ex.5 : fractions avec prénoms
+            if (node.fractionsDocumentees?.length > 0) {
+                return {
+                    ordre: node.fractionsDocumentees.map((f) => f.prenom),
+                };
+            }
+            return { ordre: [] };
+        }
+
+        case "comparaison": {
+            // Un slot par item de comparaison, valeur initiale null.
+            return Object.fromEntries(
+                (node.comparaisons ?? []).map((c) => [c.id, null])
+            );
+        }
+
         case "number_input":
             return "";
         default:

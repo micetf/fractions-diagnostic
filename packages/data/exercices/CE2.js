@@ -196,32 +196,41 @@ export const exercices = [
     // ── Exercice 5 ────────────────────────────────────────────────────────────
     {
         numero: 5,
-        titre: "Qui a la plus grande part ?",
+        titre: "Range les parts",
         competence: "Comparer des fractions de même numérateur",
-        type: "text",
+        type: "sortable",
         consigne:
-            "Cinq amis partagent chacun une barre de chocolat de la même taille, mais pas en le même nombre de parts égales. Range leurs parts de la plus petite à la plus grande. Explique comment tu as trouvé.",
-        // ATTENTION : Le document source mentionne « cinq amis » mais ne documente
-        // que 3 d'entre eux dans l'analyse des erreurs :
-        //   Ali (5/6), Bea (5/8), Chloé (5/12).
-        // Les 2 fractions restantes ne sont pas spécifiées dans le document source.
-        // TODO : compléter la liste des 5 fractions lors de la conception de l'exercice.
-        fractionsDocumentees: [
-            { prenom: "Ali", fraction: { n: 5, d: 6 } },
-            { prenom: "Bea", fraction: { n: 5, d: 8 } },
-            { prenom: "Chloé", fraction: { n: 5, d: 12 } },
+            "Cinq amis ont chacun mangé une part de gâteau. " +
+            "Voici les fractions qu'ils ont mangées. " +
+            "Range leurs parts de la plus petite à la plus grande.",
+        // Source : document CE2 documente Ali, Bea, Chloé.
+        // David (5/9) et Emma (5/7) ajoutés pour compléter à 5 items
+        // en conservant la cohérence numérateur constant (même numérateur = 5).
+        fractions: [
+            { prenom: "Ali", n: 5, d: 6 },
+            { prenom: "Bea", n: 5, d: 8 },
+            { prenom: "Chloé", n: 5, d: 12 },
+            { prenom: "David", n: 5, d: 9 },
+            { prenom: "Emma", n: 5, d: 7 },
         ],
-        ordreAttendu: ["Chloé (5/12)", "Bea (5/8)", "Ali (5/6)"],
-        // Biais détectable si l'élève fournit l'ordre inverse (par dénominateur croissant)
+        // Ordre correct croissant : 5/12 < 5/9 < 5/8 < 5/7 < 5/6
+        ordreAttendu: ["Chloé", "David", "Bea", "Emma", "Ali"],
         biaisDetectables: [
             {
                 code: "BIAIS_ENTIER_DENOMINATEUR",
-                declencheur: { type: "text_review" },
+                // Ordre inverse = tri par dénominateur croissant
+                // (l'élève pense : plus grand dénominateur = plus grande fraction)
+                declencheur: {
+                    type: "ordre_exact",
+                    ordre: ["Ali", "Emma", "Bea", "David", "Chloé"],
+                },
                 ceQueRevele:
-                    "Ranger dans l'ordre inverse (Ali < Bea < Chloé « car 12 > 8 > 6 ») → biais entier appliqué directement au dénominateur, sans comprendre que plus le dénominateur est grand, plus les parts sont petites.",
+                    "Ranger dans l'ordre inverse (Ali < Emma < Bea < David < Chloé) " +
+                    "→ biais entier appliqué au dénominateur : " +
+                    "plus grand d = plus grande fraction.",
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 6 ────────────────────────────────────────────────────────────
@@ -230,9 +239,8 @@ export const exercices = [
         titre: "Compare sans poser de calcul",
         competence:
             "Comparer des fractions dont l'un des dénominateurs est multiple de l'autre",
-        type: "text",
-        consigne:
-            "Sans poser de calcul, écris < ou > entre chaque paire. Explique ta réponse en une phrase.",
+        type: "comparaison",
+        consigne: "Sans poser de calcul, écris <, > ou = entre chaque paire.",
         comparaisons: [
             {
                 id: "a",
@@ -256,12 +264,51 @@ export const exercices = [
         biaisDetectables: [
             {
                 code: "BIAIS_ENTIER_DENOMINATEUR",
-                declencheur: { type: "text_review" },
+                // a) : 5/12 < 1/4 « car 12 > 4 »
+                declencheur: {
+                    type: "comparaison_item_wrong",
+                    itemId: "a",
+                    valeurErronee: "<",
+                },
                 ceQueRevele:
-                    "En a) : répondre 5/12 < 1/4 « car 12 > 4 » → biais du dénominateur. En b) : répondre 7/12 > 5/6 « car 7 > 5 » → biais du numérateur. En c) : répondre < ou > au lieu de = → l'équivalence 3/4 = 9/12 n'est pas mobilisée.",
+                    "Répondre 5/12 < 1/4 en (a) → biais du dénominateur : " +
+                    "12 > 4 donc la fraction est perçue comme plus petite.",
+            },
+            {
+                code: "BIAIS_ENTIER_DENOMINATEUR",
+                // b) : 7/12 > 5/6 « car 7 > 5 » (biais numérateur)
+                declencheur: {
+                    type: "comparaison_item_wrong",
+                    itemId: "b",
+                    valeurErronee: ">",
+                },
+                ceQueRevele:
+                    "Répondre 7/12 > 5/6 en (b) → biais du numérateur : " +
+                    "7 > 5 donc la fraction est perçue comme plus grande.",
+            },
+            {
+                code: "EQUIVALENCE_NON_GENERALISEE",
+                // c) : répondre < ou > au lieu de =
+                declencheur: {
+                    type: "comparaison_item_wrong",
+                    itemId: "c",
+                    valeurErronee: "<",
+                },
+                ceQueRevele:
+                    "Répondre < en (c) → l'égalité 3/4 = 9/12 n'est pas mobilisée.",
+            },
+            {
+                code: "EQUIVALENCE_NON_GENERALISEE",
+                declencheur: {
+                    type: "comparaison_item_wrong",
+                    itemId: "c",
+                    valeurErronee: ">",
+                },
+                ceQueRevele:
+                    "Répondre > en (c) → l'égalité 3/4 = 9/12 n'est pas mobilisée.",
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 7 ────────────────────────────────────────────────────────────

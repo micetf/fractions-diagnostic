@@ -119,6 +119,39 @@ function evaluerDeclencheur(declencheur, valeur) {
             return inf === declencheur.borneInf && sup === declencheur.borneSup;
         }
 
+        case "ordre_position_apres": {
+            // Déclenché si `id` apparaît après `apres` dans l'ordre stocké.
+            // valeur = { ordre: string[] }
+            const ordre = valeur?.ordre ?? [];
+            const idxId = ordre.indexOf(declencheur.id);
+            const idxApres = ordre.indexOf(declencheur.apres);
+            return idxId !== -1 && idxApres !== -1 && idxId > idxApres;
+        }
+
+        case "ordre_not_last": {
+            // Déclenché si `id` n'est pas en dernière position de l'ordre stocké.
+            // valeur = { ordre: string[] }
+            const ordre = valeur?.ordre ?? [];
+            if (ordre.length === 0) return false;
+            return ordre[ordre.length - 1] !== declencheur.id;
+        }
+
+        case "ordre_exact": {
+            // Déclenché si l'ordre stocké correspond exactement à `ordre[]`.
+            // valeur = { ordre: string[] }
+            const ordre = valeur?.ordre ?? [];
+            return (
+                ordre.length === declencheur.ordre.length &&
+                declencheur.ordre.every((id, i) => ordre[i] === id)
+            );
+        }
+
+        case "comparaison_item_wrong": {
+            // Déclenché si l'item `itemId` a la valeur `valeurErronee`.
+            // valeur = { [itemId]: "<"|">"|"=" }
+            return valeur?.[declencheur.itemId] === declencheur.valeurErronee;
+        }
+
         default:
             return false;
     }

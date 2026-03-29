@@ -347,12 +347,12 @@ export const exercices = [
     // ── Exercice 5 ────────────────────────────────────────────────────────────
     {
         numero: 5,
-        titre: "Range et compare",
+        titre: "Range ces fractions",
         competence:
-            "Comparer des fractions aux dénominateurs variés (dont le multiple commun est ≤ 60)",
-        type: "text",
-        consigne:
-            "Range ces fractions de la plus petite à la plus grande. Explique ta stratégie. Puis réponds : 13/6 et 5/3, laquelle est la plus grande ? Justifie sans faire appel à la stratégie de la mise au même dénominateur uniquement.",
+            "Comparer des fractions aux dénominateurs variés " +
+            "(dont le multiple commun est ≤ 60)",
+        type: "sortable",
+        consigne: "Range ces fractions de la plus petite à la plus grande.",
         fractions: [
             { n: 7, d: 4 },
             { n: 17, d: 12 },
@@ -360,22 +360,38 @@ export const exercices = [
             { n: 5, d: 3 },
             { n: 2, d: 1 },
         ],
-        ordreAttendu: ["17/12", "7/4", "5/3", "13/6", "2/1"],
+        // 17/12 ≈ 1.417 < 5/3 ≈ 1.667 < 7/4 = 1.75 < 2/1 = 2 < 13/6 ≈ 2.167
+        // Correction bug v1 : ordreAttendu était ["17/12","7/4","5/3","13/6","2/1"]
+        // ce qui plaçait 5/3 > 7/4 et 13/6 > 2/1 — tous deux faux.
+        ordreAttendu: ["17/12", "5/3", "7/4", "2/1", "13/6"],
         biaisDetectables: [
             {
                 code: "BIAIS_ENTIER_DENOMINATEUR",
-                declencheur: { type: "text_review" },
+                // L'élève place 5/3 APRÈS 7/4 car "5 > 4 donc 5/3 > 7/4"
+                // (biais sur le numérateur, cf. ceQueRevele)
+                declencheur: {
+                    type: "ordre_position_apres",
+                    id: "5/3",
+                    apres: "7/4",
+                },
                 ceQueRevele:
-                    "Erreur sur 7/4 vs 5/3 → biais entier : « 5 > 4 donc 5/3 > 7/4 » sans vérification.",
+                    "Placer 5/3 après 7/4 → « 5 > 4 donc 5/3 > 7/4 » : " +
+                    "biais de comparaison par le numérateur seul.",
             },
             {
                 code: "N_SUR_N_NON_ACQUIS",
-                declencheur: { type: "text_review" },
+                // 2/1 = 2 : doit être en avant-dernière position (avant 13/6 ≈ 2.167)
+                // Si l'élève ne reconnaît pas 2/1 comme un entier, il peut le placer n'importe où.
+                declencheur: {
+                    type: "ordre_not_last",
+                    id: "13/6",
+                },
                 ceQueRevele:
-                    "Placer 2/1 ailleurs qu'en dernier → 2/1 = 2 non reconnu comme entier.",
+                    "Ne pas placer 13/6 en dernière position → " +
+                    "13/6 ≈ 2.167 non reconnu comme la plus grande des fractions.",
             },
         ],
-        aRelire: true,
+        aRelire: false,
     },
 
     // ── Exercice 6 ────────────────────────────────────────────────────────────
