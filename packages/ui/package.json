@@ -1,0 +1,13 @@
+{
+    "name": "@fractions-diagnostic/ui",
+    "private": true,
+    "version": "1.0.0",
+    "type": "module",
+    "exports": {
+        "./figures/*": "./figures/*"
+    },
+    "peerDependencies": {
+        "prop-types": ">=15.0.0",
+        "react": ">=18.0.0"
+    }
+}

@@ -7,16 +7,16 @@ import ColoringFigure from "./ColoringFigure";
 import NumberLine from "./NumberLine";
 import SortableFractions from "./SortableFractions";
 import NumberInput from "./NumberInput";
-import DemiDroiteTiers from "./figures/DemiDroiteTiers";
-import RulerWithPointP from "./figures/RulerWithPointP";
-import { figuresCE1Ex1 } from "./figures/CE1Ex1";
-import { figuresCE1Ex2 } from "./figures/CE1Ex2";
-import { figuresCE2Ex2 } from "./figures/CE2Ex2";
-import { figuresCM2Ex4 } from "./figures/CM2Ex4";
-import DemiDroiteCM2Ex3B from "./figures/DemiDroiteCM2Ex3B";
-import DemiDisque from "./figures/DemiDisque";
-import RegletteSegments from "./figures/RegletteSegments";
-import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
+import DemiDroiteTiers from "@fractions-diagnostic/ui/figures/DemiDroiteTiers";
+import RulerWithPointP from "@fractions-diagnostic/ui/figures/RulerWithPointP";
+import { figuresCE1Ex1 } from "@fractions-diagnostic/ui/figures/CE1Ex1";
+import { figuresCE1Ex2 } from "@fractions-diagnostic/ui/figures/CE1Ex2";
+import { figuresCE2Ex2 } from "@fractions-diagnostic/ui/figures/CE2Ex2";
+import { figuresCM2Ex4 } from "@fractions-diagnostic/ui/figures/CM2Ex4";
+import DemiDroiteCM2Ex3B from "@fractions-diagnostic/ui/figures/DemiDroiteCM2Ex3B";
+import DemiDisque from "@fractions-diagnostic/ui/figures/DemiDisque";
+import RegletteSegments from "@fractions-diagnostic/ui/figures/RegletteSegments";
+import { segmentsCE1Ex3TriangleD } from "@fractions-diagnostic/ui/figures/segmentsCE1";
 import { getInitialValue } from "@fractions-diagnostic/engine/initialValues";
 
 /** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
