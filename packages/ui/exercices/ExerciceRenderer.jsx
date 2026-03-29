@@ -7,17 +7,17 @@ import ColoringFigure from "./ColoringFigure";
 import NumberLine from "./NumberLine";
 import SortableFractions from "./SortableFractions";
 import NumberInput from "./NumberInput";
-import DemiDroiteTiers from "./figures/DemiDroiteTiers";
-import RulerWithPointP from "./figures/RulerWithPointP";
-import { figuresCE1Ex1 } from "./figures/CE1Ex1";
-import { figuresCE1Ex2 } from "./figures/CE1Ex2";
-import { figuresCE2Ex2 } from "./figures/CE2Ex2";
-import { figuresCM2Ex4 } from "./figures/CM2Ex4";
-import DemiDroiteCM2Ex3B from "./figures/DemiDroiteCM2Ex3B";
-import DemiDisque from "./figures/DemiDisque";
-import RegletteSegments from "./figures/RegletteSegments";
-import { segmentsCE1Ex3TriangleD } from "./figures/segmentsCE1";
-import { getInitialValue } from "@fractions-diagnostic/engine/initialValues";
+import DemiDroiteTiers from "../figures/DemiDroiteTiers";
+import RulerWithPointP from "../figures/RulerWithPointP";
+import { figuresCE1Ex1 } from "../figures/CE1Ex1";
+import { figuresCE1Ex2 } from "../figures/CE1Ex2";
+import { figuresCE2Ex2 } from "../figures/CE2Ex2";
+import { figuresCM2Ex4 } from "../figures/CM2Ex4";
+import DemiDroiteCM2Ex3B from "../figures/DemiDroiteCM2Ex3B";
+import DemiDisque from "../figures/DemiDisque";
+import RegletteSegments from "../figures/RegletteSegments";
+import { segmentsCE1Ex3TriangleD } from "../figures/segmentsCE1";
+import { getInitialValue } from "../../engine/initialValues";
 
 /** Registre figures SVG pour les exercices 'selection'. Clé : "NIVEAU-NUMERO". */
 const FIGURE_REGISTRY = {
@@ -214,14 +214,19 @@ function ExerciceRenderer({ exercice, niveau, value = undefined, onChange }) {
                                 <div className="w-full">{figureSupport}</div>
                             )}
 
-                            <div className="flex flex-wrap gap-8 items-end">
+                            <div
+                                className="grid w-full gap-6"
+                                style={{
+                                    gridTemplateColumns: `repeat(${exercice.items.length}, 1fr)`,
+                                }}
+                            >
                                 {exercice.items.map((item) => (
                                     <div
                                         key={item.id}
                                         className="flex flex-col items-center gap-3"
                                     >
                                         {itemFigures[item.id] ? (
-                                            <div className="flex items-center justify-center">
+                                            <div className="w-full flex items-center justify-center">
                                                 {itemFigures[item.id]}
                                             </div>
                                         ) : item.description ? (

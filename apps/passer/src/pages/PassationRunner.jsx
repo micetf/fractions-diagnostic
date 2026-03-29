@@ -195,7 +195,14 @@ function PassationRunner({ eleveId, onTermine }) {
 
             {/* Exercice */}
             <div className="flex-1 overflow-y-auto">
-                <div className="max-w-2xl mx-auto px-4 py-8">
+                <div className="max-w-2xl mx-auto px-4 py-8 flex flex-col gap-6">
+                    {/* Consigne principale (SRS F-PAS-12 : ≥ 18px) */}
+                    {exercice.consigne && (
+                        <p className="text-lg text-slate-700 leading-relaxed whitespace-pre-wrap">
+                            {exercice.consigne}
+                        </p>
+                    )}
+
                     <ExerciceRenderer
                         exercice={exercice}
                         niveau={diagnostic.niveau}

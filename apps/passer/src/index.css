@@ -1,11 +1,14 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Nunito:wght@600;700;800&display=swap");
 @import "tailwindcss";
 
+/* Scan des composants partagés (packages/ui) non détectés par défaut */
+@source "../../../packages/ui/**/*.{js,jsx}";
+
 @theme {
     --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Nunito", "DM Sans", ui-sans-serif, sans-serif;
 
-    --color-brand-50:  #eef4ff;
+    --color-brand-50: #eef4ff;
     --color-brand-100: #d9e6ff;
     --color-brand-200: #bbd1ff;
     --color-brand-300: #8eb2ff;
@@ -28,7 +31,11 @@
 }
 
 @layer base {
-    *, *::before, *::after { box-sizing: border-box; }
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
     body {
         margin: 0;
         font-family: var(--font-sans);
@@ -36,12 +43,16 @@
         -webkit-font-smoothing: antialiased;
     }
     /* Empêche le rebond du scroll sur iOS */
-    html, body { overscroll-behavior: none; }
+    html,
+    body {
+        overscroll-behavior: none;
+    }
 }
 
 @layer utilities {
     /* Cibles tactiles minimum 44px (SRS NF-UX-04) */
-    button, [role="button"] {
+    button,
+    [role="button"] {
         min-height: 44px;
         min-width: 44px;
         touch-action: manipulation;

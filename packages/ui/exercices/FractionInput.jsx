@@ -62,7 +62,10 @@ function FractionInput({
     focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent
     disabled:opacity-50 disabled:cursor-not-allowed
     bg-white border-slate-300 text-slate-800
-  `;
+    [appearance:textfield]
+    [&::-webkit-inner-spin-button]:appearance-none
+    [&::-webkit-outer-spin-button]:appearance-none
+`;
 
     return (
         <div

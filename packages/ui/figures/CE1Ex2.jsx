@@ -11,7 +11,7 @@ import DisqueColorie from "./DisqueColorie";
 import CarreColorie from "./CarreColorie";
 
 export const figuresCE1Ex2 = {
-    A: <BandeColoriee n={5} k={2} />,
-    B: <DisqueColorie n={6} k={1} />,
-    C: <CarreColorie n={8} k={3} />,
+    A: <BandeColoriee n={5} k={2} w={200} h={56} />,
+    B: <DisqueColorie n={6} k={1} size={110} />,
+    C: <CarreColorie n={8} k={3} size={110} />,
 };
