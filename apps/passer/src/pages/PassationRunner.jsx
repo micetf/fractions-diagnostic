@@ -19,7 +19,7 @@ import { usePasserContext } from "@/context/PasserContext";
 import { getExercice } from "@fractions-diagnostic/data";
 import { getInitialValue } from "@fractions-diagnostic/engine/initialValues";
 import { detecterBiais } from "@fractions-diagnostic/engine/biaisDetector";
-import ExerciceRenderer from "@/components/exercices/ExerciceRenderer";
+import ExerciceRenderer from "@fractions-diagnostic/ui/exercices/ExerciceRenderer";
 
 /**
  * @param {object}   props
@@ -56,7 +56,7 @@ function PassationRunner({ eleveId, onTermine }) {
                 },
             });
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const passationId = passationExistante?.id ?? newIdRef.current;
@@ -72,7 +72,7 @@ function PassationRunner({ eleveId, onTermine }) {
         if (passationExistante?.statut === "terminee") {
             onTermine(passationId);
         }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const numeroCourant = numeros[indexCourant];
@@ -99,7 +99,8 @@ function PassationRunner({ eleveId, onTermine }) {
             e.returnValue = "";
         }
         window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+        return () =>
+            window.removeEventListener("beforeunload", handleBeforeUnload);
     }, []);
 
     // ── Validation d'un exercice ──────────────────────────────────────────
@@ -140,7 +141,16 @@ function PassationRunner({ eleveId, onTermine }) {
             });
             onTermine(passationId);
         }
-    }, [exercice, valeur, numeroCourant, indexCourant, numeros, passationId, dispatch, onTermine]);
+    }, [
+        exercice,
+        valeur,
+        numeroCourant,
+        indexCourant,
+        numeros,
+        passationId,
+        dispatch,
+        onTermine,
+    ]);
 
     // ── Rendu ─────────────────────────────────────────────────────────────
     if (!exercice) return null;
@@ -214,7 +224,7 @@ function PassationRunner({ eleveId, onTermine }) {
 }
 
 PassationRunner.propTypes = {
-    eleveId:   PropTypes.string.isRequired,
+    eleveId: PropTypes.string.isRequired,
     onTermine: PropTypes.func.isRequired,
 };
 
