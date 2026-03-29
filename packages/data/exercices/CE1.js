@@ -39,7 +39,7 @@ export const exercices = [
         competence: "Identifier les figures représentant la fraction 1/4",
         type: "selection",
         consigne:
-            "Voici 4 rectangles. Dans certains, une partie est coloriée. Entoure seulement les rectangles qui montrent 1/4 du rectangle.",
+            "Observe les rectangles. Entoure ceux où une partie coloriée représente un quart du rectangle.",
         figures: [
             {
                 id: "A",
@@ -102,7 +102,7 @@ export const exercices = [
             {
                 id: "C",
                 description:
-                    "Bande partagée en 8 parts égales, 3 parts coloriées",
+                    "Tangram partagé en 8 parts égales, 3 parts coloriées",
                 attendu: { numerateur: 3, denominateur: 8 },
             },
         ],

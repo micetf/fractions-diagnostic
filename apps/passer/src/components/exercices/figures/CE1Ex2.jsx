@@ -10,9 +10,10 @@
 
 import BandeColoriee from "./BandeColoriee";
 import DisqueCoupes from "./DisqueCoupes";
+import TangramCarre from "./TangramCarre";
 
 export const figuresCE1Ex2 = {
     A: <BandeColoriee n={5} k={2} />,
     B: <DisqueCoupes n={6} k={1} />,
-    C: <BandeColoriee n={8} k={3} />,
+    C: <TangramCarre n={8} k={3} />,
 };
